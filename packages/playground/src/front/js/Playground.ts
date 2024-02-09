@@ -178,5 +178,3 @@ export function createPlayground() {
     },
   });
 }
-
-export default createPlayground();

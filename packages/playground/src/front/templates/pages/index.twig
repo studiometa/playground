@@ -11,7 +11,13 @@
 {% block body %}
   <div class="fixed top-0 left-0 w-full h-full">
     {% include '../components/header-switcher.twig' %}
-    {% include '../components/header.twig' with { version } %}
+    {% embed '../components/header.twig' with { version } %}
+      {% block title %}
+        <span class="font-bold">
+          {{ header_title ?? 'Playground' }}
+        </span>
+      {% endblock %}
+    {% endembed %}
     {% include '../components/main.twig' %}
   </div>
 {% endblock %}
