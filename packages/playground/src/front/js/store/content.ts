@@ -2,15 +2,7 @@ import { historyReplace } from '@studiometa/js-toolkit/utils';
 import { zipUrlStore as store } from '../utils/storage/index.js';
 
 export function getScript() {
-  return (
-    store.get('script') ??
-    `import { Base, createApp } from '@unistra/design-system';
-
-createApp({
-  components: [Base],
-});
-`
-  );
+  return store.get('script') ?? '';
 }
 
 export function setScript(value) {
@@ -18,12 +10,7 @@ export function setScript(value) {
 }
 
 export function getHtml() {
-  return (
-    store.get('html') ??
-    `<unistra-base>
-  Hello world
-</unistra-base>`
-  );
+  return store.get('html') ?? '';
 }
 
 export function setHtml(value) {
@@ -32,10 +19,7 @@ export function setHtml(value) {
 
 export function getStyle() {
   return (
-    store.get('style') ??
-    `body {
-  padding: 1rem;
-}`
+    store.get('style') ?? ''
   );
 }
 

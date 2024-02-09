@@ -9,8 +9,5 @@
 	},
 	"dependencies": {
 		"@studiometa/playground": "*"
-	},
-	"devDependencies": {
-		"@studiometa/webpack-config": "^1.1.3"
 	}
 }

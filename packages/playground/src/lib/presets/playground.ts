@@ -14,20 +14,32 @@ export function playgroundPreset(): Preset {
   return {
     name: 'playground-preset',
     async handler(config, context) {
-      const { handler: prototypingHandler } = prototyping();
+      const { handler: prototypingHandler } = prototyping({
+        twig: {
+          namespaces: {
+            'playground': resolve(
+              import.meta.dirname,
+              '../../front/templates/pages/'
+            ),
+          },
+        },
+      });
       await prototypingHandler(config, context);
 
       await context.extendWebpack(config, (webpackConfig) => {
         if (!isDefined(webpackConfig.entry['js/app'])) {
-          webpackConfig.entry['js/app'] = resolve(import.meta.dirname, '../../front/js/app.js');
+          webpackConfig.entry['js/app'] =
+            '@studiometa/playground/dist/front/js/app.js';
         }
 
         if (!isDefined(webpackConfig.entry['css/app'])) {
-          webpackConfig.entry['css/app'] = resolve(import.meta.dirname, '../../front/css/app.css');
+          webpackConfig.entry['css/app'] =
+            '@studiometa/playground/dist/front/css/app.css';
         }
       });
 
-      const { handler: scriptTypeModuleHandler } = htmlWebpackScriptTypeModulePreset();
+      const { handler: scriptTypeModuleHandler } =
+        htmlWebpackScriptTypeModulePreset();
       await scriptTypeModuleHandler(config, context);
 
       await monacoPreset().handler(config, context);

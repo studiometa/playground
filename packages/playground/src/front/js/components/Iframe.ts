@@ -33,6 +33,12 @@ export default class Iframe extends Base<IframeProps> {
   static isEsbuildInitialized = false;
 
   /**
+   * Esbuild initializer promise.
+   * @type {Promise}
+   */
+  static esbuildPromise;
+
+  /**
    * The style element inside the iframe used to inject the style editor's content.
    */
   style: HTMLStyleElement;
@@ -84,8 +90,6 @@ export default class Iframe extends Base<IframeProps> {
     this.style.id = 'style';
     this.doc.head.append(this.style.cloneNode());
 
-    await this.updateStyle();
-
     // Add custom script
     this.script = this.doc.createElement('script');
     this.script.type = 'module';
@@ -93,6 +97,7 @@ export default class Iframe extends Base<IframeProps> {
     this.doc.head.append(this.script.cloneNode());
 
     await nextTick();
+    await this.updateStyle();
     await this.updateScript(false);
 
     this.$refs.iframe.classList.remove('opacity-0');
@@ -103,9 +108,10 @@ export default class Iframe extends Base<IframeProps> {
       return;
     }
     try {
-      await esbuild.initialize({
+      Iframe.esbuildPromise = esbuild.initialize({
         wasmURL: new URL('esbuild-wasm/esbuild.wasm', import.meta.url),
       });
+      await Iframe.esbuildPromise;
       Iframe.isEsbuildInitialized = true;
     } catch {
       // Silence is golden.
@@ -175,6 +181,7 @@ export default class Iframe extends Base<IframeProps> {
     const clone = this.script.cloneNode() as HTMLScriptElement;
     const newScript = `${getScript()}\ndocument.dispatchEvent(new Event("readystatechange"))`;
     try {
+      await Iframe.esbuildPromise;
       const results = await esbuild.transform(newScript, {
         target: 'es2020',
       });

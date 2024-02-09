@@ -25,7 +25,7 @@
     </span>
   </div>
   <div class="flex items-center">
-    {% include '@components/checkbox-group.twig' with {
+    {% include './checkbox-group.twig' with {
       items: [
         {
           label: 'HTML',
@@ -93,7 +93,7 @@
         <div class="absolute top-0 left-0 w-1/2 h-full bg-black dark:bg-white opacity-50"></div>
       </div>
     {% endset %}
-    {% include '@components/radio-group.twig' with {
+    {% include './radio-group.twig' with {
       items: [
         {
           label: top_label,
@@ -159,7 +159,7 @@
         <span class="sr-only">Dark</span>
       </div>
     {% endset %}
-    {% include '@components/radio-group.twig' with {
+    {% include './radio-group.twig' with {
       items: [
         {
           label: light_label,

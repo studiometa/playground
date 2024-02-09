@@ -1,3 +1,3 @@
-import { createPlayground } from '@studiometa/playground/browser';
+import { createPlayground } from '@studiometa/playground';
 
 export default createPlayground();

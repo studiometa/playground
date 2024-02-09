@@ -1,3 +1,3 @@
-import { tailwindConfig } from '@studiometa/playground';
+import { tailwindConfig } from '@studiometa/playground/tailwind';
 
 export default tailwindConfig();
