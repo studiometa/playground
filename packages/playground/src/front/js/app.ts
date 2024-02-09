@@ -1,3 +1,3 @@
-import { createPlayground } from './Playground.js';
+import { createPlayground } from './create-playground.js';
 
 export default createPlayground();

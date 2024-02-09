@@ -1,22 +1,22 @@
-import { Base, createApp } from '@studiometa/js-toolkit';
+import { Base } from '@studiometa/js-toolkit';
 import type { BaseConfig, BaseProps } from '@studiometa/js-toolkit';
 import { domScheduler, wait } from '@studiometa/js-toolkit/utils';
-import HeaderSwitcher from './components/HeaderSwitcher.js';
-import LayoutReactive from './components/LayoutReactive.js';
-import LayoutSwitcher from './components/LayoutSwitcher.js';
-import ThemeSwitcher from './components/ThemeSwitcher.js';
-import type Editors from './components/Editors.js';
-import type HtmlEditor from './components/HtmlEditor.js';
-import type Iframe from './components/Iframe.js';
-import type Resizable from './components/Resizable.js';
-import type ScriptEditor from './components/ScriptEditor.js';
-import type StyleEditor from './components/StyleEditor.js';
+import HeaderSwitcher from './HeaderSwitcher.js';
+import LayoutReactive from './LayoutReactive.js';
+import LayoutSwitcher from './LayoutSwitcher.js';
+import ThemeSwitcher from './ThemeSwitcher.js';
+import type Editors from './Editors.js';
+import type HtmlEditor from './HtmlEditor.js';
+import type Iframe from './Iframe.js';
+import type Resizable from './Resizable.js';
+import type ScriptEditor from './ScriptEditor.js';
+import type StyleEditor from './StyleEditor.js';
 import {
   layoutUpdateDOM,
   themeUpdateDOM,
   headerUpdateDOM,
-} from './store/index.js';
-import { urlStore } from './utils/storage/index.js';
+} from '../store/index.js';
+import { urlStore } from '../utils/storage/index.js';
 
 layoutUpdateDOM();
 themeUpdateDOM();
@@ -51,19 +51,25 @@ export class Playground extends Base<PlaygroundProps> {
       ThemeSwitcher,
       HeaderSwitcher,
       Iframe: async () =>
-        wait(100).then(() => import('./components/Iframe.js')),
+        wait(100).then(() => import('./Iframe.js')),
       Resizable: async () =>
-        wait(100).then(() => import('./components/Resizable.js')),
+        wait(100).then(() => import('./Resizable.js')),
       Editors: async () =>
-        wait(100).then(() => import('./components/Editors.js')),
+        wait(100).then(() => import('./Editors.js')),
       HtmlEditor: async () =>
-        wait(100).then(() => import('./components/HtmlEditor.js')),
+        wait(100).then(() => import('./HtmlEditor.js')),
       ScriptEditor: async () =>
-        wait(100).then(() => import('./components/ScriptEditor.js')),
+        wait(100).then(() => import('./ScriptEditor.js')),
       StyleEditor: async () =>
-        wait(100).then(() => import('./components/StyleEditor.js')),
+        wait(100).then(() => import('./StyleEditor.js')),
     },
   };
+
+  static options;
+
+  static setOptions(options) {
+    Playground.options = options;
+  }
 
   get iframe() {
     return this.$children.Iframe[0];
@@ -169,12 +175,4 @@ export class Playground extends Base<PlaygroundProps> {
       });
     }
   }
-}
-
-export function createPlayground() {
-  return createApp(Playground, {
-    features: {
-      asyncChildren: true,
-    },
-  });
 }
