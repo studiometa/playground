@@ -1,0 +1,28 @@
+{#
+/**
+ * @file
+ *   Editor
+ *
+ * @description
+ *   Renders an editor.
+ *
+ * @param {array}  $attr       Attributes for the root element.
+ * @param {array}  $components Additional components to attach to the root element.
+ * @param {string} $editor     Name of the editor component.
+ */
+#}
+
+{% set attributes = merge_html_attributes(attr, {}, {
+  data_component: [editor]|merge(components ?? [])|join(' '),
+  class: 'relative',
+}) %}
+
+{% block before_start %}{% endblock %}
+<div {{ html_attributes(attributes) }}>
+  {% block after_start %}{% endblock %}
+  <div class="absolute inset-0 flex items-center justify-center bg-zinc-50 dark:bg-neutral-900">
+    <div class="w-4 h-4 border-2 rounded-full border-zinc-300 dark:opacity-20 border-t-transparent animate-loader"></div>
+  </div>
+  {% block before_end %}{% endblock %}
+</div>
+{% block after_end %}{% endblock %}

@@ -1,0 +1,16 @@
+{
+	"name": "@studiometa/playground-demo",
+	"version": "0.0.0",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"dev": "meta dev",
+		"build": "meta build"
+	},
+	"dependencies": {
+		"@studiometa/playground": "*"
+	},
+	"devDependencies": {
+		"@studiometa/webpack-config": "^1.1.3"
+	}
+}

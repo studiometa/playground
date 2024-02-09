@@ -1,0 +1,17 @@
+{#
+/**
+ * @file
+ *   Checkbox
+ *
+ * @description
+ *   Display a list of checkbox input elements.
+ *
+ * @param {array} $items A list of checkbox inputs to render.
+ */
+#}
+
+<div class="relative flex items-center gap-4">
+	{% for item in items %}
+		{% include '@components/checkbox.twig' with item only %}
+	{% endfor %}
+</div>

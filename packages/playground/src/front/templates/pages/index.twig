@@ -1,0 +1,17 @@
+{% extends '@pkg-layouts/default.twig' %}
+
+{% set html_attr = {
+  class: 'fixed inset-0'
+} %}
+
+{% set body_attr = {
+  class: 'fixed inset-0 group dark:bg-zinc-900 dark:text-white',
+} %}
+
+{% block body %}
+  <div class="fixed top-0 left-0 w-full h-full">
+    {% include '@components/header-switcher.twig' %}
+    {% include '@components/header.twig' with { version } %}
+    {% include '@components/main.twig' %}
+  </div>
+{% endblock %}

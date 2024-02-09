@@ -1,0 +1,129 @@
+{#
+/**
+ * @file
+ *   Editors
+ *
+ * @description
+ *   Display all editors.
+ */
+#}
+
+<div data-component="LayoutReactive Editors"
+  data-option-top="w-full"
+  data-option-right="h-full"
+  data-option-bottom="w-full"
+  data-option-left="h-full"
+  class="flex flex-col w-full">
+  <div data-component="LayoutReactive Resizable"
+    data-option-top="w-full h-[33vh] pb-2"
+    data-option-right="flex-col w-[40vw] h-full pl-2"
+    data-option-bottom="w-full h-[33vh] pt-2"
+    data-option-left="flex-col w-[40vw] h-full pr-2"
+    class="relative gap-2 flex flex-grow items-stretch w-full h-[33vh] pb-2 select-none">
+    {% include '@components/resizable/cursor-x.twig' with {
+      components: ['LayoutReactive'],
+      attr: {
+        class: 'absolute top-0 right-0',
+        data_option_top: 'hidden',
+        data_option_right: 'left-0',
+        data_option_bottom: 'hidden',
+        data_option_left: 'right-0',
+      }
+    } %}
+    {% include '@components/resizable/cursor-y.twig' with {
+      components: ['LayoutReactive'],
+      attr: {
+        class: 'absolute bottom-0 left-0',
+        data_option_top: 'bottom-0',
+        data_option_right: 'hidden',
+        data_option_bottom: 'top-0',
+        data_option_left: 'hidden',
+      }
+    } %}
+
+    {# BEGIN HTML editor #}
+    {% embed '@components/editors/html.twig' with {
+      components: ['LayoutReactive', 'ResizableSync'],
+      attr: {
+        data_option_top: 'w-1/3 h-full',
+        data_option_right: 'w-full h-1/3',
+        data_option_bottom: 'w-1/3 h-full',
+        data_option_left: 'w-full h-1/3',
+        class: 'flex-grow w-1/3',
+        data_lang: 'text/html',
+      }
+    } %}
+      {% block before_end %}
+        {% include '@components/resizable/cursor-x.twig' with {
+          components: ['LayoutReactive'],
+          attr: {
+            data_option_top: 'absolute top-0 left-full',
+            data_option_right: 'hidden',
+            data_option_bottom: 'absolute bottom-0 left-full',
+            data_option_left: 'hidden',
+          }
+        } %}
+        {% include '@components/resizable/cursor-y.twig' with {
+          components: ['LayoutReactive'],
+          attr: {
+            data_option_top: 'hidden',
+            data_option_right: 'absolute top-full right-0',
+            data_option_bottom: 'hidden',
+            data_option_left: 'absolute top-full left-0',
+          }
+        } %}
+      {% endblock %}
+    {% endembed %}
+    {# END HTML editor #}
+
+
+    {# BEGIN Style editor #}
+    {% embed '@components/editors/style.twig' with {
+      components: ['LayoutReactive', 'ResizableSync'],
+      attr: {
+        data_option_top: 'w-1/3 h-full',
+        data_option_right: 'w-full h-1/3',
+        data_option_bottom: 'w-1/3 h-full',
+        data_option_left: 'w-full h-1/3',
+        class: 'flex-grow w-1/3 h-full',
+        data_lang: 'text/css',
+      }
+    } %}
+      {% block before_end %}
+        {% include '@components/resizable/cursor-x.twig' with {
+          components: ['LayoutReactive'],
+          attr: {
+            data_option_top: 'absolute top-0 left-full',
+            data_option_right: 'hidden',
+            data_option_bottom: 'absolute bottom-0 left-full',
+            data_option_left: 'hidden',
+          }
+        } %}
+        {% include '@components/resizable/cursor-y.twig' with {
+          components: ['LayoutReactive'],
+          attr: {
+            data_option_top: 'hidden',
+            data_option_right: 'absolute top-full right-0',
+            data_option_bottom: 'hidden',
+            data_option_left: 'absolute top-full left-0',
+          }
+        } %}
+      {% endblock %}
+    {% endembed %}
+    {# END Style editor #}
+
+    {# BEGIN Script editor #}
+    {% include '@components/editors/script.twig' with {
+      components: ['LayoutReactive', 'ResizableSync'],
+      attr: {
+        data_option_top: 'w-1/3 h-full',
+        data_option_right: 'w-full h-1/3',
+        data_option_bottom: 'w-1/3 h-full',
+        data_option_left: 'w-full h-1/3',
+        class: 'flex-grow w-1/3 h-full',
+        data_lang: 'text/javascript',
+      }
+    } %}
+    {# END Script editor #}
+  </div>
+</div>
