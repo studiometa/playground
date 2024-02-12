@@ -1,5 +1,4 @@
 import { resolve } from 'node:path';
-import { existsSync } from 'node:fs';
 import type { PartialDeep } from 'type-fest';
 import type { Preset } from '@studiometa/webpack-config';
 import { prototyping } from '@studiometa/webpack-config-preset-prototyping';
@@ -7,6 +6,8 @@ import { isDefined } from '@studiometa/js-toolkit/utils';
 import { htmlWebpackScriptTypeModulePreset } from './html-webpack-script-type-module.js';
 import { monacoPreset } from './monaco.js';
 import { productionBuildPreset } from './production-build.js';
+import { PlaygroundLoadersPlugin } from '../plugins/PlaygroundLoadersPlugin.js';
+import type { PlaygroundLoadersOptions } from '../plugins/PlaygroundLoadersPlugin.js';
 
 export interface HTMLElementAttributes {
   [name: string]: unknown;
@@ -45,8 +46,6 @@ export interface PlaygroundPresetOptions {
     link: HTMLLinkElementAttributes[];
     meta: HTMLMetaElementAttributes[];
   };
-  html_attr: any;
-  body_attr: any;
   header: {
     title: string;
   };
@@ -54,15 +53,20 @@ export interface PlaygroundPresetOptions {
     html: string;
     style: string;
     script: string;
-  },
+  };
+  loaders: PlaygroundLoadersOptions;
   tailwindcss: boolean;
   syncColorScheme: boolean;
+  html_attr: any;
+  body_attr: any;
 }
 
 /**
  * Preset to build the playground.
  */
-export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>): Preset {
+export function playgroundPreset(
+  options?: PartialDeep<PlaygroundPresetOptions>
+): Preset {
   return {
     name: 'playground-preset',
     async handler(config, context) {
@@ -77,6 +81,8 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
       await prototypingHandler(config, context);
 
       await context.extendWebpack(config, (webpackConfig) => {
+        webpackConfig.plugins.push(new PlaygroundLoadersPlugin(options.loaders));
+
         webpackConfig.cache = {
           ...webpackConfig.cache,
           buildDependencies: {

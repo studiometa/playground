@@ -59,7 +59,7 @@ export async function build() {
   const start = performance.now();
 
   console.log(`Building...`);
-  const { errors, warnings } = await esbuild.build(getOptions({ format }));
+  const { errors, warnings } = await esbuild.build(getOptions());
 
   for (const error of errors) {
     console.error(error);

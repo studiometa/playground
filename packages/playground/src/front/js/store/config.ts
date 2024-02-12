@@ -1,5 +1,8 @@
-import { noopValue, isString } from '@studiometa/js-toolkit/utils';
+import { isString } from '@studiometa/js-toolkit/utils';
 import type { PartialDeep } from 'type-fest';
+import htmlLoader from '@studiometa/playground/html-loader';
+import styleLoader from '@studiometa/playground/style-loader';
+import scriptLoader from '@studiometa/playground/script-loader';
 
 export type PlaygroundLoader = (content: string) => string | Promise<string>;
 
@@ -55,9 +58,9 @@ const store: PlaygroundConfig = {
 		script: '',
 	},
 	loaders: {
-		html: noopValue,
-		style: noopValue,
-		script: noopValue,
+		html: htmlLoader,
+		style: styleLoader,
+		script: scriptLoader,
 	},
 };
 

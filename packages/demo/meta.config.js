@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { defineConfig } from '@studiometa/webpack-config';
 import { playgroundPreset } from '@studiometa/playground/preset';
 
@@ -14,6 +15,9 @@ export default defineConfig({
 			syncColorScheme: true,
 			importMap: {
 				'@studiometa/': 'https://cdn.skypack.dev/@studiometa/',
+			},
+			loaders: {
+				html: resolve('./html-loader.js'),
 			},
 			defaults: {
 				html: '<h1>hello world</h1>',
