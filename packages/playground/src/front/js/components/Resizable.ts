@@ -30,10 +30,6 @@ export default class Resizable extends Base<ResizableProps> {
     );
   }
 
-  onResizableCursorClick(event, index: number) {
-    console.log('dblclick', index);;
-  }
-
   onResizableCursorDragged(props: DragServiceProps, index: number) {
     const resizableCursor = this.$children.ResizableCursor[index];
     const { axis } = resizableCursor.$options;

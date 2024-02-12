@@ -32,6 +32,7 @@ export function tailwindConfig() {
     plugins: [
       plugin(({ addVariant }) => {
         addVariant('has-header', 'html.has-header &');
+        addVariant('is-resizing', 'html.is-resizing &');
       }),
     ],
   };

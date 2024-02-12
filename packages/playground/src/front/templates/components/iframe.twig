@@ -13,7 +13,7 @@
 
 {% set attributes = merge_html_attributes(attr, {}, {
   data_component: ['Iframe']|merge(components ?? [])|join(' '),
-  class: 'relative w-full flex flex-grow items-center justify-center bg-white',
+  class: 'relative w-full flex flex-grow items-center justify-center bg-white is-resizing:pointer-events-none',
 }) %}
 
 <div {{ html_attributes(attributes) }}>

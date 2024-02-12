@@ -24,4 +24,12 @@ export default class ResizableCursor extends withDrag(Base)<ResizableCursorProps
       },
     },
   };
+
+  onPointerdown() {
+    document.documentElement.classList.add('is-resizing');
+  }
+
+  onPointerup() {
+    document.documentElement.classList.remove('is-resizing');
+  }
 }
