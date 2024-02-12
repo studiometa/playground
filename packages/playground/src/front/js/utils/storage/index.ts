@@ -6,11 +6,11 @@ import { ZipStorage } from './ZipStorage.js';
 
 export const urlSearchStore = new URLStorage(
   new URLSearchParams(window.location.hash.slice(1)),
-'search'
+  'search',
 );
 export const urlHashStore = new URLStorage(
   new URLSearchParams(window.location.hash.slice(1)),
-'hash'
+  'hash',
 );
 export const urlStore = urlHashStore;
 export const zipUrlStore = new ZipStorage(urlStore);

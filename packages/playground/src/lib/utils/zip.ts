@@ -3,7 +3,6 @@ import { zlibSync, unzlibSync, strToU8, strFromU8 } from 'fflate';
 
 /**
  * Zip a string.
- *
  * @param   {string} data The string to compress.
  * @returns {string}      The compressed version of the given string.
  */
@@ -16,7 +15,6 @@ export function zip(data: string): string {
 
 /**
  * Unzip a string.
- *
  * @param   {string} data The string to decompress.
  * @returns {string}      The decompressed version of the given string.
  */

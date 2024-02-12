@@ -27,7 +27,7 @@
         data_option_top: 'hidden',
         data_option_right: 'left-0',
         data_option_bottom: 'hidden',
-        data_option_left: 'right-0',
+        data_option_left: 'right-0'
       }
     } %}
     {% include './resizable/cursor-y.twig' with {
@@ -37,22 +37,24 @@
         data_option_top: 'bottom-0',
         data_option_right: 'hidden',
         data_option_bottom: 'top-0',
-        data_option_left: 'hidden',
+        data_option_left: 'hidden'
       }
     } %}
 
     {# BEGIN HTML editor #}
-    {% embed './editors/html.twig' with {
-      components: ['LayoutReactive', 'ResizableSync'],
-      attr: {
-        data_option_top: 'w-1/3 h-full',
-        data_option_right: 'w-full h-1/3',
-        data_option_bottom: 'w-1/3 h-full',
-        data_option_left: 'w-full h-1/3',
-        class: 'flex-grow w-1/3',
-        data_lang: 'text/html',
+    {% embed './editors/html.twig'
+      with {
+        components: ['LayoutReactive', 'ResizableSync'],
+        attr: {
+          data_option_top: 'w-1/3 h-full',
+          data_option_right: 'w-full h-1/3',
+          data_option_bottom: 'w-1/3 h-full',
+          data_option_left: 'w-full h-1/3',
+          class: 'flex-grow w-1/3',
+          data_lang: 'text/html'
+        }
       }
-    } %}
+    %}
       {% block before_end %}
         {% include './resizable/cursor-x.twig' with {
           components: ['LayoutReactive'],
@@ -60,7 +62,7 @@
             data_option_top: 'absolute top-0 left-full',
             data_option_right: 'hidden',
             data_option_bottom: 'absolute bottom-0 left-full',
-            data_option_left: 'hidden',
+            data_option_left: 'hidden'
           }
         } %}
         {% include './resizable/cursor-y.twig' with {
@@ -69,26 +71,27 @@
             data_option_top: 'hidden',
             data_option_right: 'absolute top-full right-0',
             data_option_bottom: 'hidden',
-            data_option_left: 'absolute top-full left-0',
+            data_option_left: 'absolute top-full left-0'
           }
         } %}
       {% endblock %}
     {% endembed %}
     {# END HTML editor #}
 
-
     {# BEGIN Style editor #}
-    {% embed './editors/style.twig' with {
-      components: ['LayoutReactive', 'ResizableSync'],
-      attr: {
-        data_option_top: 'w-1/3 h-full',
-        data_option_right: 'w-full h-1/3',
-        data_option_bottom: 'w-1/3 h-full',
-        data_option_left: 'w-full h-1/3',
-        class: 'flex-grow w-1/3 h-full',
-        data_lang: 'text/css',
+    {% embed './editors/style.twig'
+      with {
+        components: ['LayoutReactive', 'ResizableSync'],
+        attr: {
+          data_option_top: 'w-1/3 h-full',
+          data_option_right: 'w-full h-1/3',
+          data_option_bottom: 'w-1/3 h-full',
+          data_option_left: 'w-full h-1/3',
+          class: 'flex-grow w-1/3 h-full',
+          data_lang: 'text/css'
+        }
       }
-    } %}
+    %}
       {% block before_end %}
         {% include './resizable/cursor-x.twig' with {
           components: ['LayoutReactive'],
@@ -96,7 +99,7 @@
             data_option_top: 'absolute top-0 left-full',
             data_option_right: 'hidden',
             data_option_bottom: 'absolute bottom-0 left-full',
-            data_option_left: 'hidden',
+            data_option_left: 'hidden'
           }
         } %}
         {% include './resizable/cursor-y.twig' with {
@@ -105,7 +108,7 @@
             data_option_top: 'hidden',
             data_option_right: 'absolute top-full right-0',
             data_option_bottom: 'hidden',
-            data_option_left: 'absolute top-full left-0',
+            data_option_left: 'absolute top-full left-0'
           }
         } %}
       {% endblock %}
@@ -121,7 +124,7 @@
         data_option_bottom: 'w-1/3 h-full',
         data_option_left: 'w-full h-1/3',
         class: 'flex-grow w-1/3 h-full',
-        data_lang: 'text/javascript',
+        data_lang: 'text/javascript'
       }
     } %}
     {# END Script editor #}

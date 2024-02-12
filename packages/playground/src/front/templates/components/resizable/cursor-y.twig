@@ -11,11 +11,17 @@
  */
 #}
 
-{% set attributes = merge_html_attributes(attr, {}, {
-  data_component: ['ResizableCursor']|merge(components ?? [])|join(' '),
-  data_option_axis: 'y',
-  class: 'z-10 flex-grow flex items-center justify-center gap-1 w-full h-2 bg-zinc-100 dark:bg-zinc-700 cursor-row-resize'
-}) %}
+{% set attributes =
+  merge_html_attributes(
+    attr,
+    {},
+    {
+      data_component: ['ResizableCursor']|merge(components ?? [])|join(' '),
+      data_option_axis: 'y',
+      class: 'z-10 flex-grow flex items-center justify-center gap-1 w-full h-2 bg-zinc-100 dark:bg-zinc-700 cursor-row-resize'
+    }
+  )
+%}
 
 <div {{ html_attributes(attributes) }}>
   <div class="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-900"></div>

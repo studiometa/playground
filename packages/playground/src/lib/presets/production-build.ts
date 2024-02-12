@@ -1,4 +1,3 @@
-import { resolve } from 'node:path';
 import type { Preset } from '@studiometa/webpack-config';
 
 /**

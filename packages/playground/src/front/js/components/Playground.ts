@@ -11,11 +11,7 @@ import type Iframe from './Iframe.js';
 import type Resizable from './Resizable.js';
 import type ScriptEditor from './ScriptEditor.js';
 import type StyleEditor from './StyleEditor.js';
-import {
-  layoutUpdateDOM,
-  themeUpdateDOM,
-  headerUpdateDOM,
-} from '../store/index.js';
+import { layoutUpdateDOM, themeUpdateDOM, headerUpdateDOM } from '../store/index.js';
 import { urlStore } from '../utils/storage/index.js';
 import { setDefaults } from '../store/config.js';
 
@@ -41,9 +37,9 @@ export interface PlaygroundProps extends BaseProps {
     styleVisibility: HTMLInputElement;
   };
   $options: {
-    html: string,
-    style: string,
-    script: string,
+    html: string;
+    style: string;
+    script: string;
   };
 }
 
@@ -61,18 +57,12 @@ export class Playground extends Base<PlaygroundProps> {
       LayoutSwitcher,
       ThemeSwitcher,
       HeaderSwitcher,
-      Iframe: async () =>
-        wait(100).then(() => import('./Iframe.js')),
-      Resizable: async () =>
-        wait(100).then(() => import('./Resizable.js')),
-      Editors: async () =>
-        wait(100).then(() => import('./Editors.js')),
-      HtmlEditor: async () =>
-        wait(100).then(() => import('./HtmlEditor.js')),
-      ScriptEditor: async () =>
-        wait(100).then(() => import('./ScriptEditor.js')),
-      StyleEditor: async () =>
-        wait(100).then(() => import('./StyleEditor.js')),
+      Iframe: async () => wait(100).then(() => import('./Iframe.js')),
+      Resizable: async () => wait(100).then(() => import('./Resizable.js')),
+      Editors: async () => wait(100).then(() => import('./Editors.js')),
+      HtmlEditor: async () => wait(100).then(() => import('./HtmlEditor.js')),
+      ScriptEditor: async () => wait(100).then(() => import('./ScriptEditor.js')),
+      StyleEditor: async () => wait(100).then(() => import('./StyleEditor.js')),
     },
   };
 
@@ -108,8 +98,7 @@ export class Playground extends Base<PlaygroundProps> {
     this.$refs.styleVisibility.checked =
       !urlStore.has('style-editor') || urlStore.get('style-editor') === 'true';
     this.$refs.scriptVisibility.checked =
-      !urlStore.has('script-editor') ||
-      urlStore.get('script-editor') === 'true';
+      !urlStore.has('script-editor') || urlStore.get('script-editor') === 'true';
     const [htmlEditor, scriptEditor, styleEditor] = await Promise.all([
       this.htmlEditor,
       this.scriptEditor,

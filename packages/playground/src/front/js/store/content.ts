@@ -1,4 +1,3 @@
-import { historyReplace } from '@studiometa/js-toolkit/utils';
 import { zipUrlStore as store } from '../utils/storage/index.js';
 import {
   getDefaultHtml,

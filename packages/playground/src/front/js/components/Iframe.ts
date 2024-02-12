@@ -16,8 +16,8 @@ export interface IframeProps extends BaseProps {
   };
   $options: {
     tailwindcss: boolean;
-    importMap: Record<string, string>
-  }
+    importMap: Record<string, string>;
+  };
 }
 
 /**
@@ -74,8 +74,10 @@ export default class Iframe extends Base<IframeProps> {
   async initIframe() {
     this.$refs.iframe.classList.add('opacity-0');
     // Enable dev mode in render
+    /* eslint-disable no-underscore-dangle */
     // @ts-ignore
     this.window.__DEV__ = true;
+    /* eslint-enable no-underscore-dangle */
 
     this.doc.documentElement.innerHTML = `
 <head>
@@ -204,7 +206,8 @@ export default class Iframe extends Base<IframeProps> {
       const results = await esbuild.transform(newScript, {
         target: 'es2020',
       });
-      clone.textContent = newScript;
+      console.log(results.warnings);
+      clone.textContent = results.code;
       // @ts-ignore
       this.window.script.replaceWith(clone);
       console.log('script updated!');
@@ -212,9 +215,7 @@ export default class Iframe extends Base<IframeProps> {
       console.log('script not updated due to some errors:');
       if (isArray(err.errors)) {
         for (const error of err.errors) {
-          console.error(
-            `${error.text} (${error.location.line}:${error.location.column})`
-          );
+          console.error(`${error.text} (${error.location.line}:${error.location.column})`);
         }
       } else {
         console.error(err);

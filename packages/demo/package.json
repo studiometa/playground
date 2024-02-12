@@ -1,18 +1,18 @@
 {
-	"name": "@studiometa/playground-demo",
-	"version": "0.0.0",
-	"type": "module",
-	"private": true,
-	"scripts": {
-		"dev": "meta dev",
-		"build": "meta build",
-		"prepreview": "npm run build",
-		"preview": "http-server dist -o"
-	},
-	"dependencies": {
-		"@studiometa/playground": "*"
-	},
-	"devDependencies": {
-		"http-server": "^14.1.1"
-	}
+  "name": "@studiometa/playground-demo",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "meta dev",
+    "build": "meta build",
+    "prepreview": "npm run build",
+    "preview": "http-server dist -o"
+  },
+  "dependencies": {
+    "@studiometa/playground": "*"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
 }

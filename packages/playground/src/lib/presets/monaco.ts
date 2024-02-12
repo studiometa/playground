@@ -18,7 +18,7 @@ export function monacoPreset(): Preset {
         webpackConfig.plugins.push(
           new MonacoWebpackPlugin({
             filename: '[name].worker.[contenthash].js',
-          })
+          }),
         );
       });
     },

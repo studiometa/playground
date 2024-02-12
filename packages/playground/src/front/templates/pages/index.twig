@@ -1,23 +1,39 @@
 {% extends '@pkg-layouts/default.twig' %}
 
-{% set html_attr = merge_html_attributes(html_attr ?? null, {}, {
-  class: 'fixed inset-0'
-}) %}
+{% set html_attr =
+  merge_html_attributes(
+    html_attr ?? null,
+    {},
+    {
+      class: 'fixed inset-0'
+    }
+  )
+%}
 
 {% set defaults = defaults ?? {} %}
 
-{% set body_attr = merge_html_attributes(body_attr ?? null, {}, {
-  class: 'fixed inset-0 group dark:bg-zinc-900 dark:text-white',
-  data_option_html: defaults.html ?? '',
-  data_option_style: defaults.style ?? '',
-  data_option_script: defaults.script ?? '',
-}) %}
+{% set body_attr =
+  merge_html_attributes(
+    body_attr ?? null,
+    {},
+    {
+      class: 'fixed inset-0 group dark:bg-zinc-900 dark:text-white',
+      data_option_html: defaults.html ?? '',
+      data_option_style: defaults.style ?? '',
+      data_option_script: defaults.script ?? ''
+    }
+  )
+%}
 
 {% set default_header_title %}
   <span class="font-bold">Playground</span>
 {% endset %}
 
-{% set header = { title: default_header_title }|merge(header ?? {}) %}
+{% set header =
+  {
+    title: default_header_title
+  }|merge(header ?? {})
+%}
 
 {% block body %}
   <div class="fixed top-0 left-0 w-full h-full">

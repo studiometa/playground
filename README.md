@@ -21,11 +21,10 @@ Create the following files:
 **meta.config.js**
 
 ```js
-import { defineConfig } from '@studiometa/webpack-config';
-import { playgroundPreset } from '@studiometa/playground/preset';
+import { playgroundPreset, defineWebpackConfig } from '@studiometa/playground/preset';
 
-export default defineConfig({
-	presets: [playgroundPreset()],
+export default defineWebpackConfig({
+  presets: [playgroundPreset()],
 });
 ```
 
@@ -44,5 +43,3 @@ And then run `npx meta dev` and open `http://localhost:3000`.
 You can configure the playground by passing a configuration object to the `playgroundPreset` function. Have a look at [the demo](https://github.com/studiometa/playground/blob/main/packages/demo/meta.config.js) for all available options.
 
 When you are ready, run `npx meta build` and you can deploy the generated `dist/` folder to any static hosting of your choice.
-
-

@@ -43,12 +43,7 @@ export default class Resizable extends Base<ResizableProps> {
     this.$emit('dragged', props);
   }
 
-  resize(
-    mode: DragServiceProps['mode'],
-    axis: 'x' | 'y',
-    distance: DragServiceProps['distance'],
-    resizableCursor: ResizableCursor,
-  ) {
+  resize(mode: DragServiceProps['mode'], axis: 'x' | 'y', distance: DragServiceProps['distance']) {
     if (layoutIs('right') || layoutIs('bottom')) {
       distance.x *= -1;
       distance.y *= -1;

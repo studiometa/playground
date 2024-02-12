@@ -1,10 +1,9 @@
-import { resolve, join, dirname } from 'node:path';
-import { createRequire } from 'node:module';
+import { resolve, dirname } from 'node:path';
 import plugin from 'tailwindcss/plugin.js';
 
 function resolveGlob(glob) {
   const root = dirname(require.resolve('@studiometa/playground'));
-  return resolve( root, 'front', glob);
+  return resolve(root, 'front', glob);
 }
 
 export function tailwindConfig() {

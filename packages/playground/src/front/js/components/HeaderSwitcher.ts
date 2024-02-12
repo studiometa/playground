@@ -1,7 +1,7 @@
 import { Base } from '@studiometa/js-toolkit';
 import type { BaseConfig, BaseProps } from '@studiometa/js-toolkit';
 import { domScheduler } from '@studiometa/js-toolkit/utils';
-import { setHeaderVisibility, getHeaderVisibility, headerIsVisible } from '../store/header.js';
+import { setHeaderVisibility, headerIsVisible } from '../store/header.js';
 
 export interface HeaderSwitcherProps extends BaseProps {
   $refs: {

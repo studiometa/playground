@@ -23,17 +23,15 @@ export class PlaygroundLoadersPlugin {
 
   apply(compiler: Compiler) {
     const virtualModulesConfig = {};
-    const defaultLoader =
-      'export default async function loader(value) { return value };';
+    const defaultLoader = 'export default async function loader(value) { return value };';
 
     for (const loaderName of this.loaderNames) {
       const loaderContent =
         this.loaders && this.loaders[loaderName] && existsSync(this.loaders[loaderName])
           ? readFileSync(this.loaders[loaderName])
           : defaultLoader;
-      virtualModulesConfig[
-        `node_modules/@studiometa/playground/${loaderName}-loader.js`
-      ] = loaderContent;
+      virtualModulesConfig[`node_modules/@studiometa/playground/${loaderName}-loader.js`] =
+        loaderContent;
     }
 
     const virtualModules = new VirtualModulesPlugin(virtualModulesConfig);

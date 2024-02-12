@@ -10,11 +10,7 @@
  */
 #}
 
-<header
-  class="
-    z-10 absolute top-0 hidden has-header:flex items-center gap-2 sm:gap-4 w-full h-12
-    p-4 leading-4 bg-zinc-100 dark:bg-zinc-800 text-sm dark:text-zinc-100 dark:border-b-zinc-700
-  ">
+<header class="z-10 absolute top-0 hidden has-header:flex items-center gap-2 sm:gap-4 w-full h-12 p-4 leading-4 bg-zinc-100 dark:bg-zinc-800 text-sm dark:text-zinc-100 dark:border-b-zinc-700">
   {% if title is not empty %}
     <div class="flex items-center gap-2 sm:gap-4">
       {{ title }}
@@ -26,45 +22,47 @@
         {
           label: 'HTML',
           attr: {
-            for: 'html-editor',
+            for: 'html-editor'
           },
           input_attr: {
             data_ref: 'htmlVisibility',
             name: 'html-editor',
             id: 'html-editor',
-            checked: true,
+            checked: true
           }
         },
         {
           label: 'CSS',
           attr: {
-            for: 'style-editor',
+            for: 'style-editor'
           },
           input_attr: {
             data_ref: 'styleVisibility',
             name: 'style-editor',
             id: 'style-editor',
-            checked: true,
+            checked: true
           }
         },
         {
           label: 'JS',
           attr: {
-            for: 'script-editor',
+            for: 'script-editor'
           },
           input_attr: {
             data_ref: 'scriptVisibility',
             name: 'script-editor',
             id: 'script-editor',
-            checked: true,
+            checked: true
           }
-        },
+        }
       ]
     } %}
   </div>
 
   <div data-component="LayoutSwitcher" class="flex items-center">
-    <div class="sr-only">Layout</div>
+    <div class="sr-only">
+      Layout
+    </div>
     {% set top_label %}
       <div class="relative inline-block w-3 h-3 border-2 border-black dark:border-white border-solid">
         <span class="sr-only">Top</span>
@@ -94,57 +92,59 @@
         {
           label: top_label,
           attr: {
-            for: 'layout-top',
+            for: 'layout-top'
           },
           input_attr: {
             data_ref: 'inputs[]',
             name: 'layout',
             id: 'layout-top',
-            value: 'top',
+            value: 'top'
           }
         },
         {
           label: right_label,
           attr: {
-            for: 'layout-right',
+            for: 'layout-right'
           },
           input_attr: {
             data_ref: 'inputs[]',
             name: 'layout',
             id: 'layout-right',
-            value: 'right',
+            value: 'right'
           }
         },
         {
           label: bottom_label,
           attr: {
-            for: 'layout-bottom',
+            for: 'layout-bottom'
           },
           input_attr: {
             data_ref: 'inputs[]',
             name: 'layout',
             id: 'layout-bottom',
-            value: 'bottom',
+            value: 'bottom'
           }
         },
         {
           label: left_label,
           attr: {
-            for: 'layout-left',
+            for: 'layout-left'
           },
           input_attr: {
             data_ref: 'inputs[]',
             name: 'layout',
             id: 'layout-left',
-            value: 'left',
+            value: 'left'
           }
         }
-      ],
+      ]
     } %}
   </div>
 
   <div data-component="ThemeSwitcher" class="flex">
-    <div class="sr-only">Theme</div>
+    <div class="sr-only">
+      Theme
+    </div>
     {% set light_label %}
       <div class="relative w-3 h-3 border-2 border-black dark:border-white border-solid rounded-full">
         <span class="sr-only">Light</span>
@@ -167,7 +167,7 @@
             data_ref: 'inputs[]',
             name: 'theme',
             id: 'theme-light',
-            value: 'light',
+            value: 'light'
           }
         },
         {
@@ -180,10 +180,10 @@
             data_ref: 'inputs[]',
             name: 'theme',
             id: 'theme-dark',
-            value: 'dark',
+            value: 'dark'
           }
         }
-      ],
+      ]
     } %}
   </div>
 </header>

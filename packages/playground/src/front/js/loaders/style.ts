@@ -1,3 +1,3 @@
 export default async function styleLoader(value) {
-	return value;
+  return value;
 }

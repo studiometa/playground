@@ -57,16 +57,14 @@ export interface PlaygroundPresetOptions {
   loaders: PlaygroundLoadersOptions;
   tailwindcss: boolean;
   syncColorScheme: boolean;
-  html_attr: any;
-  body_attr: any;
+  html_attr: Record<string, unknown>;
+  body_attr: Record<string, unknown>;
 }
 
 /**
  * Preset to build the playground.
  */
-export function playgroundPreset(
-  options?: PartialDeep<PlaygroundPresetOptions>
-): Preset {
+export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>): Preset {
   return {
     name: 'playground-preset',
     async handler(config, context) {
@@ -92,18 +90,15 @@ export function playgroundPreset(
         };
 
         if (!isDefined(webpackConfig.entry['js/app'])) {
-          webpackConfig.entry['js/app'] =
-            '@studiometa/playground/dist/front/js/app.js';
+          webpackConfig.entry['js/app'] = '@studiometa/playground/dist/front/js/app.js';
         }
 
         if (!isDefined(webpackConfig.entry['css/app'])) {
-          webpackConfig.entry['css/app'] =
-            '@studiometa/playground/dist/front/css/app.css';
+          webpackConfig.entry['css/app'] = '@studiometa/playground/dist/front/css/app.css';
         }
       });
 
-      const { handler: scriptTypeModuleHandler } =
-        htmlWebpackScriptTypeModulePreset();
+      const { handler: scriptTypeModuleHandler } = htmlWebpackScriptTypeModulePreset();
       await scriptTypeModuleHandler(config, context);
 
       await monacoPreset().handler(config, context);

@@ -1,15 +1,14 @@
 import { resolve } from 'node:path';
 import glob from 'fast-glob';
-import esbuild from 'esbuild';
+import esbuild from 'esbuild-wasm';
 
 const root = resolve(import.meta.dirname, '..');
 
 function getOptions() {
   return {
-    entryPoints: glob.globSync(
-      ['src/**/*.ts', 'src/**/*.css', 'src/**/*.twig', 'src/**/*.json'],
-      { cwd: root }
-    ),
+    entryPoints: glob.globSync(['src/**/*.ts', 'src/**/*.css', 'src/**/*.twig', 'src/**/*.json'], {
+      cwd: root,
+    }),
     write: true,
     outdir: resolve(root, 'dist'),
     target: 'esnext',

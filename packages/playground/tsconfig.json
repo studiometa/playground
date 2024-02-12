@@ -17,7 +17,5 @@
       "@studiometa/playground/script-loader.js": ["./src/front/js/loaders/script.js"]
     }
   },
-  "include": [
-    "src/**/*.ts"
-  ]
+  "include": ["src/**/*.ts"]
 }
