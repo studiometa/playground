@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## v0.0.1 - 2024.02.12
+
+### Changed
+
+- Improve publish action ([ec9bb1d](https://github.com/studiometa/playground/commit/ec9bb1d))
+
 ## v0.0.0 - 2024.02.12
 
 First release 🎉
