@@ -2,6 +2,12 @@
   "name": "@studiometa/playground",
   "version": "0.0.0",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist/"
+  ],
   "exports": {
     ".": "./dist/index.js",
     "./preset": "./dist/preset.js",
