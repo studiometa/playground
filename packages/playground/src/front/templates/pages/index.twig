@@ -1,23 +1,23 @@
 {% extends '@pkg-layouts/default.twig' %}
 
-{% set html_attr = {
+{% set html_attr = merge_html_attributes(html_attr ?? null, {}, {
   class: 'fixed inset-0'
-} %}
+}) %}
 
-{% set body_attr = {
+{% set body_attr = merge_html_attributes(body_attr ?? null, {}, {
   class: 'fixed inset-0 group dark:bg-zinc-900 dark:text-white',
-} %}
+}) %}
+
+{% set default_header_title %}
+  <span class="font-bold">Playground</span>
+{% endset %}
+
+{% set header = { title: default_header_title }|merge(header ?? {}) %}
 
 {% block body %}
   <div class="fixed top-0 left-0 w-full h-full">
     {% include '../components/header-switcher.twig' %}
-    {% embed '../components/header.twig' with { version } %}
-      {% block title %}
-        <span class="font-bold">
-          {{ header_title ?? 'Playground' }}
-        </span>
-      {% endblock %}
-    {% endembed %}
+    {% include '../components/header.twig' with header %}
     {% include '../components/main.twig' %}
   </div>
 {% endblock %}

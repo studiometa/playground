@@ -6,7 +6,7 @@
  * @description
  *   Main header of the playground.
  *
- * @param {string} $version The version of the package.
+ * @param {string} $title The title of the page.
  */
 #}
 
@@ -16,12 +16,7 @@
     p-4 leading-4 bg-zinc-100 dark:bg-zinc-800 text-sm dark:text-zinc-100 dark:border-b-zinc-700
   ">
   <div class="flex items-center gap-2 sm:gap-4">
-    {% block title %}
-      <span class="font-bold">Playground</span>
-    {% endblock %}
-    {# <span class="py-1 px-2 rounded bg-zinc-200 dark:bg-zinc-900 dark:bg-opacity-50">
-      <span class="text-xs">v{{ version }}</span>
-    </span> #}
+    {{ title }}
   </div>
   <div class="flex items-center">
     {% include './checkbox-group.twig' with {

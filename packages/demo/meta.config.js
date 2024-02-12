@@ -2,6 +2,14 @@ import { defineConfig } from '@studiometa/webpack-config';
 import { playgroundPreset } from '@studiometa/playground/preset';
 
 export default defineConfig({
-	// @todo add options for Twig context to the preset
-	presets: [playgroundPreset()],
+	presets: [
+		playgroundPreset({
+			head: {
+				title: 'Playground demo',
+			},
+			header: {
+				title: '<span class="font-bold">Playground demo</span>',
+			},
+		}),
+	],
 });

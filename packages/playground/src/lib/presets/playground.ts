@@ -7,20 +7,61 @@ import { htmlWebpackScriptTypeModulePreset } from './html-webpack-script-type-mo
 import { monacoPreset } from './monaco.js';
 import { productionBuildPreset } from './production-build.js';
 
+export interface HTMLElementAttributes {
+  [name: string]: unknown;
+}
+
+export interface HTMLMetaElementAttributes extends HTMLElementAttributes {
+  content?: string;
+  httpEquiv?: string;
+  media?: string;
+  name?: string;
+  scheme?: string;
+}
+
+export interface HTMLLinkElementAttributes extends HTMLElementAttributes {
+  as?: string;
+  crossorigin?: string | null;
+  disabled?: boolean;
+  fetchpriority?: 'high' | 'low' | 'auto';
+  href?: string;
+  hreflang?: string;
+  imagesizes?: string;
+  imagesrcset?: string;
+  integrity?: string;
+  media?: string;
+  referrerpolicy?: string;
+  rel?: string;
+  sizes?: string;
+  title?: string;
+  type?: string;
+}
+
+export interface PlaygroundPresetOptions {
+  head?: {
+    title?: string;
+    description?: string;
+    link?: HTMLLinkElementAttributes[];
+    meta?: HTMLMetaElementAttributes[];
+  };
+  html_attr: any;
+  body_attr: any;
+  header_title: string;
+}
+
 /**
  * Preset to build the playground.
  */
-export function playgroundPreset(): Preset {
+export function playgroundPreset(options?: PlaygroundPresetOptions): Preset {
+
   return {
     name: 'playground-preset',
     async handler(config, context) {
       const { handler: prototypingHandler } = prototyping({
         twig: {
+          data: options,
           namespaces: {
-            'playground': resolve(
-              import.meta.dirname,
-              '../../front/templates/pages/'
-            ),
+            playground: resolve(import.meta.dirname, '../../front/templates/'),
           },
         },
       });
