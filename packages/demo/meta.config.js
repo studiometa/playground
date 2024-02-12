@@ -20,16 +20,23 @@ export default defineConfig({
 				html: resolve('./html-loader.js'),
 			},
 			defaults: {
-				html: '<h1>hello world</h1>',
+				html: '<h1>hello world</h1>\n<pre data-ref="performance">0</pre>',
 				style: `body {
+  min-height: 100vh;
   background: lightgreen;
+  user-select: none;
 }`,
 				script: `import { Base, createApp } from '@studiometa/js-toolkit';
 
 class App extends Base {
 	static config = {
 		name: 'App',
+		refs: ['performance']
 	};
+
+	onClick() {
+		this.$refs.performance.textContent = performance.now();
+	}
 }
 
 createApp(App);`

@@ -6,6 +6,7 @@
 	"scripts": {
 		"dev": "meta dev",
 		"build": "meta build",
+		"prepreview": "npm run build",
 		"preview": "http-server dist -o"
 	},
 	"dependencies": {
