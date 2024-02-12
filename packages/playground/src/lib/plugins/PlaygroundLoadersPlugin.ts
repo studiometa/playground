@@ -32,7 +32,7 @@ export class PlaygroundLoadersPlugin {
           ? readFileSync(this.loaders[loaderName])
           : defaultLoader;
       virtualModulesConfig[
-        `node_modules/@studiometa/playground/${loaderName}-loader`
+        `node_modules/@studiometa/playground/${loaderName}-loader.js`
       ] = loaderContent;
     }
 

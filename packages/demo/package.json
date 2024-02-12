@@ -5,9 +5,13 @@
 	"private": true,
 	"scripts": {
 		"dev": "meta dev",
-		"build": "meta build"
+		"build": "meta build",
+		"preview": "http-server dist -o"
 	},
 	"dependencies": {
 		"@studiometa/playground": "*"
+	},
+	"devDependencies": {
+		"http-server": "^14.1.1"
 	}
 }

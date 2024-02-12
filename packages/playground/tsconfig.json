@@ -10,7 +10,12 @@
     "noImplicitThis": true,
     "esModuleInterop": true,
     "moduleResolution": "bundler",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@studiometa/playground/html-loader.js": ["./src/front/js/loaders/html.js"],
+      "@studiometa/playground/style-loader.js": ["./src/front/js/loaders/style.js"],
+      "@studiometa/playground/script-loader.js": ["./src/front/js/loaders/script.js"]
+    }
   },
   "include": [
     "src/**/*.ts"

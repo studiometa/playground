@@ -1,8 +1,8 @@
 import { isString } from '@studiometa/js-toolkit/utils';
 import type { PartialDeep } from 'type-fest';
-import htmlLoader from '@studiometa/playground/html-loader';
-import styleLoader from '@studiometa/playground/style-loader';
-import scriptLoader from '@studiometa/playground/script-loader';
+import htmlLoader from '@studiometa/playground/html-loader.js';
+import styleLoader from '@studiometa/playground/style-loader.js';
+import scriptLoader from '@studiometa/playground/script-loader.js';
 
 export type PlaygroundLoader = (content: string) => string | Promise<string>;
 
