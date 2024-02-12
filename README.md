@@ -1,6 +1,10 @@
 # @studiometa/playground
 
-> An online small code editor for shareable demo.
+[![NPM Version](https://img.shields.io/npm/v/@studiometa/playground.svg?style=flat-square)](https://www.npmjs.com/package/@studiometa/playground/)
+
+A packaged small code editor for shareable demo, deploy it in seconds.
+
+![Screenshots of the playground in light and dark mode](https://raw.githubusercontent.com/studiometa/playground/main/static/screenshots.png)
 
 ## Usage
 
@@ -37,8 +41,6 @@ export default tailwindConfig();
 ```
 
 And then run `npx meta dev` and open `http://localhost:3000`.
-
-![Screenshot of the playground](https://raw.githubusercontent.com/studiometa/playground/main/static/screenshot.png)
 
 You can configure the playground by passing a configuration object to the `playgroundPreset` function. Have a look at [the demo](https://github.com/studiometa/playground/blob/main/packages/demo/meta.config.js) for all available options.
 
