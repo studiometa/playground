@@ -1,28 +1,27 @@
 import { historyReplace } from '@studiometa/js-toolkit/utils';
 import { zipUrlStore as store } from '../utils/storage/index.js';
+import { getDefaultHtml, getDefaultScript, getDefaultStyle } from './config.js';
 
-export function getScript() {
-  return store.get('script') ?? '';
+export async function getScript() {
+  return store.get('script') ?? await getDefaultScript();
 }
 
-export function setScript(value) {
+export function setScript(value: string) {
   store.set('script', value);
 }
 
-export function getHtml() {
-  return store.get('html') ?? '';
+export async function getHtml() {
+  return store.get('html') ?? await getDefaultHtml();
 }
 
-export function setHtml(value) {
+export function setHtml(value: string) {
   store.set('html', value);
 }
 
-export function getStyle() {
-  return (
-    store.get('style') ?? ''
-  );
+export async function getStyle() {
+  return store.get('style') ?? await getDefaultStyle();
 }
 
-export function setStyle(value) {
+export function setStyle(value: string) {
   store.set('style', value);
 }

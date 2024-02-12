@@ -6,7 +6,7 @@ export default class HtmlEditor extends Editor {
     return 'html';
   }
 
-  get initialValue(): string {
+  async getInitialValue() {
     return getHtml();
   }
 

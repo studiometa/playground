@@ -6,7 +6,7 @@ export default class ScriptEditor extends Editor {
     return 'javascript';
   }
 
-  get initialValue(): string {
+  async getInitialValue() {
     return getScript();
   }
 

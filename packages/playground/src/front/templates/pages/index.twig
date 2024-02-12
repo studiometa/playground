@@ -4,8 +4,13 @@
   class: 'fixed inset-0'
 }) %}
 
+{% set defaults = defaults ?? {} %}
+
 {% set body_attr = merge_html_attributes(body_attr ?? null, {}, {
   class: 'fixed inset-0 group dark:bg-zinc-900 dark:text-white',
+  data_option_html: defaults.html ?? '',
+  data_option_style: defaults.style ?? '',
+  data_option_script: defaults.script ?? '',
 }) %}
 
 {% set default_header_title %}

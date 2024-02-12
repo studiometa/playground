@@ -17,6 +17,7 @@ import {
   headerUpdateDOM,
 } from '../store/index.js';
 import { urlStore } from '../utils/storage/index.js';
+import { setDefaults } from '../store/config.js';
 
 layoutUpdateDOM();
 themeUpdateDOM();
@@ -39,12 +40,22 @@ export interface PlaygroundProps extends BaseProps {
     scriptVisibility: HTMLInputElement;
     styleVisibility: HTMLInputElement;
   };
+  $options: {
+    html: string,
+    style: string,
+    script: string,
+  };
 }
 
 export class Playground extends Base<PlaygroundProps> {
   static config: BaseConfig = {
     name: 'Playground',
     refs: ['htmlVisibility', 'scriptVisibility', 'styleVisibility'],
+    options: {
+      html: String,
+      style: String,
+      script: String,
+    },
     components: {
       LayoutReactive,
       LayoutSwitcher,
@@ -64,12 +75,6 @@ export class Playground extends Base<PlaygroundProps> {
         wait(100).then(() => import('./StyleEditor.js')),
     },
   };
-
-  static options;
-
-  static setOptions(options) {
-    Playground.options = options;
-  }
 
   get iframe() {
     return this.$children.Iframe[0];
@@ -92,6 +97,12 @@ export class Playground extends Base<PlaygroundProps> {
   }
 
   async mounted() {
+    setDefaults({
+      html: this.$options.html,
+      script: this.$options.script,
+      style: this.$options.style,
+    });
+
     this.$refs.htmlVisibility.checked =
       !urlStore.has('html-editor') || urlStore.get('html-editor') === 'true';
     this.$refs.styleVisibility.checked =

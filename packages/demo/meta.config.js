@@ -10,6 +10,10 @@ export default defineConfig({
 			header: {
 				title: '<span class="font-bold">Playground demo</span>',
 			},
+			defaults: {
+				html: 'hello world',
+				style: 'body {\n\tbackground: #eee;\n}',
+			},
 		}),
 	],
 });

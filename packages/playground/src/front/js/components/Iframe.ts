@@ -74,7 +74,7 @@ export default class Iframe extends Base<IframeProps> {
     // Add Tailwind CDN
     // await this.initTailwind();
 
-    const html = getHtml();
+    const html = await getHtml();
     if (html) {
       this.doc.body.innerHTML = html;
     }
@@ -147,7 +147,7 @@ export default class Iframe extends Base<IframeProps> {
   async updateHtml() {
     console.log('updating html...');
     await nextTick();
-    const html = getHtml();
+    const html = await getHtml();
     if (html !== this.doc.body.innerHTML) {
       this.doc.body.innerHTML = html;
     }
@@ -159,7 +159,7 @@ export default class Iframe extends Base<IframeProps> {
   async updateStyle() {
     console.log('updating style...');
     await nextTick();
-    const style = getStyle();
+    const style = await getStyle();
     if (style) {
       const clone = this.style.cloneNode() as HTMLStyleElement;
       clone.textContent = style;
@@ -179,7 +179,8 @@ export default class Iframe extends Base<IframeProps> {
     await nextTick();
 
     const clone = this.script.cloneNode() as HTMLScriptElement;
-    const newScript = `${getScript()}\ndocument.dispatchEvent(new Event("readystatechange"))`;
+    const newScriptContent = await getScript();
+    const newScript = `${newScriptContent}\ndocument.dispatchEvent(new Event("readystatechange"))`;
     try {
       await Iframe.esbuildPromise;
       const results = await esbuild.transform(newScript, {

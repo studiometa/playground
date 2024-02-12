@@ -6,7 +6,7 @@ export default class StyleEditor extends Editor {
     return 'css';
   }
 
-  get initialValue(): string {
+  async getInitialValue() {
     return getStyle();
   }
 

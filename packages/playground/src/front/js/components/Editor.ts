@@ -27,13 +27,6 @@ export default class Editor extends Base<EditorProps> {
   editor: editor.IStandaloneCodeEditor;
 
   /**
-   * Initial value for the editor.
-   */
-  get initialValue() {
-    return '';
-  }
-
-  /**
    * Language of the editor.
    */
   get language() {
@@ -42,9 +35,10 @@ export default class Editor extends Base<EditorProps> {
 
   async mounted() {
     const { addJsAutocompletion } = await import('../utils/js/index.js');
+    const value = await this.getInitialValue();
 
     this.editor = monaco.editor.create(this.$el, {
-      value: this.initialValue,
+      value,
       language: this.language,
       minimap: { enabled: false },
       automaticLayout: true,
@@ -79,6 +73,10 @@ export default class Editor extends Base<EditorProps> {
         this.$emit('content-change', this.editor.getValue());
       }, 500),
     );
+  }
+
+  async getInitialValue() {
+    return '';
   }
 
   show() {
