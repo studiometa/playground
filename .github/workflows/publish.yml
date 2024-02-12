@@ -1,0 +1,41 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.11'
+      - run: npm i
+      - run: npm run build
+      - run: |
+          VERSION=${GITHUB_REF/refs\/tags\//}
+          TAG='latest'
+          if [[ $VERSION =~ 'alpha' || $VERSION =~ 'beta' ]]; then
+            TAG='next'
+          fi
+          npm publish --tag $TAG --workspace @studiometa/playground
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+      - run: |
+          PRERELEASE=false
+          # Check release type
+          if [[ $GITHUB_REF_NAME =~ 'alpha' || $GITHUB_REF_NAME =~ 'beta' || $GITHUB_REF_NAME =~ 'rc' ]]; then
+            echo "This is a prerelease."
+            PRERELEASE=true
+          fi
+          echo "is_prerelease=$PRERELEASE" >> $GITHUB_ENV
+      - uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.ref }}
+          name: v${{ github.ref_name }}
+          body: Please refer to [CHANGELOG.md](https://github.com/studiometa/playground/blob/${{ github.ref_name }}/CHANGELOG.md) for details.
+          draft: false
+          prerelease: ${{ env.is_prerelease }}
