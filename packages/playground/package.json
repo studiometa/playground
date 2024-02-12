@@ -5,7 +5,7 @@
   "exports": {
     ".": "./dist/index.js",
     "./preset": "./dist/preset.js",
-    "./tailwind": "./tailwind.config.js",
+    "./tailwind": "./dist/tailwind.js",
     "./*": "./*"
   },
   "scripts": {
