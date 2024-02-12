@@ -11,6 +11,7 @@
     "build": "npm run build --workspace=@studiometa/playground",
     "watch": "npm run watch --workspace=@studiometa/playground",
     "demo:dev": "npm run dev --workspace=@studiometa/playground-demo",
+    "predemo:build": "npm run build",
     "demo:build": "npm run build --workspace=@studiometa/playground-demo",
     "demo:preview": "npm run preview --workspace=@studiometa/playground-demo",
     "lint": "npm run lint:scripts && npm run lint:styles && npm run lint:templates",
