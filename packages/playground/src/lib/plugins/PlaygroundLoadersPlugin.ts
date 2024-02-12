@@ -28,7 +28,7 @@ export class PlaygroundLoadersPlugin {
 
     for (const loaderName of this.loaderNames) {
       const loaderContent =
-        this.loaders[loaderName] && existsSync(this.loaders[loaderName])
+        this.loaders && this.loaders[loaderName] && existsSync(this.loaders[loaderName])
           ? readFileSync(this.loaders[loaderName])
           : defaultLoader;
       virtualModulesConfig[
