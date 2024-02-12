@@ -5,6 +5,22 @@
   "publishConfig": {
     "access": "public"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/studiometa/playground.git"
+  },
+  "keywords": [
+    "playground",
+    "code",
+    "editor",
+    "online"
+  ],
+  "author": "Studio Meta <agence@studiometa.fr> (https://www.studiometa.fr/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/studiometa/playground/issues"
+  },
+  "homepage": "https://github.com/studiometa/playground#readme",
   "files": [
     "dist/"
   ],

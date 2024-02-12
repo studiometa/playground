@@ -17,7 +17,9 @@ jobs:
         with:
           node-version: '20.11'
       - run: npm i
-      - run: npm run build
+      - run: |
+          npm run build
+          cp README.md packages/playground/
       - run: |
           TAG='latest'
           PRERELEASE=false
