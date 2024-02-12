@@ -2,12 +2,22 @@ import { Base } from '@studiometa/js-toolkit';
 import type { BaseProps } from '@studiometa/js-toolkit';
 import { nextTick, isArray } from '@studiometa/js-toolkit/utils';
 import * as esbuild from 'esbuild-wasm';
-import { getHtml, getStyle, getScript } from '../store/index.js';
+import {
+  themeIsDark,
+  watchTheme,
+  getTransformedHtml as getHtml,
+  getTransformedStyle as getStyle,
+  getTransformedScript as getScript,
+} from '../store/index.js';
 
 export interface IframeProps extends BaseProps {
   $refs: {
     iframe: HTMLIFrameElement;
   };
+  $options: {
+    tailwindcss: boolean;
+    importMap: Record<string, string>
+  }
 }
 
 /**
@@ -20,6 +30,11 @@ export default class Iframe extends Base<IframeProps> {
   static config = {
     name: 'Iframe',
     refs: ['iframe'],
+    options: {
+      tailwindcss: Boolean,
+      syncColorScheme: Boolean,
+      importMap: Object,
+    },
   };
 
   /**
@@ -72,18 +87,21 @@ export default class Iframe extends Base<IframeProps> {
     await this.initImportMaps();
 
     // Add Tailwind CDN
-    // await this.initTailwind();
+    if (this.$options.tailwindcss) {
+      await this.initTailwind();
+    }
 
     const html = await getHtml();
     if (html) {
       this.doc.body.innerHTML = html;
     }
 
-    // Uncomment to enable dark mode in the preview
-    // this.doc.documentElement.classList.toggle('dark', themeIsDark());
-    // watchTheme((theme) => {
-    //   this.doc.documentElement.classList.toggle('dark', theme === 'dark');
-    // });
+    if (this.$options.syncColorScheme) {
+      this.doc.documentElement.classList.toggle('dark', themeIsDark());
+      watchTheme((theme) => {
+        this.doc.documentElement.classList.toggle('dark', theme === 'dark');
+      });
+    }
 
     // Add custom style
     this.style = this.doc.createElement('style');
@@ -122,7 +140,7 @@ export default class Iframe extends Base<IframeProps> {
     const importMap = this.doc.createElement('script');
     importMap.type = 'importmap';
     importMap.textContent = JSON.stringify({
-      imports: {},
+      imports: this.$options.importMap,
     });
     this.doc.head.append(importMap);
   }

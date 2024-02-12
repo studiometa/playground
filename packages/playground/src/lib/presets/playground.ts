@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import { existsSync } from 'node:fs';
+import type { PartialDeep } from 'type-fest';
 import type { Preset } from '@studiometa/webpack-config';
 import { prototyping } from '@studiometa/webpack-config-preset-prototyping';
 import { isDefined } from '@studiometa/js-toolkit/utils';
@@ -38,22 +39,30 @@ export interface HTMLLinkElementAttributes extends HTMLElementAttributes {
 }
 
 export interface PlaygroundPresetOptions {
-  head?: {
-    title?: string;
-    description?: string;
-    link?: HTMLLinkElementAttributes[];
-    meta?: HTMLMetaElementAttributes[];
+  head: {
+    title: string;
+    description: string;
+    link: HTMLLinkElementAttributes[];
+    meta: HTMLMetaElementAttributes[];
   };
   html_attr: any;
   body_attr: any;
-  header_title: string;
+  header: {
+    title: string;
+  };
+  defaults: {
+    html: string;
+    style: string;
+    script: string;
+  },
+  tailwindcss: boolean;
+  syncColorScheme: boolean;
 }
 
 /**
  * Preset to build the playground.
  */
-export function playgroundPreset(options?: PlaygroundPresetOptions): Preset {
-
+export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>): Preset {
   return {
     name: 'playground-preset',
     async handler(config, context) {
@@ -68,6 +77,14 @@ export function playgroundPreset(options?: PlaygroundPresetOptions): Preset {
       await prototypingHandler(config, context);
 
       await context.extendWebpack(config, (webpackConfig) => {
+        webpackConfig.cache = {
+          ...webpackConfig.cache,
+          buildDependencies: {
+            // @ts-ignore
+            config: [import.meta.filename, config.PATH],
+          },
+        };
+
         if (!isDefined(webpackConfig.entry['js/app'])) {
           webpackConfig.entry['js/app'] =
             '@studiometa/playground/dist/front/js/app.js';

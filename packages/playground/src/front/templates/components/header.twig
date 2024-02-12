@@ -15,9 +15,11 @@
     z-10 absolute top-0 hidden has-header:flex items-center gap-2 sm:gap-4 w-full h-12
     p-4 leading-4 bg-zinc-100 dark:bg-zinc-800 text-sm dark:text-zinc-100 dark:border-b-zinc-700
   ">
-  <div class="flex items-center gap-2 sm:gap-4">
-    {{ title }}
-  </div>
+  {% if title is not empty %}
+    <div class="flex items-center gap-2 sm:gap-4">
+      {{ title }}
+    </div>
+  {% endif %}
   <div class="flex items-center">
     {% include './checkbox-group.twig' with {
       items: [

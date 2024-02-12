@@ -10,9 +10,25 @@ export default defineConfig({
 			header: {
 				title: '<span class="font-bold">Playground demo</span>',
 			},
+			tailwindcss: true,
+			syncColorScheme: true,
+			importMap: {
+				'@studiometa/': 'https://cdn.skypack.dev/@studiometa/',
+			},
 			defaults: {
-				html: 'hello world',
-				style: 'body {\n\tbackground: #eee;\n}',
+				html: '<h1>hello world</h1>',
+				style: `body {
+  background: lightgreen;
+}`,
+				script: `import { Base, createApp } from '@studiometa/js-toolkit';
+
+class App extends Base {
+	static config = {
+		name: 'App',
+	};
+}
+
+createApp(App);`
 			},
 		}),
 	],
