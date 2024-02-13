@@ -21,16 +21,16 @@ jobs:
           npm run build
           cp README.md packages/playground/
       - run: |
-          TAG='latest'
-          PRERELEASE=false
+          NPM_TAG='latest'
+          IS_PRERELEASE=false
 
           if [[ $GITHUB_REF_NAME =~ 'alpha' || $GITHUB_REF_NAME =~ 'beta' || $GITHUB_REF_NAME =~ 'rc' ]]; then
-            TAG='next'
-            PRERELEASE=true
+            NPM_TAG='next'
+            IS_PRERELEASE=true
           fi
 
-          echo "NPM_TAG=$PRERELEASE" >> $GITHUB_ENV
-          echo "IS_PRERELEASE=$PRERELEASE" >> $GITHUB_ENV
+          echo "NPM_TAG=$NPM_TAG" >> $GITHUB_ENV
+          echo "IS_PRERELEASE=$IS_PRERELEASE" >> $GITHUB_ENV
       - uses: JS-DevTools/npm-publish@v3
         with:
           provenance: true
