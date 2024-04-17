@@ -1,6 +1,9 @@
 # @studiometa/playground
 
-[![NPM Version](https://img.shields.io/npm/v/@studiometa/playground.svg?style=flat-square)](https://www.npmjs.com/package/@studiometa/playground/)
+[![NPM Version](https://img.shields.io/npm/v/@studiometa/playground.svg?style=flat&colorB=3e63dd&colorA=414853)](https://www.npmjs.com/package/@studiometa/playground/)
+[![Downloads](https://img.shields.io/npm/dm/@studiometa/playground?style=flat&colorB=3e63dd&colorA=414853)](https://www.npmjs.com/package/@studiometa/playground/)
+[![Size](https://img.shields.io/bundlephobia/minzip/@studiometa/playground?style=flat&colorB=3e63dd&colorA=414853&label=size)](https://bundlephobia.com/package/@studiometa/playground)
+[![Dependency Status](https://img.shields.io/librariesio/release/npm/@studiometa/playground?style=flat&colorB=3e63dd&colorA=414853)](https://david-dm.org/studiometa/js-toolkit)
 
 A packaged small code editor for shareable demo, deploy it in seconds.
 

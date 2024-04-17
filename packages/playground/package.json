@@ -39,21 +39,21 @@
   },
   "dependencies": {
     "@studiometa/js-toolkit": "^2.12.0",
-    "@studiometa/webpack-config": "^5.3.0",
-    "@studiometa/webpack-config-preset-prototyping": "^5.3.0",
-    "emmet-monaco-es": "^5.3.0",
-    "esbuild-wasm": "^0.20.0",
+    "@studiometa/webpack-config": "^6.0.1",
+    "@studiometa/webpack-config-preset-prototyping": "^6.0.1",
+    "emmet-monaco-es": "^5.3.2",
+    "esbuild-wasm": "^0.20.2",
     "fast-glob": "^3.3.2",
     "fflate": "^0.8.2",
-    "monaco-editor": "^0.45.0",
+    "monaco-editor": "^0.47.0",
     "monaco-editor-webpack-plugin": "^7.1.0",
-    "tailwindcss": "^3.4.1",
+    "tailwindcss": "^3.4.3",
     "webpack-virtual-modules": "^0.6.1"
   },
   "engines": {
     "node": ">=20.11.0"
   },
   "devDependencies": {
-    "type-fest": "^4.10.2"
+    "type-fest": "^4.15.0"
   }
 }
