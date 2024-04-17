@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## v0.1.0 - 2024.04.17
+
 ### Fixed
 
 - Add a main property ([f6e57c4](https://github.com/studiometa/playground/commit/f6e57c4))
