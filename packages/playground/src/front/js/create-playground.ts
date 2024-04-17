@@ -6,9 +6,5 @@ import { setConfig } from './store/config.js';
 export function createPlayground(config?: PartialPlaygroundConfig) {
   setConfig(config);
 
-  return createApp(Playground, {
-    features: {
-      asyncChildren: true,
-    },
-  });
+  return createApp(Playground);
 }
