@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- Add a main property ([f6e57c4](https://github.com/studiometa/playground/commit/f6e57c4))
+
+### Changed
+
+- ⚠️ Update @studiometa/js-toolkit to v3.0.0-alpha.3 ([050a41a](https://github.com/studiometa/playground/commit/050a41a))
+- ⚠️ Update dependencies ([cc8fcd8](https://github.com/studiometa/playground/commit/cc8fcd8))
+
 ## v0.0.3 - 2024.02.13
 
 ### Fixed
