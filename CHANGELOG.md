@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix dark theme ([23538b7](https://github.com/studiometa/playground/commits/23538b7))
+
+### Changed
+
+- Update dev Node version ([8b82c52](https://github.com/studiometa/playground/commits/8b82c52))
+
 ## v0.1.0 - 2024.04.17
 
 ### Fixed
