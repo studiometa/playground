@@ -10,12 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
-- Fix an error where uninitialized variables were accessed ([b0b65be](https://github.com/studiometa/playground/commits/b0b65be))
+- Fix an error where uninitialized variables were accessed ([1eb2128](https://github.com/studiometa/playground/commits/1eb2128))
 - Fix dark theme ([23538b7](https://github.com/studiometa/playground/commits/23538b7))
 
 ### Changed
 
-- Update dependencies ([eaff3ec](https://github.com/studiometa/playground/commits/eaff3ec))
+- Update dependencies ([1b60675](https://github.com/studiometa/playground/commits/1b60675))
 - Update dev Node version ([8b82c52](https://github.com/studiometa/playground/commits/8b82c52))
 
 ## v0.1.0 - 2024.04.17
