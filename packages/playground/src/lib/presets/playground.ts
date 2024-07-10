@@ -89,6 +89,8 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
           },
         };
 
+        delete webpackConfig.optimization?.runtimeChunk;
+
         if (!isDefined(webpackConfig.entry['js/app'])) {
           webpackConfig.entry['js/app'] = '@studiometa/playground/dist/front/js/app.js';
         }
