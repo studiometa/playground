@@ -28,14 +28,14 @@ export default defineWebpackConfig({
         script: `import { Base, createApp } from '@studiometa/js-toolkit';
 
 class App extends Base {
-	static config = {
-		name: 'App',
-		refs: ['performance']
-	};
+  static config = {
+    name: 'App',
+    refs: ['performance']
+  };
 
-	onClick() {
-		this.$refs.performance.textContent = performance.now();
-	}
+  onClick() {
+    this.$refs.performance.textContent = performance.now();
+  }
 }
 
 createApp(App);`,
