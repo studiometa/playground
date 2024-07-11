@@ -23,20 +23,12 @@
   )
 %}
 
-{% block before_start %}
-
-{% endblock %}
+{% block before_start %}{% endblock %}
 <div {{ html_attributes(attributes) }}>
-  {% block after_start %}
-
-  {% endblock %}
+  {% block after_start %}{% endblock %}
   <div class="absolute inset-0 flex items-center justify-center bg-white dark:bg-neutral-900">
     {% include '../loader.twig' with {} only %}
   </div>
-  {% block before_end %}
-
-  {% endblock %}
+  {% block before_end %}{% endblock %}
 </div>
-{% block after_end %}
-
-{% endblock %}
+{% block after_end %}{% endblock %}

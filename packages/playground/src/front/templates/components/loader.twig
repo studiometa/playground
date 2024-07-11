@@ -7,11 +7,17 @@
  */
 #}
 
-{% set attributes = merge_html_attributes(attr ?? null, {
-  class: 'w-4 h-4',
-}, {
-  class: 'border-2 rounded-full border-zinc-300 dark:opacity-20 border-t-transparent animate-loader',
-}) %}
+{% set attributes =
+  merge_html_attributes(
+    attr ?? null,
+    {
+      class: 'w-4 h-4'
+    },
+    {
+      class: 'border-2 rounded-full border-zinc-300 dark:opacity-20 border-t-transparent animate-loader'
+    }
+  )
+%}
 
 {% html_element tag ?? 'div' with attributes %}
 {% end_html_element %}

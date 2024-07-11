@@ -4,6 +4,10 @@ import esbuild from 'esbuild-wasm';
 
 const root = resolve(import.meta.dirname, '..');
 
+/**
+ * Get options.
+ * @returns {object}
+ */
 function getOptions() {
   return {
     entryPoints: glob.globSync(['src/**/*.ts', 'src/**/*.css', 'src/**/*.twig', 'src/**/*.json'], {
@@ -21,6 +25,10 @@ function getOptions() {
   };
 }
 
+/**
+ * Watch and rebuild.
+ * @returns {Promise<void>}
+ */
 export async function watch() {
   const ctx = await esbuild.context({
     ...getOptions(),
@@ -54,6 +62,10 @@ export async function watch() {
   console.log('Watching...');
 }
 
+/**
+ * Build.
+ * @returns {Promise<void>}
+ */
 export async function build() {
   const start = performance.now();
 
