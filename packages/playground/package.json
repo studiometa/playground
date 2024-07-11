@@ -55,6 +55,7 @@
     "node": ">=20.11.0"
   },
   "devDependencies": {
-    "type-fest": "^4.21.0"
+    "type-fest": "^4.21.0",
+    "typescript": "5.5.3"
   }
 }
