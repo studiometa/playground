@@ -20,7 +20,7 @@
       data_option_tailwindcss: tailwindcss ?? false,
       data_option_sync_color_scheme: syncColorScheme ?? false,
       data_option_import_map: importMap ?? {},
-      class: 'relative w-full flex flex-grow items-center justify-center bg-zinc-100 dark:bg-zinc-800 is-resizing:pointer-events-none'
+      class: 'relative w-full flex flex-grow items-center justify-center bg-white dark:bg-zinc-800 is-resizing:pointer-events-none'
     }
   )
 %}
@@ -30,6 +30,6 @@
     src="about:blank"
     srcdoc=""
     frameborder="0"
-    class="z-10 absolute inset-0 w-full h-full bg-zinc-100 dark:bg-zinc-800 opacity-0"></iframe>
-  <div class="w-6 h-6 border-2 rounded-full border-zinc-500 dark:opacity-20 border-t-transparent animate-loader"></div>
+    class="z-10 absolute inset-0 w-full h-full bg-white dark:bg-zinc-800 opacity-0"></iframe>
+  {% include './loader.twig' with { attr: { class: 'w-6 h-6' } } %}
 </div>

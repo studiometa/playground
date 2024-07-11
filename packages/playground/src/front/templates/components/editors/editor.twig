@@ -30,8 +30,8 @@
   {% block after_start %}
 
   {% endblock %}
-  <div class="absolute inset-0 flex items-center justify-center bg-zinc-50 dark:bg-neutral-900">
-    <div class="w-4 h-4 border-2 rounded-full border-zinc-300 dark:opacity-20 border-t-transparent animate-loader"></div>
+  <div class="absolute inset-0 flex items-center justify-center bg-white dark:bg-neutral-900">
+    {% include '../loader.twig' with {} only %}
   </div>
   {% block before_end %}
 
