@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## v0.1.2 - 2024.07.11
+
+### Fixed
+
+- Fix build ([9d7973b](https://github.com/studiometa/playground/commits/9d7973b))
+- Fix production build config ([a63eb38](https://github.com/studiometa/playground/commits/a63eb38))
+
+### Changed
+
+- Improve responsive layout ([1df4cdf](https://github.com/studiometa/playground/commits/1df4cdf))
+
 ## v0.1.1 - 2024.07.10
 
 ### Fixed
