@@ -63,6 +63,7 @@ export class Playground extends Base<PlaygroundProps> {
       HtmlEditor: async () => wait(100).then(() => import('./HtmlEditor.js')),
       ScriptEditor: async () => wait(100).then(() => import('./ScriptEditor.js')),
       StyleEditor: async () => wait(100).then(() => import('./StyleEditor.js')),
+      IframeReloader: async () => wait(100).then(() => import('./IframeReloader.js')),
     },
   };
 
@@ -174,5 +175,10 @@ export class Playground extends Base<PlaygroundProps> {
         iframe.$el.parentElement.classList.remove('pointer-events-none');
       });
     }
+  }
+
+  async onIframeReloaderClick() {
+    const iframe = await this.iframe;
+    iframe.initIframe();
   }
 }

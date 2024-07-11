@@ -206,7 +206,6 @@ export default class Iframe extends Base<IframeProps> {
       const results = await esbuild.transform(newScript, {
         target: 'es2020',
       });
-      console.log(results.warnings);
       clone.textContent = results.code;
       // @ts-ignore
       this.window.script.replaceWith(clone);
