@@ -10,6 +10,7 @@
   "scripts": {
     "build": "npm run build --workspace=@studiometa/playground",
     "watch": "npm run watch --workspace=@studiometa/playground",
+    "dev": "concurrently --raw 'npm run watch' 'npm run demo:dev' --names 'playground,demo'",
     "demo:dev": "npm run dev --workspace=@studiometa/playground-demo",
     "predemo:build": "npm run build",
     "demo:build": "npm run build --workspace=@studiometa/playground-demo",
@@ -27,6 +28,7 @@
     "@studiometa/eslint-config": "^4.0.1",
     "@studiometa/prettier-config": "^4.1.0",
     "@studiometa/stylelint-config": "^4.0.0",
+    "concurrently": "8.2.2",
     "eslint": "^9.6.0",
     "prettier": "^3.3.2",
     "stylelint": "^16.6.1"
