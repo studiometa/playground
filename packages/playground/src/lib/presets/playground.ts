@@ -105,8 +105,8 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
 
       await monacoPreset().handler(config, context);
 
-      if (context.isDev) {
-        productionBuildPreset().handler(config, context);
+      if (!context.isDev) {
+        await productionBuildPreset().handler(config, context);
       }
     },
   };
