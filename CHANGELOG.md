@@ -6,28 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## v0.1.3 - 2024.07.11
+
+### Added
+
+- Add a reload button ([b5f3811](https://github.com/studiometa/playground/commit/b5f3811))
+
 ## v0.1.2 - 2024.07.11
 
 ### Fixed
 
-- Fix build ([9d7973b](https://github.com/studiometa/playground/commits/9d7973b))
-- Fix production build config ([a63eb38](https://github.com/studiometa/playground/commits/a63eb38))
+- Fix build ([9d7973b](https://github.com/studiometa/playground/commit/9d7973b))
+- Fix production build config ([a63eb38](https://github.com/studiometa/playground/commit/a63eb38))
 
 ### Changed
 
-- Improve responsive layout ([1df4cdf](https://github.com/studiometa/playground/commits/1df4cdf))
+- Improve responsive layout ([1df4cdf](https://github.com/studiometa/playground/commit/1df4cdf))
 
 ## v0.1.1 - 2024.07.10
 
 ### Fixed
 
-- Fix an error where uninitialized variables were accessed ([1eb2128](https://github.com/studiometa/playground/commits/1eb2128))
-- Fix dark theme ([23538b7](https://github.com/studiometa/playground/commits/23538b7))
+- Fix an error where uninitialized variables were accessed ([1eb2128](https://github.com/studiometa/playground/commit/1eb2128))
+- Fix dark theme ([23538b7](https://github.com/studiometa/playground/commit/23538b7))
 
 ### Changed
 
-- Update dependencies ([1b60675](https://github.com/studiometa/playground/commits/1b60675))
-- Update dev Node version ([8b82c52](https://github.com/studiometa/playground/commits/8b82c52))
+- Update dependencies ([1b60675](https://github.com/studiometa/playground/commit/1b60675))
+- Update dev Node version ([8b82c52](https://github.com/studiometa/playground/commit/8b82c52))
 
 ## v0.1.0 - 2024.04.17
 
