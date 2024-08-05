@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix compatibility with [@studiometa/js-toolkit](https://github.com/studiometa/js-toolkit) v3.0.0-alpha.6 ([#3](https://github.com/studiometa/playground/pull/3), [43c216d](https://github.com/studiometa/playground/commit/43c216d))
+- Fix an error where the export were not found ([#3](https://github.com/studiometa/playground/pull/3), [4f1d20a](https://github.com/studiometa/playground/commit/4f1d20a))
+
+### Changed
+
+- Update dependencies ([#3](https://github.com/studiometa/playground/pull/3), [350c1a6](https://github.com/studiometa/playground/commit/350c1a6))
+
 ## v0.1.3 - 2024.07.11
 
 ### Added

@@ -10,7 +10,7 @@ export default class StyleEditor extends Editor {
     return getStyle();
   }
 
-  onContentChange(value) {
+  onContentChange({ args: [value] }) {
     setStyle(value);
   }
 }
