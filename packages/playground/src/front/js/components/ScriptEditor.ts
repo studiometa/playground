@@ -10,7 +10,7 @@ export default class ScriptEditor extends Editor {
     return getScript();
   }
 
-  onContentChange({ args: [value]}) {
+  onContentChange({ args: [value] }) {
     setScript(value);
   }
 }
