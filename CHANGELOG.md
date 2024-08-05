@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## v0.1.4 - 2024.08.05
+
 ### Fixed
 
 - Fix compatibility with [@studiometa/js-toolkit](https://github.com/studiometa/js-toolkit) v3.0.0-alpha.6 ([#3](https://github.com/studiometa/playground/pull/3), [43c216d](https://github.com/studiometa/playground/commit/43c216d))
