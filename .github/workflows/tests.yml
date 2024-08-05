@@ -72,7 +72,7 @@ jobs:
       - uses: titouanmathis/export-size-action@main
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          build_script: npm run build-for-export-size
-          paths: dist
+          build_script: npm run build
+          paths: packages/playground/
           bundler: esbuild
-          node-version: '18'
+          node-version: '22'
