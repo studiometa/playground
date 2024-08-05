@@ -30,15 +30,18 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "node": "./dist/index.js"
     },
     "./preset": {
       "types": "./dist/preset.d.ts",
-      "import": "./dist/preset.js"
+      "import": "./dist/preset.js",
+      "node": "./dist/preset.js"
     },
     "./tailwind": {
       "types": "./dist/tailwind.d.ts",
-      "import": "./dist/tailwind.js"
+      "import": "./dist/tailwind.js",
+      "node": "./dist/tailwind.js"
     },
     "./*": "./*"
   },
