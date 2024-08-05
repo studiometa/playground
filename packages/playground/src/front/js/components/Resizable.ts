@@ -30,16 +30,21 @@ export default class Resizable extends Base<ResizableProps> {
     );
   }
 
-  onResizableCursorDragged(props: DragServiceProps, index: number) {
-    const resizableCursor = this.$children.ResizableCursor[index];
-    const { axis } = resizableCursor.$options;
+  onResizableCursorDragged({
+    target,
+    args: [props],
+  }: {
+    target: ResizableCursor;
+    args: [DragServiceProps];
+  }) {
+    const { axis } = target.$options;
     let method = 'resize';
 
     if ((layoutIsVertical() && axis === 'y') || (!layoutIsVertical() && axis === 'x')) {
       method = 'resizeSync';
     }
 
-    this[method](props.mode, resizableCursor.$options.axis, props.distance, resizableCursor);
+    this[method](props.mode, target.$options.axis, props.distance, target);
     this.$emit('dragged', props);
   }
 

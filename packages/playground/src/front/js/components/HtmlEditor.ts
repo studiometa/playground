@@ -10,7 +10,7 @@ export default class HtmlEditor extends Editor {
     return getHtml();
   }
 
-  onContentChange(value) {
+  onContentChange({ args: [value] }) {
     setHtml(value);
   }
 }
