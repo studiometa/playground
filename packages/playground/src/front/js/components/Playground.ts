@@ -5,6 +5,7 @@ import HeaderSwitcher from './HeaderSwitcher.js';
 import LayoutReactive from './LayoutReactive.js';
 import LayoutSwitcher from './LayoutSwitcher.js';
 import ThemeSwitcher from './ThemeSwitcher.js';
+import Console from './Console.js';
 import type Editors from './Editors.js';
 import type HtmlEditor from './HtmlEditor.js';
 import type Iframe from './Iframe.js';
@@ -57,6 +58,7 @@ export class Playground extends Base<PlaygroundProps> {
       LayoutSwitcher,
       ThemeSwitcher,
       HeaderSwitcher,
+      Console,
       Iframe: async () => wait(100).then(() => import('./Iframe.js')),
       Resizable: async () => wait(100).then(() => import('./Resizable.js')),
       Editors: async () => wait(100).then(() => import('./Editors.js')),

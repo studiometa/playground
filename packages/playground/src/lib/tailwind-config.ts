@@ -11,6 +11,7 @@ export function tailwindConfig() {
     darkMode: 'class',
     content: [
       resolveGlob('js/**/*.ts'),
+      resolveGlob('js/**/*.js'),
       resolveGlob('templates/**/*.twig'),
       resolveGlob('templates/**/*.yml'),
       'tailwind.safelist.txt',

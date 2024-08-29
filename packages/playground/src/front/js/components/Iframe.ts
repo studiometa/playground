@@ -30,6 +30,7 @@ export default class Iframe extends Base<IframeProps> {
   static config = {
     name: 'Iframe',
     refs: ['iframe'],
+    emits: ['iframe-ready'],
     options: {
       tailwindcss: Boolean,
       syncColorScheme: Boolean,
@@ -121,6 +122,7 @@ export default class Iframe extends Base<IframeProps> {
     await this.updateScript(false);
 
     this.$refs.iframe.classList.remove('opacity-0');
+    this.$emit('iframe-ready');
   }
 
   async initEsbuild() {
@@ -136,6 +138,8 @@ export default class Iframe extends Base<IframeProps> {
     } catch {
       // Silence is golden.
     }
+
+    this.$emit('esbuild-ready');
   }
 
   initImportMaps() {
@@ -165,19 +169,20 @@ export default class Iframe extends Base<IframeProps> {
   }
 
   async updateHtml() {
-    console.log('updating html...');
+    this.$log('updating html...');
     await nextTick();
     const html = await getHtml();
     if (html !== this.doc.body.innerHTML) {
       this.doc.body.innerHTML = html;
     }
     await nextTick();
-    console.log('html updated!');
+    this.$log('html updated!');
+    this.$emit('html-updated');
     await this.updateScript(false);
   }
 
   async updateStyle() {
-    console.log('updating style...');
+    this.$log('updating style...');
     await nextTick();
     const style = await getStyle();
     if (style) {
@@ -187,11 +192,12 @@ export default class Iframe extends Base<IframeProps> {
       this.window.style.replaceWith(clone);
     }
     await nextTick();
-    console.log('style updated!');
+    this.$log('style updated!');
+    this.$emit('style-updated')
   }
 
   async updateScript(resetHtml = true): Promise<void> {
-    console.log('updating script...');
+    this.$log('updating script...');
     if (resetHtml) {
       this.doc.body.replaceWith(this.doc.body.cloneNode(true));
       await nextTick();
@@ -209,7 +215,8 @@ export default class Iframe extends Base<IframeProps> {
       clone.textContent = results.code;
       // @ts-ignore
       this.window.script.replaceWith(clone);
-      console.log('script updated!');
+      this.$log('script updated!');
+      this.$emit('script-updated');
     } catch (err) {
       console.log('script not updated due to some errors:');
       if (isArray(err.errors)) {
