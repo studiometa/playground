@@ -24,5 +24,12 @@
     }
   } %}
 </main>
-<div data-component="Console" class="z-10 fixed left-0 right-0 bottom-0 h-96 border-t-8 border-t-zinc-100 font-mono text-sm mt-10 overflow-y-auto bg-white"></div>
-
+<div class="z-10 fixed left-0 right-0 bottom-0 h-96" data-component="Resizable" data-option-reverse>
+  <div data-component="Console"
+    class="absolute inset-0 font-mono text-sm overflow-y-auto bg-white"></div>
+  {% include './resizable/cursor-y.twig' with {
+    attr: {
+      class: 'absolute top-0 left-0'
+    }
+  } %}
+</div>

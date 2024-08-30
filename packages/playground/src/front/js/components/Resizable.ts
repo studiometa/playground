@@ -10,6 +10,9 @@ export interface ResizableProps extends BaseProps {
     ResizableCursor: ResizableCursor[];
     ResizableSync: ResizableSync[];
   };
+  $options: {
+    reverse: boolean;
+  }
 }
 
 export default class Resizable extends Base<ResizableProps> {
@@ -18,6 +21,9 @@ export default class Resizable extends Base<ResizableProps> {
     components: {
       ResizableCursor,
       ResizableSync,
+    },
+    options: {
+      reverse: Boolean,
     },
     emits: ['dragged'],
   };
@@ -49,7 +55,7 @@ export default class Resizable extends Base<ResizableProps> {
   }
 
   resize(mode: DragServiceProps['mode'], axis: 'x' | 'y', distance: DragServiceProps['distance']) {
-    if (layoutIs('right') || layoutIs('bottom')) {
+    if (layoutIs('right') || layoutIs('bottom') || this.$options.reverse) {
       distance.x *= -1;
       distance.y *= -1;
     }

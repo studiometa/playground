@@ -210,7 +210,8 @@ export default class Iframe extends Base<IframeProps> {
     try {
       await Iframe.esbuildPromise;
       const results = await esbuild.transform(newScript, {
-        target: 'es2020',
+        target: 'es2022',
+        loader: 'ts',
       });
       clone.textContent = results.code;
       // @ts-ignore

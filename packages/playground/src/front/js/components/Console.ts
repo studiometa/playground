@@ -80,23 +80,20 @@ export default class Console extends Base {
   }
 
   onWindowError({ event }) {
-    this.send('error', event.message, event.filename);
+    this.send('error', event.error);
   }
 
   send(level: Levels, ...args: string[]) {
     const title = `[${level}] ${args[0]}`;
 
     const div = document.createElement('div');
-    const tag = args.length === 1 ? 'div' : 'details';
+    const tag = args.length === 1 ? 'div' : 'div';
     const color = this.colors[level] ?? 'current';
 
     div.innerHTML = `
       <${tag} class="px-2 py-1 ${color}">
-        <summary class="w-full flex justify-between">
-          <span>▸ ${title}</span>
-          <span>${Date.now()}</span>
-        </summary>
-        <div class="whitespace-pre">${args.slice(1).join('\n')}</div>
+
+        <div class="whitespace-pre">${args.join(' ')}</div>
       </${tag}>
     `;
 
