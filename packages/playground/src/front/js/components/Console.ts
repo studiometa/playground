@@ -1,23 +1,5 @@
 import { Base } from '@studiometa/js-toolkit';
-
-function h(tag, attributes= {}, children) {
-  const el = document.createElement(tag);
-
-  if (Array.isArray(attributes) && typeof children === 'undefined') {
-    children = attributes;
-    attributes = {};
-  }
-
-  for (const [name, value] of Object.entries(attributes)) {
-    el.setAttribute(name.replaceAll(/([a-z])([A-Z])/g, '$1-$2').toLowerCase(), value);
-  }
-
-  if (Array.isArray(children)) {
-    el.append(...children);
-  }
-
-  return el;
-}
+import devalue from '@nuxt/devalue';
 
 type Levels = 'log' | 'debug' | 'warn' | 'error' | 'info';
 
@@ -93,7 +75,7 @@ export default class Console extends Base {
     div.innerHTML = `
       <${tag} class="px-2 py-1 ${color}">
 
-        <div class="whitespace-pre">${args.join(' ')}</div>
+        <div class="whitespace-pre">${args.map(arg => devalue(arg)).join(' ')}</div>
       </${tag}>
     `;
 

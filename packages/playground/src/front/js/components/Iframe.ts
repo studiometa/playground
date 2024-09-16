@@ -193,7 +193,7 @@ export default class Iframe extends Base<IframeProps> {
     }
     await nextTick();
     this.$log('style updated!');
-    this.$emit('style-updated')
+    this.$emit('style-updated');
   }
 
   async updateScript(resetHtml = true): Promise<void> {
@@ -213,7 +213,8 @@ export default class Iframe extends Base<IframeProps> {
         target: 'es2022',
         loader: 'ts',
       });
-      clone.textContent = results.code;
+      clone.src = URL.createObjectURL(new Blob([results.code], { type: 'application/javascript' }));
+      // clone.textContent = results.code;
       // @ts-ignore
       this.window.script.replaceWith(clone);
       this.$log('script updated!');

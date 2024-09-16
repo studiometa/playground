@@ -53,6 +53,7 @@
     "build:types": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
+    "@nuxt/devalue": "^2.0.2",
     "@studiometa/js-toolkit": "^3.0.0-alpha.9",
     "@studiometa/webpack-config": "^6.1.0",
     "@studiometa/webpack-config-preset-prototyping": "^6.1.0",
