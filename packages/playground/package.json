@@ -57,7 +57,7 @@
     "@studiometa/webpack-config": "^6.1.0",
     "@studiometa/webpack-config-preset-prototyping": "^6.1.0",
     "emmet-monaco-es": "^5.4.0",
-    "esbuild-wasm": "^0.23.1",
+    "esbuild-wasm": "^0.24.0",
     "fast-glob": "^3.3.2",
     "fflate": "^0.8.2",
     "monaco-editor": "^0.50.0",
