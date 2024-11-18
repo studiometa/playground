@@ -69,7 +69,7 @@
     "node": ">=20.11.0"
   },
   "devDependencies": {
-    "type-fest": "0.8.1",
+    "type-fest": "0.21.3",
     "typescript": "5.5.3"
   }
 }
