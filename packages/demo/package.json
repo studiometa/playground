@@ -1,6 +1,6 @@
 {
   "name": "@studiometa/playground-demo",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "type": "module",
   "private": true,
   "scripts": {
@@ -13,6 +13,6 @@
     "@studiometa/playground": "*"
   },
   "devDependencies": {
-    "http-server": "^14.1.1"
+    "http-server": "14.1.1"
   }
 }

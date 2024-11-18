@@ -1,6 +1,6 @@
 {
   "name": "@studiometa/playground-root",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A packaged web development playground",
   "type": "module",
   "private": true,
@@ -28,10 +28,10 @@
     "@studiometa/eslint-config": "^4.1.0",
     "@studiometa/prettier-config": "^4.1.0",
     "@studiometa/stylelint-config": "^4.0.0",
-    "concurrently": "8.2.2",
-    "eslint": "^9.8.0",
+    "concurrently": "9.1.0",
+    "eslint": "^9.15.0",
     "prettier": "^3.3.3",
-    "stylelint": "^16.8.1"
+    "stylelint": "^16.10.0"
   },
   "engines": {
     "node": ">=20.11.0"
