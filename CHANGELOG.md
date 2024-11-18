@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## v0.1.5 - 2024.11.18
+
+### Changed
+
+- Update dependencies ([60cef7b](https://github.com/studiometa/playground/commit/60cef7b), [8ffba5d](https://github.com/studiometa/playground/commit/8ffba5d), [3f47162](https://github.com/studiometa/playground/commit/3f47162), [9adc03e](https://github.com/studiometa/playground/commit/9adc03e), [22f15fe](https://github.com/studiometa/playground/commit/22f15fe), [f139277](https://github.com/studiometa/playground/commit/f139277), [6c88ecf](https://github.com/studiometa/playground/commit/6c88ecf), [e427cfd](https://github.com/studiometa/playground/commit/e427cfd), [f93ab86](https://github.com/studiometa/playground/commit/f93ab86))
+
+### Fixed
+
+- Fix GitHub actions for main ([7ab645d](https://github.com/studiometa/playground/commit/7ab645d))
+
 ## v0.1.4 - 2024.08.05
 
 ### Fixed
