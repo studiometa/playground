@@ -74,10 +74,8 @@ export default class Iframe extends Base<IframeProps> {
   async initIframe() {
     this.$refs.iframe.classList.add('opacity-0');
     // Enable dev mode in render
-    /* eslint-disable no-underscore-dangle */
-    // @ts-ignore
+    // @ts-expect-error Enable dev mode.
     this.window.__DEV__ = true;
-    /* eslint-enable no-underscore-dangle */
 
     this.doc.documentElement.innerHTML = `
 <head>
@@ -138,7 +136,7 @@ export default class Iframe extends Base<IframeProps> {
     }
   }
 
-  initImportMaps() {
+  async initImportMaps() {
     const importMap = this.doc.createElement('script');
     importMap.type = 'importmap';
     importMap.textContent = JSON.stringify({
@@ -183,8 +181,8 @@ export default class Iframe extends Base<IframeProps> {
     if (style) {
       const clone = this.style.cloneNode() as HTMLStyleElement;
       clone.textContent = style;
-      // @ts-ignore
-      this.window.style.replaceWith(clone);
+      this.style.replaceWith(clone);
+      this.style = clone;
     }
     await nextTick();
     console.log('style updated!');
@@ -207,8 +205,8 @@ export default class Iframe extends Base<IframeProps> {
         target: 'es2020',
       });
       clone.textContent = results.code;
-      // @ts-ignore
-      this.window.script.replaceWith(clone);
+      this.script.replaceWith(clone);
+      this.script = clone;
       console.log('script updated!');
     } catch (err) {
       console.log('script not updated due to some errors:');
