@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## v0.1.6 - 2024.12.17
+
+### Fixed
+
+- Fix an ESM error ([b46b74f](https://github.com/studiometa/playground/commit/b46b74f))
+
+### Changed
+
+- Update dependencies ([dc8bc36](https://github.com/studiometa/playground/commit/dc8bc36))
+- Lock file maintenance ([#12](https://github.com/studiometa/playground/pull/12), [676a0e0](https://github.com/studiometa/playground/commit/676a0e0))
+
 ## v0.1.5 - 2024.11.18
 
 ### Changed
