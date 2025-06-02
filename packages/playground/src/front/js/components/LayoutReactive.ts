@@ -11,10 +11,11 @@ export interface LayoutReactiveProps extends BaseProps {
     right: string;
     bottom: string;
     left: string;
+    none: string;
   };
 }
 
-const layouts = ['top', 'right', 'bottom', 'left'];
+const layouts = ['top', 'right', 'bottom', 'left', 'none'];
 
 /**
  * LayoutReactive class.
@@ -30,6 +31,10 @@ export default class LayoutReactive extends Base<LayoutReactiveProps> {
       right: String,
       bottom: String,
       left: String,
+      none: {
+        type: String,
+        default: 'hidden',
+      },
     },
   };
 

@@ -49,9 +49,8 @@ export default class Iframe extends Base<IframeProps> {
 
   /**
    * Esbuild initializer promise.
-   * @type {Promise}
    */
-  static esbuildPromise;
+  static esbuildPromise: Promise<void>;
 
   /**
    * The style element inside the iframe used to inject the style editor's content.

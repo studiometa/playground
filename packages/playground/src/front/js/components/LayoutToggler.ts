@@ -4,26 +4,29 @@ import Switcher from './Switcher.js';
 import { setLayout, getLayout, defaultLayout } from '../store/index.js';
 import type { Layouts } from '../store/index.js';
 
-export default class LayoutSwitcher extends Switcher {
+export default class LayoutToggler extends Switcher {
   static config: BaseConfig = {
-    name: 'LayoutSwitcher',
+    name: 'LayoutToggler',
   };
+
+  previousLayout: Layouts = defaultLayout;
 
   mounted() {
     domScheduler.read(() => {
-      const value = getLayout() === 'none' ? defaultLayout : getLayout();
-      console.log({ value });
-      const input = this.$refs.inputs.find((i) => i.value === value);
-
-      if (input) {
+      if (getLayout() === 'none') {
         domScheduler.write(() => {
-          input.checked = true;
+          this.$refs.inputs[0].checked = true;
         });
       }
     });
   }
 
   switch(value: Layouts) {
-    setLayout(value);
+    if (value === 'none') {
+      this.previousLayout = getLayout();
+      setLayout(value);
+    } else {
+      setLayout(this.previousLayout);
+    }
   }
 }

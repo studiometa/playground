@@ -53,23 +53,23 @@
     "build:types": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "@studiometa/js-toolkit": "^3.0.0-beta.3",
-    "@studiometa/webpack-config": "^6.3.2",
-    "@studiometa/webpack-config-preset-prototyping": "^6.3.2",
+    "@studiometa/js-toolkit": "^3.0.4",
+    "@studiometa/webpack-config": "^6.3.4",
+    "@studiometa/webpack-config-preset-prototyping": "^6.3.4",
     "emmet-monaco-es": "^5.5.0",
-    "esbuild-wasm": "^0.24.0",
-    "fast-glob": "^3.3.2",
+    "esbuild-wasm": "^0.24.2",
+    "fast-glob": "^3.3.3",
     "fflate": "^0.8.2",
     "monaco-editor": "^0.52.2",
     "monaco-editor-webpack-plugin": "^7.1.0",
-    "tailwindcss": "^3.4.16",
+    "tailwindcss": "^3.4.17",
     "webpack-virtual-modules": "^0.6.2"
   },
   "engines": {
     "node": ">=20.11.0"
   },
   "devDependencies": {
-    "type-fest": "4.30.2",
+    "type-fest": "4.41.0",
     "typescript": "5.8.3"
   }
 }

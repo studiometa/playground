@@ -41,5 +41,13 @@ class App extends Base {
 createApp(App);`,
       },
     }),
+    {
+      name: 'no-cache',
+      async handler(config, context) {
+        await context.extendWebpack(config, (webpackConfig) => {
+          webpackConfig.cache = false;
+        });
+      },
+    },
   ],
 });

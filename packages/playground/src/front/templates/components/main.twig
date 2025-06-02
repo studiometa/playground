@@ -12,6 +12,7 @@
   data-option-top="flex-col"
   data-option-right="flex-row-reverse"
   data-option-bottom="flex-col-reverse"
+  data-option-none=""
   class="absolute top-0 has-header:top-10 sm:has-header:top-12 left-0 right-0 bottom-0 flex flex-col">
   {% include './editors.twig' %}
   {% include './iframe.twig' with {
@@ -20,7 +21,8 @@
       data_option_top: 'w-full',
       data_option_right: 'w-3/5',
       data_option_bottom: 'w-full',
-      data_option_left: 'w-3/5'
+      data_option_left: 'w-3/5',
+      data_option_none: ''
     }
   } %}
 </main>

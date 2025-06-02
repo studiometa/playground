@@ -1,9 +1,8 @@
 import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import plugin from 'tailwindcss/plugin.js';
 
-function resolveGlob(glob) {
-  const root = dirname(fileURLToPath(import.meta.resolve('@studiometa/playground')));
+function resolveGlob(glob: string) {
+  const root = dirname(require.resolve('@studiometa/playground'));
   return resolve(root, 'front', glob);
 }
 

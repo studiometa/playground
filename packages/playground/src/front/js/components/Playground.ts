@@ -4,6 +4,7 @@ import { domScheduler, wait } from '@studiometa/js-toolkit/utils';
 import HeaderSwitcher from './HeaderSwitcher.js';
 import LayoutReactive from './LayoutReactive.js';
 import LayoutSwitcher from './LayoutSwitcher.js';
+import LayoutToggler from './LayoutToggler.js';
 import ThemeSwitcher from './ThemeSwitcher.js';
 import type Editors from './Editors.js';
 import type HtmlEditor from './HtmlEditor.js';
@@ -22,6 +23,7 @@ headerUpdateDOM();
 export interface PlaygroundProps extends BaseProps {
   $children: {
     LayoutSwitcher: LayoutSwitcher[];
+    LayoutToggler: LayoutToggler[];
     LayoutReactive: LayoutReactive[];
     HeaderSwitcher: HeaderSwitcher[];
     Iframe: Promise<Iframe>[];
@@ -55,6 +57,7 @@ export class Playground extends Base<PlaygroundProps> {
     components: {
       LayoutReactive,
       LayoutSwitcher,
+      LayoutToggler,
       ThemeSwitcher,
       HeaderSwitcher,
       Iframe: async () => wait(100).then(() => import('./Iframe.js')),

@@ -1,10 +1,10 @@
 import { domScheduler } from '@studiometa/js-toolkit/utils';
 import { fallbackStore as store } from '../utils/storage/index.js';
 
-export type Layouts = 'top' | 'right' | 'bottom' | 'left';
+export type Layouts = 'top' | 'right' | 'bottom' | 'left' | 'none';
 
-const layouts = new Set<Layouts>(['top', 'right', 'bottom', 'left']);
-const defaultLayout = 'top';
+const layouts = new Set<Layouts>(['top', 'right', 'bottom', 'left', 'none']);
+export const defaultLayout = 'top';
 
 const callbacks = [];
 
@@ -26,12 +26,17 @@ export function layoutIsHoritontal() {
   return layout === 'top' || layout === 'bottom';
 }
 
+export function layoutIsNone() {
+  return layoutIs('none');
+}
+
 export function layoutUpdateDOM(value: Layouts = getLayout()) {
   domScheduler.write(() => {
     document.documentElement.classList.toggle('is-top', value === 'top');
     document.documentElement.classList.toggle('is-right', value === 'right');
     document.documentElement.classList.toggle('is-bottom', value === 'bottom');
     document.documentElement.classList.toggle('is-left', value === 'left');
+    document.documentElement.classList.toggle('is-none', value === 'none');
   });
 }
 
