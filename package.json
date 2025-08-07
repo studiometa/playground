@@ -12,6 +12,7 @@
     "watch": "npm run watch --workspace=@studiometa/playground",
     "dev": "concurrently --raw 'npm run watch' 'npm run demo:dev' --names 'playground,demo'",
     "demo:dev": "npm run dev --workspace=@studiometa/playground-demo",
+    "demo:watch": "npm run watch --workspace=@studiometa/playground-demo",
     "predemo:build": "npm run build",
     "demo:build": "npm run build --workspace=@studiometa/playground-demo",
     "demo:preview": "npm run preview --workspace=@studiometa/playground-demo",
