@@ -11,6 +11,7 @@ import type Iframe from './Iframe.js';
 import type Resizable from './Resizable.js';
 import type ScriptEditor from './ScriptEditor.js';
 import type StyleEditor from './StyleEditor.js';
+import type Claude from './Claude.js';
 import { layoutUpdateDOM, themeUpdateDOM, headerUpdateDOM } from '../store/index.js';
 import { urlStore } from '../utils/storage/index.js';
 import { setDefaults } from '../store/config.js';
@@ -30,6 +31,7 @@ export interface PlaygroundProps extends BaseProps {
     HtmlEditor: Promise<HtmlEditor>[];
     ScriptEditor: Promise<ScriptEditor>[];
     StyleEditor: Promise<StyleEditor>[];
+    Claude: Promise<Claude>[];
   };
   $refs: {
     htmlVisibility: HTMLInputElement;
@@ -64,6 +66,7 @@ export class Playground extends Base<PlaygroundProps> {
       ScriptEditor: async () => wait(100).then(() => import('./ScriptEditor.js')),
       StyleEditor: async () => wait(100).then(() => import('./StyleEditor.js')),
       IframeReloader: async () => wait(100).then(() => import('./IframeReloader.js')),
+      Claude: async () => wait(100).then(() => import('./Claude.js')),
     },
   };
 

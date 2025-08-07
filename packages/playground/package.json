@@ -53,6 +53,7 @@
     "build:types": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.58.0",
     "@studiometa/js-toolkit": "^3.0.0-beta.3",
     "@studiometa/webpack-config": "^6.3.2",
     "@studiometa/webpack-config-preset-prototyping": "^6.3.2",
