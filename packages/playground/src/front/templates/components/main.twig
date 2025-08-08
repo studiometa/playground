@@ -14,6 +14,7 @@
   data-option-bottom="flex-col-reverse"
   class="absolute top-0 has-header:top-10 sm:has-header:top-12 left-0 right-0 bottom-0 flex flex-col">
   {% include './editors.twig' %}
+  {% include './claude.twig' with {} only %}
   {% include './iframe.twig' with {
     components: ['LayoutReactive'],
     attr: {
@@ -23,4 +24,5 @@
       data_option_left: 'w-3/5'
     }
   } %}
+
 </main>

@@ -1,0 +1,48 @@
+{#
+/**
+ * @file
+ *   Claude
+ *
+ * @description
+ *   Claude section.
+ */
+#}
+
+<div data-component="Claude Resizable"
+  class="relative grid grid-cols-1 grid-rows-1 w-full h-96">
+  {% include './resizable/cursor-y.twig' with {
+    components: ['LayoutReactive'],
+    attr: {
+      class: 'absolute bottom-0 left-0',
+      data_option_top: 'bottom-0',
+      data_option_right: 'hidden',
+      data_option_bottom: 'top-0',
+      data_option_left: 'hidden'
+    }
+  } %}
+  <div class="flex">
+    <div data-component="ResizableSync" class="relative w-1/2">
+      {% include './resizable/cursor-x.twig' with {
+        components: ['LayoutReactive'],
+        attr: {
+          class: 'absolute right-0 top-0',
+          data_option_top: 'bottom-0',
+          data_option_right: 'hidden',
+          data_option_bottom: 'top-0',
+          data_option_left: 'hidden'
+        }
+      } %}
+      <input class="block w-full p-2" type="text" name="apiKey" data-ref="Claude.api-key" placeholder="Your Claude API key" />
+      <form data-ref="Claude.prompt">
+        <textarea class="w-full" name="prompt"></textarea>
+        {% include './button.twig' with {
+          content: 'Send',
+          attr: {
+            type: 'submit',
+          }
+        } %}
+      </form>
+    </div>
+    <div data-component="ResizableSync" data-ref="Claude.response"  class="w-1/2 bg-gray-50 p-4 font-mono whitespace-pre-wrap text-sm overflow-auto">Hi, I'm Claude</div>
+  </div>
+</div>

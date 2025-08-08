@@ -40,13 +40,5 @@
     {% include '../components/header-switcher.twig' %}
     {% include '../components/header.twig' with header %}
     {% include '../components/main.twig' %}
-    <div data-component="Claude" class="z-[999] fixed inset-0 bg-white font-mono whitespace-pre p-10">
-      <input type="text" name="apiKey" data-ref="api-key" placeholder="Your Claude API key">
-      <form data-ref="prompt">
-        <textarea name="prompt"></textarea>
-        <button>submit</button>
-      </form>
-      <pre data-ref="response"></pre>
-    </div>
   </div>
 {% endblock %}
