@@ -112,7 +112,7 @@ export default class Iframe extends Base<IframeProps> {
     this.script = this.doc.createElement('script');
     this.script.type = 'module';
     this.script.id = 'script';
-    this.doc.head.append(this.script.cloneNode());
+    this.doc.head.append(this.script);
 
     await nextTick();
     await this.updateStyle();
@@ -196,17 +196,20 @@ export default class Iframe extends Base<IframeProps> {
     }
     await nextTick();
 
-    const clone = this.script.cloneNode() as HTMLScriptElement;
     const newScriptContent = await getScript();
     const newScript = `${newScriptContent}\ndocument.dispatchEvent(new Event("readystatechange"))`;
+
     try {
       await Iframe.esbuildPromise;
       const results = await esbuild.transform(newScript, {
         target: 'es2020',
       });
-      clone.textContent = results.code;
-      this.script.replaceWith(clone);
-      this.script = clone;
+      this.script.remove();
+      this.script = this.doc.createElement('script');
+      this.script.type = 'module';
+      this.script.id = 'script';
+      this.script.textContent = results.code;
+      this.doc.head.append(this.script);
       console.log('script updated!');
     } catch (err) {
       console.log('script not updated due to some errors:');
