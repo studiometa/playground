@@ -13,7 +13,7 @@ export default defineWebpackConfig({
       tailwindcss: true,
       syncColorScheme: true,
       importMap: {
-        '@studiometa/': 'https://cdn.skypack.dev/@studiometa/',
+        '@studiometa/': 'https://esm.sh/@studiometa/',
       },
       loaders: {
         html: resolve('./html-loader.js'),
