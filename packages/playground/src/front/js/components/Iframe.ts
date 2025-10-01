@@ -106,6 +106,9 @@ export default class Iframe extends Base<IframeProps> {
     // Add custom style
     this.style = this.doc.createElement('style');
     this.style.id = 'style';
+    if (this.$options.tailwindcss) {
+      this.style.type = 'text/tailwindcss';
+    }
     this.doc.head.append(this.style);
 
     // Add custom script
@@ -149,12 +152,13 @@ export default class Iframe extends Base<IframeProps> {
     return new Promise((resolve) => {
       // Add Tailwind CDN
       const tailwindScript = this.doc.createElement('script');
-      tailwindScript.src = 'https://cdn.tailwindcss.com';
+      tailwindScript.src = 'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4';
       tailwindScript.id = 'tw';
       tailwindScript.addEventListener('load', () => {
         // Add Tailwind config
-        const tailwindConfig = this.doc.createElement('script');
-        tailwindConfig.textContent = "tailwind.config = { darkMode: 'class' };";
+        const tailwindConfig = this.doc.createElement('style');
+        tailwindConfig.type = 'text/tailwindcss';
+        tailwindConfig.textContent = '@custom-variant dark (&:where(.dark, .dark *));';
         this.doc.head.append(tailwindConfig);
         resolve();
       });
