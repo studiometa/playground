@@ -5,7 +5,8 @@ import HeaderSwitcher from './HeaderSwitcher.js';
 import LayoutReactive from './LayoutReactive.js';
 import LayoutSwitcher from './LayoutSwitcher.js';
 import ThemeSwitcher from './ThemeSwitcher.js';
-import type Editors from './Editors.js';
+import EditorVisibility from './EditorVisibility.js';
+import Editors from './Editors.js';
 import type HtmlEditor from './HtmlEditor.js';
 import type Iframe from './Iframe.js';
 import type Resizable from './Resizable.js';
@@ -24,9 +25,10 @@ export interface PlaygroundProps extends BaseProps {
     LayoutSwitcher: LayoutSwitcher[];
     LayoutReactive: LayoutReactive[];
     HeaderSwitcher: HeaderSwitcher[];
+    Editors: Editors[];
+    EditorVisibility: EditorVisibility[];
     Iframe: Promise<Iframe>[];
     Resizable: Promise<Resizable>[];
-    Editors: Promise<Editors>[];
     HtmlEditor: Promise<HtmlEditor>[];
     ScriptEditor: Promise<ScriptEditor>[];
     StyleEditor: Promise<StyleEditor>[];
@@ -57,9 +59,10 @@ export class Playground extends Base<PlaygroundProps> {
       LayoutSwitcher,
       ThemeSwitcher,
       HeaderSwitcher,
+      EditorVisibility,
+      Editors,
       Iframe: async () => wait(100).then(() => import('./Iframe.js')),
       Resizable: async () => wait(100).then(() => import('./Resizable.js')),
-      Editors: async () => wait(100).then(() => import('./Editors.js')),
       HtmlEditor: async () => wait(100).then(() => import('./HtmlEditor.js')),
       ScriptEditor: async () => wait(100).then(() => import('./ScriptEditor.js')),
       StyleEditor: async () => wait(100).then(() => import('./StyleEditor.js')),
@@ -75,16 +78,28 @@ export class Playground extends Base<PlaygroundProps> {
     return this.$children.Editors[0];
   }
 
-  get htmlEditor() {
-    return this.$children.HtmlEditor[0];
+  get htmlEditorVisibility() {
+    for (const editor of this.$children.EditorVisibility) {
+      if (editor.$el.dataset.lang === 'text/html') {
+        return editor;
+      }
+    }
   }
 
-  get scriptEditor() {
-    return this.$children.ScriptEditor[0];
+  get scriptEditorVisibility() {
+    for (const editor of this.$children.EditorVisibility) {
+      if (editor.$el.dataset.lang === 'text/javascript') {
+        return editor;
+      }
+    }
   }
 
-  get styleEditor() {
-    return this.$children.StyleEditor[0];
+  get styleEditorVisibility() {
+    for (const editor of this.$children.EditorVisibility) {
+      if (editor.$el.dataset.lang === 'text/css') {
+        return editor;
+      }
+    }
   }
 
   async mounted() {
@@ -100,40 +115,33 @@ export class Playground extends Base<PlaygroundProps> {
       !urlStore.has('style-editor') || urlStore.get('style-editor') === 'true';
     this.$refs.scriptVisibility.checked =
       !urlStore.has('script-editor') || urlStore.get('script-editor') === 'true';
-    const [htmlEditor, scriptEditor, styleEditor] = await Promise.all([
-      this.htmlEditor,
-      this.scriptEditor,
-      this.styleEditor,
-    ]);
-    htmlEditor.toggle(this.$refs.htmlVisibility.checked);
-    scriptEditor.toggle(this.$refs.scriptVisibility.checked);
-    styleEditor.toggle(this.$refs.styleVisibility.checked);
+
+    this.htmlEditorVisibility.toggle(this.$refs.htmlVisibility.checked);
+    this.scriptEditorVisibility.toggle(this.$refs.scriptVisibility.checked);
+    this.styleEditorVisibility.toggle(this.$refs.styleVisibility.checked);
     this.maybeToggleEditorsContainer();
   }
 
-  async onHtmlVisibilityInput({ target: { checked } }) {
-    const editor = await this.htmlEditor;
-    editor.toggle(checked);
+  onHtmlVisibilityInput({ target: { checked } }) {
+    this.htmlEditorVisibility.toggle(checked);
     urlStore.set('html-editor', checked);
     this.maybeToggleEditorsContainer();
   }
 
-  async onStyleVisibilityInput({ target: { checked } }) {
-    const editor = await this.styleEditor;
-    editor.toggle(this.$refs.styleVisibility.checked);
+  onStyleVisibilityInput({ target: { checked } }) {
+    this.styleEditorVisibility.toggle(this.$refs.styleVisibility.checked);
     urlStore.set('style-editor', checked);
     this.maybeToggleEditorsContainer();
   }
 
-  async onScriptVisibilityInput({ target: { checked } }) {
-    const editor = await this.scriptEditor;
-    editor.toggle(this.$refs.scriptVisibility.checked);
+  onScriptVisibilityInput({ target: { checked } }) {
+    this.scriptEditorVisibility.toggle(this.$refs.scriptVisibility.checked);
     urlStore.set('script-editor', checked);
     this.maybeToggleEditorsContainer();
   }
 
-  async maybeToggleEditorsContainer() {
-    const editors = await this.editors;
+  maybeToggleEditorsContainer() {
+    const { editors } = this;
     if (
       !this.$refs.htmlVisibility.checked &&
       !this.$refs.scriptVisibility.checked &&
