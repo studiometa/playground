@@ -10,11 +10,11 @@
  */
 #}
 
-<header class="z-10 absolute top-0 hidden has-header:flex items-center gap-2 sm:gap-4 w-full h-10 sm:h-12 p-2 sm:p-4 leading-4 bg-zinc-100 dark:bg-zinc-800 text-sm dark:text-zinc-100 dark:border-b-zinc-700">
+<header class="z-10 absolute top-0 hidden has-header:flex items-stretch gap-2 sm:gap-4 w-full h-10 sm:h-12 p-2 sm:p-4 leading-4 bg-zinc-100 dark:bg-zinc-800 text-sm dark:text-zinc-100 dark:border-b-zinc-700">
   {% if title is not empty %}
     <div class="hidden sm:flex items-center gap-2 sm:gap-4">{{ title }}</div>
   {% endif %}
-  <div class="flex items-center">
+  <div class="flex items-stretch">
     {% include './checkbox-group.twig' with {
       items: [
         {
@@ -66,7 +66,7 @@
     } %}
   </div>
 
-  <div data-component="LayoutSwitcher" class="flex items-center">
+  <div data-component="LayoutSwitcher" class="flex items-stretch">
     <div class="sr-only">Layout</div>
     {% set top_label %}
       <div class="relative inline-block w-3 h-3 border-2 border-black dark:border-white border-solid">
@@ -154,7 +154,7 @@
       </div>
     {% endset %}
     {% set dark_label %}
-      <div class="relative w-3 h-3 border-2 border-black dark:border-white border-solid bg-black dark:bg-white bg-opacity-50 dark:bg-opacity-50 rounded-full">
+      <div class="relative w-3 h-3 border-2 border-black dark:border-white border-solid bg-black/50 dark:bg-white/50 rounded-full">
         <span class="sr-only">Dark</span>
       </div>
     {% endset %}
