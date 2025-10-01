@@ -106,7 +106,7 @@ export default class Iframe extends Base<IframeProps> {
     // Add custom style
     this.style = this.doc.createElement('style');
     this.style.id = 'style';
-    this.doc.head.append(this.style.cloneNode());
+    this.doc.head.append(this.style);
 
     // Add custom script
     this.script = this.doc.createElement('script');
@@ -179,10 +179,7 @@ export default class Iframe extends Base<IframeProps> {
     await nextTick();
     const style = await getStyle();
     if (style) {
-      const clone = this.style.cloneNode() as HTMLStyleElement;
-      clone.textContent = style;
-      this.style.replaceWith(clone);
-      this.style = clone;
+      this.style.textContent = style;
     }
     await nextTick();
     console.log('style updated!');
