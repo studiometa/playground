@@ -64,6 +64,7 @@
     "esbuild-wasm": "^0.24.0",
     "fast-glob": "^3.3.2",
     "fflate": "^0.8.2",
+    "modern-monaco": "^0.2.1",
     "monaco-editor": "^0.52.2",
     "monaco-editor-webpack-plugin": "^7.1.0",
     "tailwindcss": "4.1.13",
