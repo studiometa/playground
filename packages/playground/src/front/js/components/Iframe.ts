@@ -182,9 +182,7 @@ export default class Iframe extends Base<IframeProps> {
     console.log('updating style...');
     await nextTick();
     const style = await getStyle();
-    if (style) {
-      this.style.textContent = style;
-    }
+    this.style.textContent = style;
     await nextTick();
     console.log('style updated!');
   }
