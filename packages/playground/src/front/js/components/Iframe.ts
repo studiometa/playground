@@ -1,7 +1,6 @@
 import { Base } from '@studiometa/js-toolkit';
 import type { BaseProps } from '@studiometa/js-toolkit';
-import { nextTick, isArray } from '@studiometa/js-toolkit/utils';
-import * as esbuild from 'esbuild-wasm';
+import { nextTick, isArray, nextFrame } from '@studiometa/js-toolkit/utils';
 import {
   themeIsDark,
   watchTheme,
@@ -9,6 +8,8 @@ import {
   getTransformedStyle as getStyle,
   getTransformedScript as getScript,
 } from '../store/index.js';
+
+type esbuildType = typeof import('esbuild-wasm');
 
 export interface IframeProps extends BaseProps {
   $refs: {
@@ -45,13 +46,12 @@ export default class Iframe extends Base<IframeProps> {
   /**
    * Is the esbuild worker ready?
    */
-  static isEsbuildInitialized = false;
+  static esbuild: esbuildType;
 
   /**
    * Esbuild initializer promise.
-   * @type {Promise}
    */
-  static esbuildPromise;
+  static esbuildPromise: PromiseWithResolvers<esbuildType>;
 
   /**
    * The style element inside the iframe used to inject the style editor's content.
@@ -67,7 +67,7 @@ export default class Iframe extends Base<IframeProps> {
   }
 
   async mounted() {
-    await this.initEsbuild();
+    await nextFrame();
     await this.initIframe();
   }
 
@@ -77,23 +77,19 @@ export default class Iframe extends Base<IframeProps> {
     // @ts-expect-error Enable dev mode.
     this.window.__DEV__ = true;
 
+    const html = await getHtml();
     this.doc.documentElement.innerHTML = `
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
 <body>
+${html}
 </body>`;
-    await this.initImportMaps();
 
     // Add Tailwind CDN
     if (this.$options.tailwindcss) {
       await this.initTailwind();
-    }
-
-    const html = await getHtml();
-    if (html) {
-      this.doc.body.innerHTML = html;
     }
 
     if (this.$options.syncColorScheme) {
@@ -110,7 +106,9 @@ export default class Iframe extends Base<IframeProps> {
       this.style.type = 'text/tailwindcss';
     }
     this.doc.head.append(this.style);
+    this.$refs.iframe.classList.remove('opacity-0');
 
+    await this.initImportMaps();
     // Add custom script
     this.script = this.doc.createElement('script');
     this.script.type = 'module';
@@ -120,23 +118,28 @@ export default class Iframe extends Base<IframeProps> {
     await nextTick();
     await this.updateStyle();
     await this.updateScript(false);
-
-    this.$refs.iframe.classList.remove('opacity-0');
   }
 
-  async initEsbuild() {
-    if (Iframe.isEsbuildInitialized) {
-      return;
+  async esbuild(): Promise<esbuildType> {
+    if (Iframe.esbuild) {
+      return Iframe.esbuild;
     }
-    try {
-      Iframe.esbuildPromise = esbuild.initialize({
-        wasmURL: new URL('esbuild-wasm/esbuild.wasm', import.meta.url),
-      });
-      await Iframe.esbuildPromise;
-      Iframe.isEsbuildInitialized = true;
-    } catch {
-      // Silence is golden.
+
+    if (Iframe.esbuildPromise) {
+      return Iframe.esbuildPromise.promise;
     }
+
+    Iframe.esbuildPromise = Promise.withResolvers();
+
+    const esbuild = await import('esbuild-wasm');
+    await esbuild.initialize({
+      wasmURL: new URL('esbuild-wasm/esbuild.wasm', import.meta.url),
+    });
+
+    Iframe.esbuild = esbuild;
+    Iframe.esbuildPromise.resolve(esbuild);
+
+    return esbuild;
   }
 
   async initImportMaps() {
@@ -199,7 +202,7 @@ export default class Iframe extends Base<IframeProps> {
     const newScript = `${newScriptContent}\ndocument.dispatchEvent(new Event("readystatechange"))`;
 
     try {
-      await Iframe.esbuildPromise;
+      const esbuild = await this.esbuild();
       const results = await esbuild.transform(newScript, {
         target: 'es2020',
       });

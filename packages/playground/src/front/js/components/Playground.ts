@@ -8,7 +8,7 @@ import ThemeSwitcher from './ThemeSwitcher.js';
 import EditorVisibility from './EditorVisibility.js';
 import Editors from './Editors.js';
 import type HtmlEditor from './HtmlEditor.js';
-import type Iframe from './Iframe.js';
+import Iframe from './Iframe.js';
 import type Resizable from './Resizable.js';
 import type ScriptEditor from './ScriptEditor.js';
 import type StyleEditor from './StyleEditor.js';
@@ -26,8 +26,8 @@ export interface PlaygroundProps extends BaseProps {
     LayoutReactive: LayoutReactive[];
     HeaderSwitcher: HeaderSwitcher[];
     Editors: Editors[];
+    Iframe: Iframe[];
     EditorVisibility: EditorVisibility[];
-    Iframe: Promise<Iframe>[];
     Resizable: Promise<Resizable>[];
     HtmlEditor: Promise<HtmlEditor>[];
     ScriptEditor: Promise<ScriptEditor>[];
@@ -61,7 +61,7 @@ export class Playground extends Base<PlaygroundProps> {
       HeaderSwitcher,
       EditorVisibility,
       Editors,
-      Iframe: async () => wait(100).then(() => import('./Iframe.js')),
+      Iframe,
       Resizable: async () => wait(100).then(() => import('./Resizable.js')),
       HtmlEditor: async () => wait(100).then(() => import('./HtmlEditor.js')),
       ScriptEditor: async () => wait(100).then(() => import('./ScriptEditor.js')),
