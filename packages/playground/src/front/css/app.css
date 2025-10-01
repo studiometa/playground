@@ -1,3 +1,19 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant has-header (html.has-header &);
+@custom-variant is-resizing (html.is-resizing &);
+
+@theme {
+  --animate-loader: loader 1s ease-in-out infinite;
+
+  @keyframes loader {
+    0% {
+      transform: rotate(0);
+    }
+
+    100% {
+      transform: rotate(720deg);
+    }
+  }
+}

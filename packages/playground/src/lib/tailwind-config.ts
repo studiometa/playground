@@ -1,13 +1,14 @@
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import plugin from 'tailwindcss/plugin.js';
+import type { Config } from 'tailwindcss';
 
 function resolveGlob(glob) {
   const root = dirname(fileURLToPath(import.meta.resolve('@studiometa/playground')));
   return resolve(root, 'front', glob);
 }
 
-export function tailwindConfig() {
+export function tailwindConfig(): Config {
   return {
     darkMode: 'class',
     content: [
@@ -35,5 +36,5 @@ export function tailwindConfig() {
         addVariant('is-resizing', 'html.is-resizing &');
       }),
     ],
-  };
+  } satisfies Config;
 }
