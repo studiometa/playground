@@ -5,10 +5,10 @@ export default defineWebpackConfig({
   presets: [
     playgroundPreset({
       head: {
-        title: 'Playground demo',
+        title: 'Playground',
       },
       header: {
-        title: '<span class="font-bold">Playground demo</span>',
+        title: '<span class="font-bold">Playground</span>',
       },
       tailwindcss: true,
       syncColorScheme: true,
@@ -16,26 +16,20 @@ export default defineWebpackConfig({
         '@studiometa/': 'https://esm.sh/@studiometa/',
       },
       loaders: {
-        html: resolve('./html-loader.js'),
+        html: resolve('./html-loader.ts'),
       },
       defaults: {
-        html: '<h1>hello world</h1>\n<pre data-ref="performance">0</pre>',
-        style: `body {
-  min-height: 100vh;
-  background: lightgreen;
-  user-select: none;
+        html: '<p class="m-10">hello world</p>',
+        style: `html.dark {
+  color: #fff;
+  background-color: #222;
 }`,
         script: `import { Base, createApp } from '@studiometa/js-toolkit';
 
 class App extends Base {
   static config = {
     name: 'App',
-    refs: ['performance']
   };
-
-  onClick() {
-    this.$refs.performance.textContent = performance.now();
-  }
 }
 
 createApp(App);`,
