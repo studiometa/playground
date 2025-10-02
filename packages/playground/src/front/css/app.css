@@ -2,6 +2,7 @@
 
 @custom-variant dark (&:where(.dark, .dark * ));
 @custom-variant has-header (html.has-header &);
+@custom-variant is-embed (html.is-embed &);
 @custom-variant is-resizing (html.is-resizing &);
 
 @theme {

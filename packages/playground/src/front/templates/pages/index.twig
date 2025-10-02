@@ -35,9 +35,24 @@
   }|merge(header ?? {})
 %}
 
+{% block head_after %}
+  <script>
+    {# prettier-ignore-start #}
+    (() => {
+      const { hash } = window.location;
+      document.documentElement.classList.toggle('is-embed', hash.includes('embed=true'));
+      document.documentElement.classList.toggle('has-header', !hash.includes('header=hidden'));
+    })();
+    {# prettier-ignore-end #}
+  </script>
+{% endblock %}
+
 {% block body %}
   <div class="fixed top-0 left-0 w-full h-full">
-    {% include '../components/header-switcher.twig' %}
+    <div class="z-50 fixed top-0 right-0 flex gap-2 items-center h-10 sm:h-12 p-2 sm:p-4 leading-4">
+      {% include '../components/header-switcher.twig' %}
+      {% include '../components/embed-btn.twig' %}
+    </div>
     {% include '../components/header.twig' with header %}
     {% include '../components/main.twig' %}
   </div>
