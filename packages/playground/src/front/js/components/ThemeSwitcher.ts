@@ -25,4 +25,13 @@ export default class ThemeSwitcher extends Switcher {
   switch(value: Themes) {
     setTheme(value);
   }
+
+  onWindowHashchange({ event }) {
+    const url = new URL(event.newURL);
+    const params = new URLSearchParams(url.hash.replace('#', ''));
+    const theme = params.get('theme') as Themes;
+    if (theme !== getTheme()) {
+      setTheme(theme);
+    }
+  }
 }

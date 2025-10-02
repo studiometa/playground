@@ -3,13 +3,14 @@ import { fallbackStore as store } from '../utils/storage/index.js';
 
 export type Themes = 'dark' | 'light';
 
+const key = 'theme' as const;
 const themes = new Set<Themes>(['dark', 'light']);
 const defaultTheme = 'light';
 
 const themeCallbacks = [];
 
 export function getTheme(): Themes {
-  return (store.get('theme') || defaultTheme) as Themes;
+  return (store.get(key) || defaultTheme) as Themes;
 }
 
 export function themeIsDark() {
@@ -33,7 +34,7 @@ export function setTheme(value: Themes = getTheme()) {
     value = defaultTheme;
   }
 
-  store.set('theme', value);
+  store.set(key, value);
   themeUpdateDOM(value);
   themeCallbacks.forEach((callback) => callback(value));
 }

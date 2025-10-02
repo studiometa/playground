@@ -6,6 +6,13 @@ export class URLStorage
   extends AbstractStorage<URLSearchParams>
   implements StorageInterface<string>
 {
+  declare ['constructor']: typeof URLStorage;
+
+  static MODES = {
+    SEARCH: 'search',
+    HASH: 'hash',
+  };
+
   mode: 'search' | 'hash';
 
   constructor(store: URLSearchParams, mode: 'search' | 'hash' = 'search') {
@@ -19,7 +26,9 @@ export class URLStorage
 
   set(key: string, value: string): void {
     this.store.set(key, value);
-    historyReplace({ [this.mode]: this.mode === 'search' ? this.store : this.store.toString() });
+    historyReplace({
+      [this.mode]: this.mode === this.constructor.MODES.SEARCH ? this.store : this.store.toString(),
+    });
   }
 
   has(key: string): boolean {

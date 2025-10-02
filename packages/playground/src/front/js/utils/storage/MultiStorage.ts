@@ -18,7 +18,9 @@ export class MultiStorage<T = unknown> implements StorageInterface<T> {
   }
 
   set(key: string, value: T): void {
-    this.stores.forEach((store) => store.set(key, value));
+    for (const store of this.stores) {
+      store.set(key, value);
+    }
   }
 
   has(key: string): boolean {
@@ -26,6 +28,8 @@ export class MultiStorage<T = unknown> implements StorageInterface<T> {
   }
 
   delete(key: string): void {
-    this.stores.forEach((store) => store.delete(key));
+    for (const store of this.stores) {
+      store.delete(key);
+    }
   }
 }
