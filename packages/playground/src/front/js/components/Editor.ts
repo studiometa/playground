@@ -46,7 +46,7 @@ export default class Editor extends Base<EditorProps> {
       fontFamily: 'JetBrains Mono',
       fontSize: 14,
       tabSize: 2,
-      theme: themeIsDark() ? 'vs-dark' : 'vs',
+      theme: (await themeIsDark()) ? 'vs-dark' : 'vs',
     });
 
     const disposeHTML = emmetHTML(monaco, ['html']);
@@ -62,9 +62,9 @@ export default class Editor extends Base<EditorProps> {
       { once: true },
     );
 
-    watchTheme(() => {
+    watchTheme(async () => {
       this.editor.updateOptions({
-        theme: themeIsDark() ? 'vs-dark' : 'vs',
+        theme: (await themeIsDark()) ? 'vs-dark' : 'vs',
       });
     });
 

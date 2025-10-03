@@ -7,43 +7,38 @@ const key = 'theme' as const;
 const themes = new Set<Themes>(['dark', 'light']);
 const defaultTheme = 'light';
 
-const themeCallbacks = [];
-
-export function getTheme(): Themes {
-  return (store.get(key) || defaultTheme) as Themes;
+export async function getTheme(): Promise<Themes> {
+  return ((await store.get(key)) || defaultTheme) as Themes;
 }
 
-export function themeIsDark() {
-  return getTheme() === 'dark';
+export async function themeIsDark() {
+  return (await getTheme()) === 'dark';
 }
 
-export function themeIsLight() {
-  return getTheme() === 'light';
+export async function themeIsLight() {
+  return (await getTheme()) === 'light';
 }
 
-export function themeUpdateDOM(value: Themes = getTheme()) {
+export async function themeUpdateDOM(value?: Themes) {
+  const theme = value ?? (await getTheme());
   domScheduler.write(() => {
-    document.documentElement.classList.toggle('dark', value === 'dark');
+    document.documentElement.classList.toggle('dark', theme === 'dark');
   });
 }
 
-export function setTheme(value: Themes = getTheme()) {
-  if (!themes.has(value)) {
-    console.warn(`The "${value}" theme is not valid.`);
-    // eslint-disable-next-line no-param-reassign
-    value = defaultTheme;
+export async function setTheme(value?: Themes) {
+  let theme = value ?? (await getTheme());
+
+  if (!themes.has(theme)) {
+    console.warn(`The "${theme}" theme is not valid.`);
+
+    theme = defaultTheme;
   }
 
-  store.set(key, value);
-  themeUpdateDOM(value);
-  themeCallbacks.forEach((callback) => callback(value));
+  store.set(key, theme);
+  themeUpdateDOM(theme);
 }
 
-export function watchTheme(callback) {
-  const index = themeCallbacks.length;
-  themeCallbacks.push(callback);
-
-  return () => {
-    themeCallbacks.splice(index, 1);
-  };
+export function watchTheme(callback: (value: Themes) => unknown) {
+  return store.watch((k, newValue: Themes) => k === key && callback(newValue));
 }

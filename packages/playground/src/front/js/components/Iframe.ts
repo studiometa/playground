@@ -91,9 +91,8 @@ ${html}
     if (this.$options.tailwindcss) {
       await this.initTailwind();
     }
-
     if (this.$options.syncColorScheme) {
-      this.doc.documentElement.classList.toggle('dark', themeIsDark());
+      this.doc.documentElement.classList.toggle('dark', await themeIsDark());
       watchTheme((theme) => {
         this.doc.documentElement.classList.toggle('dark', theme === 'dark');
       });

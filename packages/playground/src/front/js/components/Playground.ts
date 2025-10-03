@@ -1,5 +1,5 @@
 import { Base } from '@studiometa/js-toolkit';
-import type { BaseConfig, BaseProps } from '@studiometa/js-toolkit';
+import type { BaseConfig, BaseProps, DragServiceProps } from '@studiometa/js-toolkit';
 import { domScheduler, wait } from '@studiometa/js-toolkit/utils';
 import HeaderSwitcher from './HeaderSwitcher.js';
 import LayoutReactive from './LayoutReactive.js';
@@ -110,11 +110,11 @@ export class Playground extends Base<PlaygroundProps> {
     });
 
     this.$refs.htmlVisibility.checked =
-      !urlStore.has('html-editor') || urlStore.get('html-editor') === 'true';
+      !(await urlStore.has('html-editor')) || (await urlStore.get('html-editor')) === 'true';
     this.$refs.styleVisibility.checked =
-      !urlStore.has('style-editor') || urlStore.get('style-editor') === 'true';
+      !(await urlStore.has('style-editor')) || (await urlStore.get('style-editor')) === 'true';
     this.$refs.scriptVisibility.checked =
-      !urlStore.has('script-editor') || urlStore.get('script-editor') === 'true';
+      !(await urlStore.has('script-editor')) || (await urlStore.get('script-editor')) === 'true';
 
     this.htmlEditorVisibility.toggle(this.$refs.htmlVisibility.checked);
     this.scriptEditorVisibility.toggle(this.$refs.scriptVisibility.checked);
@@ -153,23 +153,20 @@ export class Playground extends Base<PlaygroundProps> {
     }
   }
 
-  async onHtmlEditorContentChange() {
-    const iframe = await this.iframe;
-    iframe.updateHtml();
+  onHtmlEditorContentChange() {
+    this.iframe.updateHtml();
   }
 
-  async onStyleEditorContentChange() {
-    const iframe = await this.iframe;
-    iframe.updateStyle();
+  onStyleEditorContentChange() {
+    this.iframe.updateStyle();
   }
 
-  async onScriptEditorContentChange() {
-    const iframe = await this.iframe;
-    iframe.updateScript();
+  onScriptEditorContentChange() {
+    this.iframe.updateScript();
   }
 
-  async onResizableDragged(props) {
-    const iframe = await this.iframe;
+  onResizableDragged(props: DragServiceProps) {
+    const { iframe } = this;
     if (props.mode === 'start') {
       domScheduler.write(() => {
         document.body.classList.add('select-none');
@@ -186,7 +183,6 @@ export class Playground extends Base<PlaygroundProps> {
   }
 
   async onIframeReloaderClick() {
-    const iframe = await this.iframe;
-    iframe.initIframe();
+    this.iframe.initIframe();
   }
 }

@@ -1,12 +1,12 @@
 import { historyReplace } from '@studiometa/js-toolkit/utils';
-import { StorageInterface } from './StorageInterface.js';
-import { AbstractStorage } from './AbstractStorage.js';
+import { StorageProviderInterface } from './StorageProviderInterface.js';
+import { AbstractStorageProvider } from './AbstractStorageProvider.js';
 
-export class URLStorage
-  extends AbstractStorage<URLSearchParams>
-  implements StorageInterface<string>
+export class URLStorageProvider
+  extends AbstractStorageProvider<URLSearchParams>
+  implements StorageProviderInterface<string>
 {
-  declare ['constructor']: typeof URLStorage;
+  declare ['constructor']: typeof URLStorageProvider;
 
   static MODES = {
     SEARCH: 'search',
@@ -20,22 +20,22 @@ export class URLStorage
     this.mode = mode;
   }
 
-  get(key: string): string | null {
+  async get(key: string): Promise<string | null> {
     return this.store.get(key);
   }
 
-  set(key: string, value: string): void {
+  async set(key: string, value: string) {
     this.store.set(key, value);
     historyReplace({
       [this.mode]: this.mode === this.constructor.MODES.SEARCH ? this.store : this.store.toString(),
     });
   }
 
-  has(key: string): boolean {
+  async has(key: string) {
     return this.store.has(key);
   }
 
-  delete(key: string): void {
+  async delete(key: string) {
     this.store.delete(key);
   }
 }

@@ -10,8 +10,8 @@ export default class LayoutSwitcher extends Switcher {
   };
 
   mounted() {
-    domScheduler.read(() => {
-      const value = getLayout();
+    domScheduler.read(async () => {
+      const value = await getLayout();
       const input = this.$refs.inputs.find((i) => i.value === value);
 
       if (input) {
