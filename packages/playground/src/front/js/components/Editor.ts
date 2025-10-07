@@ -1,10 +1,11 @@
 import { Base } from '@studiometa/js-toolkit';
 import type { BaseConfig, BaseProps } from '@studiometa/js-toolkit';
 import { debounce } from '@studiometa/js-toolkit/utils';
-// import type { editor } from 'monaco-editor/esm/vs/editor/editor.api.js';
+// import type { IStandaloneCodeEditor  } from 'monaco-editor/esm/vs/editor/editor.api.js';
 // import * as monaco from 'monaco-editor';
-import { init, type editor } from 'modern-monaco';
-// import { emmetHTML, emmetCSS } from 'emmet-monaco-es';
+import { init } from 'modern-monaco';
+import { type editor } from 'modern-monaco/editor-core';
+import { emmetHTML, emmetCSS } from 'emmet-monaco-es';
 import { themeIsDark, watchTheme } from '../store/index.js';
 
 export type EditorProps = BaseProps;
@@ -24,7 +25,7 @@ export default class Editor extends Base<EditorProps> {
   /**
    * Editor.
    */
-  editor: editor;
+  editor: editor.IStandaloneCodeEditor;
 
   /**
    * Language of the editor.
@@ -34,7 +35,20 @@ export default class Editor extends Base<EditorProps> {
   }
 
   async mounted() {
-    const monaco = await init();
+    const monaco = await init({
+      theme: (await themeIsDark()) ? 'github-dark' : 'github-light',
+      // langs: ['html', 'css', 'javascript'],
+      lsp: {
+        typescript: {
+          importMap: {
+            imports: {
+              '@studiometa/': 'https://esm.sh/@studiometa/',
+            },
+            scopes: {},
+          },
+        },
+      },
+    });
     const { addJsAutocompletion } = await import('../utils/js/index.js');
     const value = await this.getInitialValue();
 
@@ -47,9 +61,10 @@ export default class Editor extends Base<EditorProps> {
       fontFamily: 'JetBrains Mono',
       fontSize: 14,
       tabSize: 2,
-      theme: (await themeIsDark()) ? 'vs-dark' : 'vs',
     });
 
+    console.log(this.editor, monaco);
+    // @ ts-expect-error Foo.
     // const disposeHTML = emmetHTML(monaco, ['html']);
     // const disposeCSS = emmetCSS(monaco, ['css']);
     // addJsAutocompletion(monaco.languages);
@@ -65,7 +80,7 @@ export default class Editor extends Base<EditorProps> {
 
     watchTheme(async () => {
       this.editor.updateOptions({
-        theme: (await themeIsDark()) ? 'vs-dark' : 'vs',
+        theme: (await themeIsDark()) ? 'github-dark' : 'github-light',
       });
     });
 

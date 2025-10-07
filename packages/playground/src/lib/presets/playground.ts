@@ -89,6 +89,12 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
       await context.extendWebpack(config, (webpackConfig) => {
         webpackConfig.plugins.push(new PlaygroundLoadersPlugin(options.loaders));
 
+        webpackConfig.externalsType = 'script';
+        webpackConfig.externals = {
+          'modern-monaco/editor-core': 'global@https://esm.sh/modern-monaco/editor-core',
+          'modern-monaco/lsp': 'global@https://esm.sh/modern-monaco/modern-monaco/lsp',
+        };
+
         webpackConfig.cache = {
           ...webpackConfig.cache,
           buildDependencies: {
