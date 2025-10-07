@@ -22,8 +22,8 @@ export default class HeaderSwitcher extends Base<HeaderSwitcherProps> {
     refs: ['show', 'hide'],
   };
 
-  mounted() {
-    this.update(headerIsVisible());
+  async mounted() {
+    this.update(await headerIsVisible());
   }
 
   onShowClick() {
@@ -34,15 +34,15 @@ export default class HeaderSwitcher extends Base<HeaderSwitcherProps> {
     this.hide();
   }
 
-  show() {
-    setHeaderVisibility('visible');
-    this.update(headerIsVisible());
+  async show() {
+    await setHeaderVisibility('visible');
+    this.update(await headerIsVisible());
     this.$refs.hide.focus();
   }
 
-  hide() {
-    setHeaderVisibility('hidden');
-    this.update(headerIsVisible());
+  async hide() {
+    await setHeaderVisibility('hidden');
+    this.update(await headerIsVisible());
     this.$refs.show.focus();
   }
 

@@ -1,6 +1,6 @@
 import { Base } from '@studiometa/js-toolkit';
 import type { BaseConfig, BaseProps } from '@studiometa/js-toolkit';
-import { debounce, domScheduler } from '@studiometa/js-toolkit/utils';
+import { debounce } from '@studiometa/js-toolkit/utils';
 import type { editor } from 'monaco-editor/esm/vs/editor/editor.api.js';
 import * as monaco from 'monaco-editor';
 import { emmetHTML, emmetCSS } from 'emmet-monaco-es';
@@ -46,7 +46,7 @@ export default class Editor extends Base<EditorProps> {
       fontFamily: 'JetBrains Mono',
       fontSize: 14,
       tabSize: 2,
-      theme: themeIsDark() ? 'vs-dark' : 'vs',
+      theme: (await themeIsDark()) ? 'vs-dark' : 'vs',
     });
 
     const disposeHTML = emmetHTML(monaco, ['html']);
@@ -62,9 +62,9 @@ export default class Editor extends Base<EditorProps> {
       { once: true },
     );
 
-    watchTheme(() => {
+    watchTheme(async () => {
       this.editor.updateOptions({
-        theme: themeIsDark() ? 'vs-dark' : 'vs',
+        theme: (await themeIsDark()) ? 'vs-dark' : 'vs',
       });
     });
 
@@ -77,37 +77,5 @@ export default class Editor extends Base<EditorProps> {
 
   async getInitialValue() {
     return '';
-  }
-
-  show() {
-    domScheduler.write(() => {
-      this.$el.style.display = '';
-    });
-  }
-
-  hide() {
-    domScheduler.write(() => {
-      this.$el.style.display = 'none';
-    });
-  }
-
-  toggle(force) {
-    if (force === true) {
-      this.show();
-      return;
-    }
-
-    if (force === false) {
-      this.hide();
-      return;
-    }
-
-    domScheduler.read(() => {
-      if (this.$el.style.display === 'none') {
-        this.show();
-      } else {
-        this.hide();
-      }
-    });
   }
 }

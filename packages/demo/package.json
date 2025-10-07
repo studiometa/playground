@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "meta dev",
+    "watch": "meta watch",
     "build": "meta build",
     "prepreview": "npm run build",
     "preview": "esbuild --serve --servedir=dist"

@@ -75,6 +75,14 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
             playground: resolve(import.meta.dirname, '../../front/templates/'),
           },
         },
+        tailwindcss() {
+          return {
+            name: 'tailwindcss',
+            async handler() {
+              // shhhh
+            },
+          } as Preset;
+        },
       });
       await prototypingHandler(config, context);
 

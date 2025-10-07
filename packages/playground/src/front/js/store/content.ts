@@ -8,12 +8,12 @@ import {
   getStyleLoader,
 } from './config.js';
 
-export async function getScript() {
-  return store.get('script') ?? (await getDefaultScript());
+export async function getScript(): Promise<string> {
+  return ((await store.get('script')) as string) ?? (await getDefaultScript());
 }
 
-export function setScript(value: string) {
-  store.set('script', value);
+export async function setScript(value: string) {
+  return store.set('script', value);
 }
 
 export async function getTransformedScript() {
@@ -23,7 +23,7 @@ export async function getTransformedScript() {
 }
 
 export async function getHtml() {
-  return store.get('html') ?? (await getDefaultHtml());
+  return ((await store.get('html')) as string) ?? (await getDefaultHtml());
 }
 
 export async function getTransformedHtml() {
@@ -32,16 +32,16 @@ export async function getTransformedHtml() {
   return loader(html);
 }
 
-export function setHtml(value: string) {
-  store.set('html', value);
+export async function setHtml(value: string) {
+  return store.set('html', value);
 }
 
 export async function getStyle() {
-  return store.get('style') ?? (await getDefaultStyle());
+  return ((await store.get('style')) as string) ?? (await getDefaultStyle());
 }
 
-export function setStyle(value: string) {
-  store.set('style', value);
+export async function setStyle(value: string) {
+  return store.set('style', value);
 }
 
 export async function getTransformedStyle() {

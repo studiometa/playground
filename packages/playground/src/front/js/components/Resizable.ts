@@ -30,7 +30,7 @@ export default class Resizable extends Base<ResizableProps> {
     );
   }
 
-  onResizableCursorDragged({
+  async onResizableCursorDragged({
     target,
     args: [props],
   }: {
@@ -40,7 +40,9 @@ export default class Resizable extends Base<ResizableProps> {
     const { axis } = target.$options;
     let method = 'resize';
 
-    if ((layoutIsVertical() && axis === 'y') || (!layoutIsVertical() && axis === 'x')) {
+    const isVertical = await layoutIsVertical();
+
+    if ((isVertical && axis === 'y') || (!isVertical && axis === 'x')) {
       method = 'resizeSync';
     }
 
@@ -48,8 +50,12 @@ export default class Resizable extends Base<ResizableProps> {
     this.$emit('dragged', props);
   }
 
-  resize(mode: DragServiceProps['mode'], axis: 'x' | 'y', distance: DragServiceProps['distance']) {
-    if (layoutIs('right') || layoutIs('bottom')) {
+  async resize(
+    mode: DragServiceProps['mode'],
+    axis: 'x' | 'y',
+    distance: DragServiceProps['distance'],
+  ) {
+    if ((await layoutIs('right')) || (await layoutIs('bottom'))) {
       distance.x *= -1;
       distance.y *= -1;
     }
