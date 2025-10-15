@@ -29,6 +29,10 @@
   <div class="absolute inset-0 flex items-center justify-center bg-white dark:bg-neutral-900">
     {% include '../loader.twig' with {} only %}
   </div>
+  <monaco-editor class="absolute inset-0"
+    theme="vitesse-dark"
+    fontFamily="Geist Mono"
+    fontSize="16"></monaco-editor>
   {% block before_end %}{% endblock %}
 </div>
 {% block after_end %}{% endblock %}
