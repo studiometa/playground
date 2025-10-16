@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## v0.2.0 - 2025.10.16
+
+### Added
+
+- Add support for embedding display ([#35](https://github.com/studiometa/playground/pull/35), [8b1c825](https://github.com/studiometa/playground/commit/8b1c825))
+- Add support for switching theme from the URL only ([#35](https://github.com/studiometa/playground/pull/35), [beb4cf8](https://github.com/studiometa/playground/commit/beb4cf8))
+
+### Changed
+
+- ⚠️ Upgrade playground Tailwind version to v4 ([#35](https://github.com/studiometa/playground/pull/35), [15fb7d2](https://github.com/studiometa/playground/commit/15fb7d2))
+- Improve default values for the playground demo ([#35](https://github.com/studiometa/playground/pull/35), [2704848](https://github.com/studiometa/playground/commit/2704848))
+- Improve UI ([#35](https://github.com/studiometa/playground/pull/35))
+- Improve load performance ([#35](https://github.com/studiometa/playground/pull/35), [229d3ad](https://github.com/studiometa/playground/commit/229d3ad))
+- Improve layout shifts on load ([#35](https://github.com/studiometa/playground/pull/35), [e1b8430](https://github.com/studiometa/playground/commit/e1b8430))
+- Always update style even if empty ([#35](https://github.com/studiometa/playground/pull/35), [11fd53f](https://github.com/studiometa/playground/commit/11fd53f))
+- Reduce layout shifts on load ([#35](https://github.com/studiometa/playground/pull/35), [db85a5d](https://github.com/studiometa/playground/commit/db85a5d))
+- Switch to more neutral color scheme ([#35](https://github.com/studiometa/playground/pull/35), [ea7d180](https://github.com/studiometa/playground/commit/ea7d180))
+- Update dependencies ([dc8bc36](https://github.com/studiometa/playground/commit/dc8bc36))
+
+### Fixed
+
+- Fix style update ([#35](https://github.com/studiometa/playground/pull/35), [2d6196d](https://github.com/studiometa/playground/commit/2d6196d))
+- Fix script update ([#35](https://github.com/studiometa/playground/pull/35), [d299aaf](https://github.com/studiometa/playground/commit/d299aaf))
+
 ## v0.1.5 - 2024.11.18
 
 ### Changed

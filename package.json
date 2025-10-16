@@ -1,6 +1,6 @@
 {
   "name": "@studiometa/playground-root",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "A packaged web development playground",
   "type": "module",
   "private": true,
@@ -23,7 +23,8 @@
     "fix": "npm run fix:scripts && npm run fix:styles && npm run fix:templates",
     "fix:scripts": "npm run lint:scripts -- --fix",
     "fix:styles": "npm run lint:styles -- --fix",
-    "fix:templates": "npm run lint:templates -- --write"
+    "fix:templates": "npm run lint:templates -- --write",
+    "postversion": "npm version -ws $npm_package_version"
   },
   "dependencies": {
     "@studiometa/eslint-config": "^4.2.0",
