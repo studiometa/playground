@@ -1,9 +1,9 @@
-import { js, prettier } from '@studiometa/eslint-config';
-import { globals } from '@studiometa/eslint-config/utils';
+import { defineConfig, js, ts, prettier, globals } from '@studiometa/eslint-config';
 
-export default [
-  ...js,
-  ...prettier,
+export default defineConfig(
+  js,
+  ts,
+  prettier,
   {
     files: ['packages/playground/scripts/*.js'],
     languageOptions: {
@@ -15,4 +15,4 @@ export default [
   {
     ignores: ['packages/*/dist/*', 'node_modules/*'],
   },
-];
+);

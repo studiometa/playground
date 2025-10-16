@@ -10,7 +10,7 @@ const root = resolve(import.meta.dirname, '..');
  */
 function getOptions() {
   return {
-    entryPoints: glob.globSync(['src/**/*.ts', 'src/**/*.css', 'src/**/*.twig', 'src/**/*.json'], {
+    entryPoints: glob.globSync(['src/**/*.ts', 'src/**/*.twig', 'src/**/*.json'], {
       cwd: root,
     }),
     write: true,

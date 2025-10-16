@@ -75,6 +75,14 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
             playground: resolve(import.meta.dirname, '../../front/templates/'),
           },
         },
+        tailwindcss() {
+          return {
+            name: 'tailwindcss',
+            async handler() {
+              // shhhh
+            },
+          } as Preset;
+        },
       });
       await prototypingHandler(config, context);
 
@@ -84,7 +92,7 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
         webpackConfig.cache = {
           ...webpackConfig.cache,
           buildDependencies: {
-            // @ts-ignore
+            // @ts-expect-error config.PATH does not exist on MetaConfig (internal)
             config: [import.meta.filename, config.PATH],
           },
         };

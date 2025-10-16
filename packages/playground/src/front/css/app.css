@@ -1,3 +1,31 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark * ));
+@custom-variant has-header (html.has-header &);
+@custom-variant is-embed (html.is-embed &);
+@custom-variant is-resizing (html.is-resizing &);
+
+@theme {
+  --color-accent-50: var(--color-gray-50);
+  --color-accent-100: var(--color-gray-100);
+  --color-accent-200: var(--color-gray-200);
+  --color-accent-300: var(--color-gray-300);
+  --color-accent-400: var(--color-gray-400);
+  --color-accent-500: var(--color-gray-500);
+  --color-accent-600: var(--color-gray-600);
+  --color-accent-700: var(--color-gray-700);
+  --color-accent-800: var(--color-gray-800);
+  --color-accent-900: var(--color-gray-900);
+  --color-accent-950: var(--color-gray-950);
+  --animate-loader: loader 1s ease-in-out infinite;
+
+  @keyframes loader {
+    0% {
+      transform: rotate(0);
+    }
+
+    100% {
+      transform: rotate(720deg);
+    }
+  }
+}

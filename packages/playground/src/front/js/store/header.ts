@@ -3,50 +3,42 @@ import { fallbackStore as store } from '../utils/storage/index.js';
 
 export type HeaderVisibility = 'visible' | 'hidden';
 
-const headerVisibilities = new Set(['visible', 'hidden']);
+const key = 'header';
+const headerVisibilities = new Set<HeaderVisibility>(['visible', 'hidden']);
 const defaultHeaderVisibility = 'visible';
 
-const key = 'header';
-const callbacks: Array<(value: HeaderVisibility) => unknown> = [];
-
-export function getHeaderVisibility(): HeaderVisibility {
-  return (store.get(key) || defaultHeaderVisibility) as HeaderVisibility;
+export async function getHeaderVisibility(): Promise<HeaderVisibility> {
+  return ((await store.get(key)) || defaultHeaderVisibility) as HeaderVisibility;
 }
 
-export function headerIs(position: HeaderVisibility) {
-  return getHeaderVisibility() === position;
+export async function headerIs(position: HeaderVisibility) {
+  return (await getHeaderVisibility()) === position;
 }
 
-export function headerIsVisible() {
+export async function headerIsVisible() {
   return headerIs('visible');
 }
 
-export function headerIsHidden() {
+export async function headerIsHidden() {
   return headerIs('hidden');
 }
 
-export function headerUpdateDOM(value: HeaderVisibility = getHeaderVisibility()) {
+export async function headerUpdateDOM(value?: HeaderVisibility) {
+  const header = value ?? (await getHeaderVisibility());
   domScheduler.write(() => {
-    document.documentElement.classList.toggle('has-header', value === 'visible');
+    document.documentElement.classList.toggle('has-header', header === 'visible');
   });
 }
 
-export function setHeaderVisibility(value: HeaderVisibility = getHeaderVisibility()) {
-  if (!headerVisibilities.has(value)) {
-    console.warn(`The "${value}" header visibility is not valid.`);
-    // eslint-disable-next-line no-param-reassign
-    value = defaultHeaderVisibility;
+export async function setHeaderVisibility(value?: HeaderVisibility) {
+  let header = value ?? (await getHeaderVisibility());
+  if (!headerVisibilities.has(header)) {
+    console.warn(`The "${header}" header visibility is not valid.`);
+    header = defaultHeaderVisibility;
   }
-  store.set(key, value);
-  headerUpdateDOM(value);
-  callbacks.forEach((callback) => callback(value));
+  await Promise.all([store.set(key, header), headerUpdateDOM(header)]);
 }
 
 export function watchHeaderVisibility(callback: (value: HeaderVisibility) => unknown) {
-  const index = callbacks.length;
-  callbacks.push(callback);
-
-  return () => {
-    callbacks.splice(index, 1);
-  };
+  return store.watch((k, newValue: HeaderVisibility) => k === key && callback(newValue));
 }

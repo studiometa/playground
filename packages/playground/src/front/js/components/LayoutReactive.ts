@@ -33,14 +33,15 @@ export default class LayoutReactive extends Base<LayoutReactiveProps> {
     },
   };
 
-  mounted() {
-    this.switch(getLayout());
+  async mounted() {
+    this.switch(await getLayout());
     watchLayout((value: Layouts) => {
       this.switch(value);
     });
   }
 
   switch(value: Layouts) {
+    console.log('switch', value);
     domScheduler.read(() => {
       let toAdd = '';
       let toRemove = '';

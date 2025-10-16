@@ -10,8 +10,8 @@ export default class ThemeSwitcher extends Switcher {
   };
 
   mounted() {
-    domScheduler.read(() => {
-      const value = getTheme();
+    domScheduler.read(async () => {
+      const value = await getTheme();
       const input = this.$refs.inputs.find((i) => i.value === value);
 
       domScheduler.write(() => {
@@ -24,5 +24,14 @@ export default class ThemeSwitcher extends Switcher {
 
   switch(value: Themes) {
     setTheme(value);
+  }
+
+  async onWindowHashchange({ event }) {
+    const url = new URL(event.newURL);
+    const params = new URLSearchParams(url.hash.replace('#', ''));
+    const theme = params.get('theme') as Themes;
+    if (theme !== (await getTheme())) {
+      setTheme(theme);
+    }
   }
 }

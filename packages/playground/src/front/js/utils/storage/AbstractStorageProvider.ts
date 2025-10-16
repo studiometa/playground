@@ -1,4 +1,4 @@
-export class AbstractStorage<T> {
+export class AbstractStorageProvider<T> {
   store: T;
 
   constructor(store: T) {
