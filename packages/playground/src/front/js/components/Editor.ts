@@ -2,7 +2,7 @@ import { Base } from '@studiometa/js-toolkit';
 import type { BaseConfig, BaseProps } from '@studiometa/js-toolkit';
 import { debounce } from '@studiometa/js-toolkit/utils';
 import type { editor } from 'monaco-editor/esm/vs/editor/editor.api.js';
-import * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
 import { emmetHTML, emmetCSS } from 'emmet-monaco-es';
 import { themeIsDark, watchTheme } from '../store/index.js';
 
@@ -27,6 +27,13 @@ export default class Editor extends Base<EditorProps> {
   editor: editor.IStandaloneCodeEditor;
 
   /**
+   * Monaco.
+   */
+  get monaco() {
+    return monaco;
+  }
+
+  /**
    * Language of the editor.
    */
   get language() {
@@ -37,7 +44,7 @@ export default class Editor extends Base<EditorProps> {
     const { addJsAutocompletion } = await import('../utils/js/index.js');
     const value = await this.getInitialValue();
 
-    this.editor = monaco.editor.create(this.$el, {
+    this.editor = this.monaco.editor.create(this.$el, {
       value,
       language: this.language,
       minimap: { enabled: false },
@@ -49,9 +56,9 @@ export default class Editor extends Base<EditorProps> {
       theme: (await themeIsDark()) ? 'vs-dark' : 'vs',
     });
 
-    const disposeHTML = emmetHTML(monaco, ['html']);
-    const disposeCSS = emmetCSS(monaco, ['css']);
-    addJsAutocompletion(monaco.languages);
+    const disposeHTML = emmetHTML(this.monaco, ['html']);
+    const disposeCSS = emmetCSS(this.monaco, ['css']);
+    addJsAutocompletion(this.monaco.languages);
 
     this.$on(
       'destroyed',
