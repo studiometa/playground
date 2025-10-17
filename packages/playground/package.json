@@ -64,7 +64,7 @@
     "esbuild-wasm": "^0.24.0",
     "fast-glob": "^3.3.2",
     "fflate": "^0.8.2",
-    "monaco-editor": "^0.52.2",
+    "monaco-editor": "^0.54.0",
     "monaco-editor-auto-typings": "0.4.6",
     "monaco-editor-webpack-plugin": "^7.1.0",
     "path-browserify": "1.0.1",
