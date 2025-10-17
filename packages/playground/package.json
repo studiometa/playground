@@ -68,7 +68,7 @@
     "monaco-editor-auto-typings": "0.4.6",
     "monaco-editor-webpack-plugin": "^7.1.0",
     "path-browserify": "1.0.1",
-    "tailwindcss": "4.1.13",
+    "tailwindcss": "4.1.14",
     "webpack-virtual-modules": "^0.6.2"
   },
   "engines": {
