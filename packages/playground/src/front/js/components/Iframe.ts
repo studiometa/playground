@@ -204,6 +204,7 @@ ${html}
       const esbuild = await this.esbuild();
       const results = await esbuild.transform(newScript, {
         target: 'es2020',
+        loader: 'ts',
       });
       this.script.remove();
       this.script = this.doc.createElement('script');

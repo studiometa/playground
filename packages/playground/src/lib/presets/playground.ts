@@ -1,4 +1,5 @@
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { PartialDeep } from 'type-fest';
 import type { Preset } from '@studiometa/webpack-config';
 import { prototyping } from '@studiometa/webpack-config-preset-prototyping';
@@ -116,6 +117,15 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
       if (!context.isDev) {
         await productionBuildPreset().handler(config, context);
       }
+
+      await context.extendWebpack(config, (webpackConfig) => {
+        webpackConfig.resolve = {
+          ...webpackConfig.resolve,
+          fallback: {
+            path: fileURLToPath(import.meta.resolve('path-browserify')),
+          },
+        };
+      });
     },
   };
 }
