@@ -1,42 +1,56 @@
-import {
-  AutoTypings,
-  LocalStorageCache,
-  JsDelivrSourceResolver,
-  type SourceResolver,
-} from 'monaco-editor-auto-typings';
+import { AutoTypings, LocalStorageCache, type SourceResolver } from 'monaco-editor-auto-typings';
 import { getScript, setScript } from '../store/index.js';
 import Editor from './Editor.js';
 
-class CustomSourceResolver extends JsDelivrSourceResolver implements SourceResolver {
+class CustomSourceResolver implements SourceResolver {
   #importMap: Record<string, string>;
 
   constructor({ importMap = {} }: { importMap: Record<string, string> }) {
-    super();
     this.#importMap = importMap;
   }
 
-  resolvePackageJson(
-    packageName: string,
+  async resolvePackageJson(
+    name: string,
     version: string | undefined,
-    subPath: string | undefined,
   ): Promise<string | undefined> {
-    console.log('resolvePackageJson', ...arguments);
-    return super.resolvePackageJson(packageName, version, subPath);
+    const url = this.#getUrlForPackage(name, version, 'package.json');
+
+    let result = await fetch(url)
+      .then((r) => r.text())
+      .catch(() => '{}');
+
+    try {
+      JSON.parse(result);
+    } catch (e) {
+      result = '{}';
+    }
+
+    return result;
   }
 
   resolveSourceFile(
-    packageName: string,
+    name: string,
     version: string | undefined,
     path: string,
   ): Promise<string | undefined> {
-    console.log('resolveSourceFile', ...arguments);
+    let url = this.#getUrlForPackage(name, version, path)
+
+    return fetch(url)
+      .then((r) => r.text())
+      .catch(() => '');
+  }
+
+  #getUrlForPackage(name: string, version: string, path: string = ''): string {
+    let url = `https://esm.sh/${name}@${version}/${path}`;
+
     for (const [key, value] of Object.entries(this.#importMap)) {
-      if (packageName.startsWith(key)) {
-        const url = packageName.replace(key, value) + '/' + path;
-        return this.resolveFile(url);
+      if (name.startsWith(key)) {
+        url = `${name.replace(key, value)}${path ? `/${path}` : ''}`;
+        break;
       }
     }
-    return super.resolveSourceFile(packageName, version, path);
+
+    return url;
   }
 }
 
