@@ -14,6 +14,7 @@ export default defineWebpackConfig({
       syncColorScheme: true,
       importMap: {
         '@studiometa/': 'https://esm.sh/@studiometa/',
+        '/': 'https://esm.sh/',
       },
       loaders: {
         html: resolve('./html-loader.ts'),

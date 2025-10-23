@@ -64,6 +64,7 @@
     "esbuild-wasm": "^0.25.11",
     "fast-glob": "^3.3.3",
     "fflate": "^0.8.2",
+    "magicast": "0.3.5",
     "monaco-editor": "^0.54.0",
     "monaco-editor-auto-typings": "0.4.6",
     "monaco-editor-webpack-plugin": "^7.1.1",

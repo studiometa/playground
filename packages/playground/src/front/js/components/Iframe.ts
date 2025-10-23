@@ -202,17 +202,52 @@ ${html}
 
     try {
       const esbuild = await this.esbuild();
-      const results = await esbuild.transform(newScript, {
+
+      function transformImport(importStatement) {
+        return importStatement.replace(
+          /from\s+['"](?!https?:\/\/)([^'"]+)['"]/g,
+          (match, pkg) => `from 'https://esm.sh/${pkg}'`,
+        );
+      }
+
+      const results = await esbuild.build({
+        stdin: {
+          contents: transformImport(newScript),
+          loader: 'ts',
+        },
         target: 'es2020',
-        loader: 'ts',
+        plugins: [
+          {
+            name: 'esm-import',
+            setup(build) {
+              console.log('ddddddddddddd', build);
+              // Intercept import paths called "env" so esbuild doesn't attempt
+              // to map them to a file system location. Tag them with the "env-ns"
+              // namespace to reserve them for this plugin.
+              build.onResolve({ filter: /@studiometa\/js-toolkit/ }, (args) => {
+                console.log(args.path);
+                return args;
+              });
+            },
+          },
+        ],
       });
-      this.script.remove();
-      this.script = this.doc.createElement('script');
-      this.script.type = 'module';
-      this.script.id = 'script';
-      this.script.textContent = results.code;
-      this.doc.head.append(this.script);
-      console.log('script updated!');
+      if (results.errors.length > 0) {
+        const error = new Error('Esbuild compilation error');
+        error.stack = results.errors.map((e) => e.text).join('\n');
+        throw error;
+      }
+
+      const newContent = results.outputFiles[0]?.text;
+      if (typeof newContent !== 'undefined') {
+        this.script.remove();
+        this.script = this.doc.createElement('script');
+        this.script.type = 'module';
+        this.script.id = 'script';
+        this.script.textContent = newContent;
+        this.doc.head.append(this.script);
+        console.log('script updated!');
+      }
     } catch (err) {
       console.log('script not updated due to some errors:');
       if (isArray(err.errors)) {
