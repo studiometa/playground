@@ -30,4 +30,42 @@ describe('PlaygroundDependenciesPlugin', () => {
       expect(isLocalSource('@studiometa/js-toolkit/utils')).toBe(false);
     });
   });
+
+  describe('resolveBasePath', () => {
+    const resolveBasePath = (basePath: string | undefined, publicPath?: string) => {
+      const p = new PlaygroundDependenciesPlugin([], '/tmp', basePath);
+      const fakeCompiler = {
+        options: { output: { publicPath: publicPath ?? 'auto' } },
+      };
+      return (p as any).resolveBasePath(fakeCompiler);
+    };
+
+    it('uses explicit basePath when provided', () => {
+      expect(resolveBasePath('/play')).toBe('/play');
+    });
+
+    it('strips trailing slash from explicit basePath', () => {
+      expect(resolveBasePath('/play/')).toBe('/play');
+    });
+
+    it('infers from webpack publicPath when no basePath', () => {
+      expect(resolveBasePath(undefined, '/play/')).toBe('/play');
+    });
+
+    it('returns empty string when publicPath is "auto"', () => {
+      expect(resolveBasePath(undefined, 'auto')).toBe('');
+    });
+
+    it('returns empty string when publicPath is "/"', () => {
+      expect(resolveBasePath(undefined, '/')).toBe('');
+    });
+
+    it('returns empty string when no basePath and no publicPath', () => {
+      expect(resolveBasePath(undefined)).toBe('');
+    });
+
+    it('prefers explicit basePath over publicPath', () => {
+      expect(resolveBasePath('/custom', '/play/')).toBe('/custom');
+    });
+  });
 });
