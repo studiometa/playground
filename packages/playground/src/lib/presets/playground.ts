@@ -39,6 +39,21 @@ export interface HTMLLinkElementAttributes extends HTMLElementAttributes {
   type?: string;
 }
 
+export interface PlaygroundHtmlLanguage {
+  /**
+   * Language ID matching a Shiki grammar name from tm-grammars.
+   * Available values include: 'html', 'twig', 'liquid', 'blade',
+   * 'handlebars', 'jinja-html', 'edge', 'pug'.
+   * @default 'html'
+   */
+  id: string;
+  /**
+   * Virtual filename for the editor model (e.g. 'index.twig').
+   * If omitted, inferred from the language ID.
+   */
+  filename?: string;
+}
+
 export interface PlaygroundPresetOptions {
   head: {
     title: string;
@@ -55,6 +70,17 @@ export interface PlaygroundPresetOptions {
     script: string;
   };
   loaders: PlaygroundLoadersOptions;
+  /**
+   * Configure the HTML editor language. Allows using HTML-superset
+   * template languages like Twig, Liquid, Blade, etc.
+   * When set to a non-HTML language, the editor will:
+   * - Load the corresponding Shiki grammar for syntax highlighting
+   * - Alias the HTML LSP provider for tag/attribute completions and emmet
+   * - Register built-in snippets when available (e.g. for Twig)
+   * @example { id: 'twig' }
+   * @example { id: 'liquid', filename: 'template.liquid' }
+   */
+  htmlLanguage: PlaygroundHtmlLanguage;
   tailwindcss: boolean;
   syncColorScheme: boolean;
   html_attr: Record<string, unknown>;
