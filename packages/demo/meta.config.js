@@ -12,9 +12,7 @@ export default defineWebpackConfig({
       },
       tailwindcss: true,
       syncColorScheme: true,
-      importMap: {
-        '@studiometa/': 'https://esm.sh/@studiometa/',
-      },
+      dependencies: ['@studiometa/js-toolkit'],
       loaders: {
         html: resolve('./html-loader.ts'),
       },

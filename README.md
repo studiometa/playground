@@ -58,5 +58,82 @@ playgroundPreset({
   importMap: {
     '@studiometa/js-toolkit': '/static/js-toolkit/index.js',
   },
-})
+});
+```
+
+## Dependencies
+
+The `dependencies` option provides a declarative way to manage packages available in the script editor. It automatically generates import map entries and, for self-hosted packages, configures the necessary build pipeline.
+
+### esm.sh (default)
+
+The simplest way to add a dependency is a plain string. It resolves via [esm.sh](https://esm.sh), which serves proper ESM bundles with TypeScript types out of the box:
+
+```js
+playgroundPreset({
+  dependencies: ['deepmerge', '@motionone/easing'],
+});
+```
+
+Versions are inferred from your `package.json` when available. You can also pin them explicitly:
+
+```js
+playgroundPreset({
+  dependencies: [{ specifier: 'deepmerge', version: '5.1.0' }],
+});
+```
+
+### Self-hosted: copy
+
+Copy pre-built `.js` and `.d.ts` files from an npm package in `node_modules`. Useful for packages that already ship ES modules and type declarations:
+
+```js
+playgroundPreset({
+  dependencies: [{ specifier: '@studiometa/js-toolkit', source: '@studiometa/js-toolkit' }],
+});
+```
+
+### Self-hosted: bundle
+
+Bundle an npm package into a single ESM file with esbuild. Useful for packages with many internal modules or CommonJS dependencies:
+
+```js
+playgroundPreset({
+  dependencies: [{ specifier: 'morphdom', source: 'morphdom', bundle: true }],
+});
+```
+
+### Self-hosted: TypeScript
+
+Transpile local TypeScript sources to `.js` with esbuild and generate `.d.ts` declarations with [tsgo](https://github.com/nicolo-ribaudo/typescript-go) (`@typescript/native-preview`). The `source` field supports glob patterns for multi-file packages:
+
+```js
+playgroundPreset({
+  dependencies: [
+    {
+      specifier: '@studiometa/ui',
+      source: '../ui/**/*.ts',
+      typescript: true,
+      entry: '../ui/index.ts', // optional, explicit entry for tsgo
+    },
+  ],
+});
+```
+
+> **Note:** TypeScript dependency processing requires `@typescript/native-preview` as a devDependency. Install it with `npm install -D @typescript/native-preview`.
+
+Relative `.js` imports in the generated `.d.ts` files are automatically rewritten to `.d.ts`, so modern-monaco's TypeScript worker can resolve types when fetching over HTTP.
+
+### Combining with `importMap`
+
+The `dependencies` option can be combined with the legacy `importMap` option. Manual `importMap` entries take precedence over entries generated from `dependencies`:
+
+```js
+playgroundPreset({
+  dependencies: ['deepmerge'],
+  importMap: {
+    // This overrides the esm.sh URL for deepmerge
+    deepmerge: '/static/custom/deepmerge.js',
+  },
+});
 ```
