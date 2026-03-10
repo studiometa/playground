@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## v0.3.1 - 2026.03.10
+
+### Added
+
+- Add declarative `dependencies` option to `playgroundPreset()` for managing script editor packages with esm.sh resolution and self-hosted bundling via tsdown ([#50](https://github.com/studiometa/playground/pull/50))
+- Add `_headers` file generation for `x-typescript-types` (Cloudflare Pages / Netlify) ([#50](https://github.com/studiometa/playground/pull/50))
+- Add CI test job with vitest and Codecov coverage ([#50](https://github.com/studiometa/playground/pull/50))
+
+### Fixed
+
+- Fix relative import map URLs not resolving to absolute URLs for TypeScript LSP ([#49](https://github.com/studiometa/playground/pull/49))
+
 ## v0.3.0 - 2026.03.10
 
 ### Changed
