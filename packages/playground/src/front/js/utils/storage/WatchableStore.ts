@@ -2,9 +2,10 @@ import { StorageProviderInterface } from './StorageProviderInterface';
 
 export type WatchableStoreHandler = (key: string, newValue: unknown, oldValue: unknown) => void;
 
-export class WatchableStore<T extends StorageProviderInterface<U>, U = unknown>
-  implements StorageProviderInterface<U>
-{
+export class WatchableStore<
+  T extends StorageProviderInterface<U>,
+  U = unknown,
+> implements StorageProviderInterface<U> {
   provider: T;
   handlers = new Set<WatchableStoreHandler>();
 
