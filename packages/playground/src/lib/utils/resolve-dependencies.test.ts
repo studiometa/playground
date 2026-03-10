@@ -102,8 +102,8 @@ describe('resolveDependencies', () => {
     expect(result.selfHosted).toEqual([]);
   });
 
-  describe('basePath support', () => {
-    it('prepends basePath to self-hosted dependency paths', () => {
+  describe('publicPath support', () => {
+    it('prepends publicPath to self-hosted dependency paths', () => {
       const result = resolveDependencies(
         [{ specifier: 'morphdom', source: 'morphdom' }],
         undefined,
@@ -115,7 +115,7 @@ describe('resolveDependencies', () => {
       expect(result.selfHosted[0].importMapValue).toBe('/play/static/deps/morphdom/index.js');
     });
 
-    it('normalizes basePath with trailing slash', () => {
+    it('normalizes publicPath with trailing slash', () => {
       const result = resolveDependencies(
         [{ specifier: 'morphdom', source: 'morphdom' }],
         undefined,
@@ -124,7 +124,7 @@ describe('resolveDependencies', () => {
       expect(result.importMap.morphdom).toBe('/play/static/deps/morphdom/index.js');
     });
 
-    it('normalizes basePath without leading slash', () => {
+    it('normalizes publicPath without leading slash', () => {
       const result = resolveDependencies(
         [{ specifier: 'morphdom', source: 'morphdom' }],
         undefined,
@@ -138,7 +138,7 @@ describe('resolveDependencies', () => {
       expect(result.importMap.deepmerge).toBe('https://esm.sh/deepmerge');
     });
 
-    it('treats "/" basePath as no prefix', () => {
+    it('treats "/" publicPath as no prefix', () => {
       const result = resolveDependencies(
         [{ specifier: 'morphdom', source: 'morphdom' }],
         undefined,
@@ -147,7 +147,7 @@ describe('resolveDependencies', () => {
       expect(result.importMap.morphdom).toBe('/static/deps/morphdom/index.js');
     });
 
-    it('treats empty basePath as no prefix', () => {
+    it('treats empty publicPath as no prefix', () => {
       const result = resolveDependencies(
         [{ specifier: 'morphdom', source: 'morphdom' }],
         undefined,
