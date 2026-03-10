@@ -32,7 +32,11 @@ export class PlaygroundDependenciesPlugin {
     }
 
     const webpackPublicPath = compiler.options.output?.publicPath;
-    if (typeof webpackPublicPath === 'string' && webpackPublicPath !== 'auto' && webpackPublicPath !== '/') {
+    if (
+      typeof webpackPublicPath === 'string' &&
+      webpackPublicPath !== 'auto' &&
+      webpackPublicPath !== '/'
+    ) {
       return webpackPublicPath.replace(/\/+$/, '');
     }
 

@@ -1,28 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { unzlibSync, strToU8, strFromU8 } from 'fflate';
+import { describe, it, expect, afterEach } from 'vitest';
 import { PlaygroundPreview } from './playground-preview.js';
 
 // Register the custom element for tests
 if (!customElements.get('playground-preview')) {
   customElements.define('playground-preview', PlaygroundPreview);
-}
-
-/**
- * Decompress a zip() result back to string.
- */
-function unzip(data: string): string {
-  const binary = atob(data);
-  const bytes = strToU8(binary, true);
-  const inflated = unzlibSync(bytes);
-  return strFromU8(inflated);
-}
-
-/**
- * Parse the hash fragment of a playground URL into key/value pairs.
- */
-function parseHash(url: string): Record<string, string> {
-  const hash = url.split('#')[1] ?? '';
-  return Object.fromEntries(new URLSearchParams(hash));
 }
 
 /**
@@ -82,9 +63,6 @@ describe('PlaygroundPreview', () => {
         `<script type="playground/html"><p>From child</p></script>`,
       );
 
-      // Access the private method via the built URL
-      const src = (el as any)['#buildSrc']?.() ?? '';
-      // We can't call private methods directly, but we can verify via the shadow DOM
       const shadow = el.shadowRoot!;
       expect(shadow.querySelector('.container')).not.toBeNull();
     });

@@ -159,11 +159,7 @@ export class PlaygroundPreview extends HTMLElement {
    */
   #getContent(type: 'html' | 'script' | 'css'): string {
     const childContent =
-      type === 'html'
-        ? this.#childHtml
-        : type === 'script'
-          ? this.#childScript
-          : this.#childCss;
+      type === 'html' ? this.#childHtml : type === 'script' ? this.#childScript : this.#childCss;
 
     if (childContent != null) {
       return childContent.trim();

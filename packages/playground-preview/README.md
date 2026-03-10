@@ -34,8 +34,7 @@ customElements.define('my-playground', PlaygroundPreview);
 <playground-preview
   html="<h1>Hello</h1>"
   script="console.log('hi')"
-  css="h1 { color: red }"
-></playground-preview>
+  css="h1 { color: red }"></playground-preview>
 ```
 
 ### Long content via `<script>` children
@@ -73,17 +72,17 @@ When both attributes and `<script>` children are provided for the same language,
 
 ## Attributes
 
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `html` | `string` | `""` | HTML content |
-| `script` | `string` | `""` | JavaScript content |
-| `css` | `string` | `""` | CSS content |
-| `base-url` | `string` | `https://studiometa-playground.pages.dev` | Playground instance URL |
-| `height` | `string` | `60vh` | Container height |
-| `zoom` | `number` | `0.9` | Initial iframe scale |
-| `theme` | `string` | `auto` | `dark`, `light`, or `auto` (uses `prefers-color-scheme`) |
-| `no-controls` | `boolean` | `false` | Hide zoom/reload/open controls |
-| `header` | `string` | — | Passed through to the playground URL |
+| Attribute     | Type      | Default                                   | Description                                              |
+| ------------- | --------- | ----------------------------------------- | -------------------------------------------------------- |
+| `html`        | `string`  | `""`                                      | HTML content                                             |
+| `script`      | `string`  | `""`                                      | JavaScript content                                       |
+| `css`         | `string`  | `""`                                      | CSS content                                              |
+| `base-url`    | `string`  | `https://studiometa-playground.pages.dev` | Playground instance URL                                  |
+| `height`      | `string`  | `60vh`                                    | Container height                                         |
+| `zoom`        | `number`  | `0.9`                                     | Initial iframe scale                                     |
+| `theme`       | `string`  | `auto`                                    | `dark`, `light`, or `auto` (uses `prefers-color-scheme`) |
+| `no-controls` | `boolean` | `false`                                   | Hide zoom/reload/open controls                           |
+| `header`      | `string`  | —                                         | Passed through to the playground URL                     |
 
 ## Controls
 

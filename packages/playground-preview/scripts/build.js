@@ -7,10 +7,7 @@ const start = performance.now();
 console.log('Building...');
 
 const { errors, warnings } = await esbuild.build({
-  entryPoints: [
-    resolve(root, 'src/index.ts'),
-    resolve(root, 'src/element.ts'),
-  ],
+  entryPoints: [resolve(root, 'src/index.ts'), resolve(root, 'src/element.ts')],
   write: true,
   outdir: resolve(root, 'dist'),
   target: 'es2022',

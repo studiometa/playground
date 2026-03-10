@@ -4,10 +4,7 @@ import esbuild from 'esbuild-wasm';
 const root = resolve(import.meta.dirname, '..');
 
 const ctx = await esbuild.context({
-  entryPoints: [
-    resolve(root, 'src/index.ts'),
-    resolve(root, 'src/element.ts'),
-  ],
+  entryPoints: [resolve(root, 'src/index.ts'), resolve(root, 'src/element.ts')],
   write: true,
   outdir: resolve(root, 'dist'),
   target: 'es2022',
