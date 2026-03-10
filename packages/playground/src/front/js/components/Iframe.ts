@@ -8,6 +8,7 @@ import {
   getTransformedStyle as getStyle,
   getTransformedScript as getScript,
 } from '../store/index.js';
+import { resolveImportMapUrls } from '../utils/resolve-import-map-urls.js';
 
 type esbuildType = typeof import('esbuild-wasm');
 
@@ -145,7 +146,7 @@ ${html}
     const importMap = this.doc.createElement('script');
     importMap.type = 'importmap';
     importMap.textContent = JSON.stringify({
-      imports: this.$options.importMap,
+      imports: resolveImportMapUrls(this.$options.importMap),
     });
     this.doc.head.append(importMap);
   }

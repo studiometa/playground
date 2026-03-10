@@ -48,3 +48,15 @@ And then run `npx meta dev` and open `http://localhost:3000`.
 You can configure the playground by passing a configuration object to the `playgroundPreset` function. Have a look at [the demo](https://github.com/studiometa/playground/blob/main/packages/demo/meta.config.js) for all available options.
 
 When you are ready, run `npx meta build` and you can deploy the generated `dist/` folder to any static hosting of your choice.
+
+### Import Map
+
+Relative paths in the `importMap` option are automatically resolved to absolute URLs at runtime using `window.location.origin`. This allows build tools to use natural relative paths:
+
+```js
+playgroundPreset({
+  importMap: {
+    '@studiometa/js-toolkit': '/static/js-toolkit/index.js',
+  },
+})
+```
