@@ -181,7 +181,12 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
         // Add self-hosted dependencies plugin when needed
         if (selfHostedDeps.length > 0) {
           webpackConfig.plugins.push(
-            new PlaygroundDependenciesPlugin(selfHostedDeps, configDir, options?.publicPath),
+            new PlaygroundDependenciesPlugin(
+              selfHostedDeps,
+              configDir,
+              options?.publicPath,
+              Object.keys(mergedImportMap),
+            ),
           );
         }
 
