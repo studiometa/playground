@@ -109,7 +109,6 @@ export async function getMonaco(
     // but webpack may tree-shake it when using dynamic import().
     Object.assign(globalThis, {
       MonacoEnvironment: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ...(globalThis as any).MonacoEnvironment,
         useBuiltinLSP: true,
       },
