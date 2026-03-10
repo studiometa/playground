@@ -5,7 +5,6 @@ import type { Preset } from '@studiometa/webpack-config';
 import { prototyping } from '@studiometa/webpack-config-preset-prototyping';
 import { isDefined } from '@studiometa/js-toolkit/utils';
 import { htmlWebpackScriptTypeModulePreset } from './html-webpack-script-type-module.js';
-import { monacoPreset } from './monaco.js';
 import { productionBuildPreset } from './production-build.js';
 import { PlaygroundLoadersPlugin } from '../plugins/PlaygroundLoadersPlugin.js';
 import type { PlaygroundLoadersOptions } from '../plugins/PlaygroundLoadersPlugin.js';
@@ -111,8 +110,6 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
 
       const { handler: scriptTypeModuleHandler } = htmlWebpackScriptTypeModulePreset();
       await scriptTypeModuleHandler(config, context);
-
-      await monacoPreset().handler(config, context);
 
       if (!context.isDev) {
         await productionBuildPreset().handler(config, context);

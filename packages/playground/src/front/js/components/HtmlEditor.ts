@@ -6,6 +6,10 @@ export default class HtmlEditor extends Editor {
     return 'html';
   }
 
+  get filename(): string {
+    return 'index.html';
+  }
+
   async getInitialValue() {
     return getHtml();
   }
