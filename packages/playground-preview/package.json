@@ -1,0 +1,56 @@
+{
+  "name": "@studiometa/playground-preview",
+  "version": "0.3.2",
+  "type": "module",
+  "description": "A web component to embed @studiometa/playground previews anywhere",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/studiometa/playground.git"
+  },
+  "keywords": [
+    "playground",
+    "web-component",
+    "custom-element",
+    "preview",
+    "embed",
+    "code"
+  ],
+  "author": "Studio Meta <agence@studiometa.fr> (https://www.studiometa.fr/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/studiometa/playground/issues"
+  },
+  "homepage": "https://github.com/studiometa/playground#readme",
+  "files": [
+    "dist/"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./element": {
+      "types": "./dist/element.d.ts",
+      "import": "./dist/element.js"
+    }
+  },
+  "scripts": {
+    "prebuild": "rm -rf dist",
+    "build": "node scripts/build.js && tsc --build tsconfig.build.json",
+    "watch": "node scripts/watch.js"
+  },
+  "devDependencies": {
+    "esbuild-wasm": "^0.24.2",
+    "fflate": "^0.8.2",
+    "typescript": "5.8.3"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  }
+}

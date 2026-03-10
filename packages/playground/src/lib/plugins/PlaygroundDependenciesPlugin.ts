@@ -14,14 +14,38 @@ import type { ResolvedDependency } from '../utils/resolve-dependencies.js';
 export class PlaygroundDependenciesPlugin {
   dependencies: ResolvedDependency[];
   configDir: string;
+  publicPath: string;
 
-  constructor(dependencies: ResolvedDependency[], configDir: string) {
+  constructor(dependencies: ResolvedDependency[], configDir: string, publicPath?: string) {
     this.dependencies = dependencies;
     this.configDir = configDir;
+    this.publicPath = publicPath ?? '';
+  }
+
+  /**
+   * Resolve the effective public path.
+   * Explicit `publicPath` takes precedence, then webpack's `output.publicPath`.
+   */
+  private resolvePublicPath(compiler: Compiler): string {
+    if (this.publicPath) {
+      return this.publicPath.replace(/\/+$/, '');
+    }
+
+    const webpackPublicPath = compiler.options.output?.publicPath;
+    if (
+      typeof webpackPublicPath === 'string' &&
+      webpackPublicPath !== 'auto' &&
+      webpackPublicPath !== '/'
+    ) {
+      return webpackPublicPath.replace(/\/+$/, '');
+    }
+
+    return '';
   }
 
   apply(compiler: Compiler) {
     const pluginName = 'PlaygroundDependenciesPlugin';
+    const publicPath = this.resolvePublicPath(compiler);
 
     compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
       compilation.hooks.processAssets.tapAsync(
@@ -38,8 +62,8 @@ export class PlaygroundDependenciesPlugin {
                 await this.processBundle(compilation, dep);
 
                 headerEntries.push({
-                  jsPath: `/static/deps/${dep.specifier}/index.js`,
-                  dtsPath: `/static/deps/${dep.specifier}/index.d.ts`,
+                  jsPath: `${publicPath}/static/deps/${dep.specifier}/index.js`,
+                  dtsPath: `${publicPath}/static/deps/${dep.specifier}/index.d.ts`,
                 });
               }
             }

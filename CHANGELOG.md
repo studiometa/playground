@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## v0.3.2 - 2026.03.10
+
+### Added
+
+- Add `publicPath` option to `playgroundPreset()` for self-hosted dependency paths, with automatic inference from webpack's `output.publicPath` ([#55](https://github.com/studiometa/playground/pull/55), [a2784d2](https://github.com/studiometa/playground/commit/a2784d2))
+- Add `@studiometa/playground-preview` web component package for embedding playground previews anywhere ([#53](https://github.com/studiometa/playground/pull/53), [9e2d52c](https://github.com/studiometa/playground/commit/9e2d52c))
+
 ## v0.3.1 - 2026.03.10
 
 ### Added
