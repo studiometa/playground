@@ -8,6 +8,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    environment: publish
     permissions:
       contents: write
       id-token: write
@@ -32,9 +33,7 @@ jobs:
 
           echo "NPM_TAG=$NPM_TAG" >> $GITHUB_ENV
           echo "IS_PRERELEASE=$IS_PRERELEASE" >> $GITHUB_ENV
-      - run: npm publish --provenance --access public --tag ${{ env.NPM_TAG }} -w @studiometa/playground
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - run: npm i -g npm@^11 && cd packages/playground && npm publish --provenance --access public --tag ${{ env.NPM_TAG }}
       - uses: ncipollo/release-action@v1
         with:
           tag: ${{ github.ref }}
