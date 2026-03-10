@@ -42,6 +42,7 @@
     } %}
 
     {# BEGIN HTML editor #}
+    {% set htmlLang = htmlLanguage ?? {} %}
     {% embed './editors/html.twig'
       with {
         components: ['LayoutReactive', 'ResizableSync', 'EditorVisibility'],
@@ -50,6 +51,8 @@
           data_option_right: 'w-full h-1/3',
           data_option_bottom: 'w-1/3 h-full',
           data_option_left: 'w-full h-1/3',
+          data_option_language: htmlLang.id ?? 'html',
+          data_option_filename: htmlLang.filename ?? '',
           class: 'flex-grow w-1/3',
           data_lang: 'text/html'
         }
@@ -123,6 +126,7 @@
         data_option_right: 'w-full h-1/3',
         data_option_bottom: 'w-1/3 h-full',
         data_option_left: 'w-full h-1/3',
+        data_option_import_map: importMap ?? {},
         class: 'flex-grow w-1/3 h-full',
         data_lang: 'text/javascript'
       }

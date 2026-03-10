@@ -5,7 +5,6 @@ import type { Preset } from '@studiometa/webpack-config';
 import { prototyping } from '@studiometa/webpack-config-preset-prototyping';
 import { isDefined } from '@studiometa/js-toolkit/utils';
 import { htmlWebpackScriptTypeModulePreset } from './html-webpack-script-type-module.js';
-import { monacoPreset } from './monaco.js';
 import { productionBuildPreset } from './production-build.js';
 import { PlaygroundLoadersPlugin } from '../plugins/PlaygroundLoadersPlugin.js';
 import type { PlaygroundLoadersOptions } from '../plugins/PlaygroundLoadersPlugin.js';
@@ -40,6 +39,21 @@ export interface HTMLLinkElementAttributes extends HTMLElementAttributes {
   type?: string;
 }
 
+export interface PlaygroundHtmlLanguage {
+  /**
+   * Language ID matching a Shiki grammar name from tm-grammars.
+   * Available values include: 'html', 'twig', 'liquid', 'blade',
+   * 'handlebars', 'jinja-html', 'edge', 'pug'.
+   * @default 'html'
+   */
+  id: string;
+  /**
+   * Virtual filename for the editor model (e.g. 'index.twig').
+   * If omitted, inferred from the language ID.
+   */
+  filename?: string;
+}
+
 export interface PlaygroundPresetOptions {
   head: {
     title: string;
@@ -56,6 +70,17 @@ export interface PlaygroundPresetOptions {
     script: string;
   };
   loaders: PlaygroundLoadersOptions;
+  /**
+   * Configure the HTML editor language. Allows using HTML-superset
+   * template languages like Twig, Liquid, Blade, etc.
+   * When set to a non-HTML language, the editor will:
+   * - Load the corresponding Shiki grammar for syntax highlighting
+   * - Alias the HTML LSP provider for tag/attribute completions and emmet
+   * - Register built-in snippets when available (e.g. for Twig)
+   * @example { id: 'twig' }
+   * @example { id: 'liquid', filename: 'template.liquid' }
+   */
+  htmlLanguage: PlaygroundHtmlLanguage;
   tailwindcss: boolean;
   syncColorScheme: boolean;
   html_attr: Record<string, unknown>;
@@ -111,8 +136,6 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
 
       const { handler: scriptTypeModuleHandler } = htmlWebpackScriptTypeModulePreset();
       await scriptTypeModuleHandler(config, context);
-
-      await monacoPreset().handler(config, context);
 
       if (!context.isDev) {
         await productionBuildPreset().handler(config, context);

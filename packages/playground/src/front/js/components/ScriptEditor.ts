@@ -1,15 +1,45 @@
-import { AutoTypings, LocalStorageCache, JsDelivrSourceResolver } from 'monaco-editor-auto-typings';
+import type { InitOptions } from 'modern-monaco';
 import { getScript, setScript } from '../store/index.js';
 import Editor from './Editor.js';
 
 export default class ScriptEditor extends Editor {
   /**
-   * Autotyping instance.
+   * Config.
    */
-  autoTypings: AutoTypings;
+  static config = {
+    ...Editor.config,
+    options: {
+      importMap: Object,
+    },
+  };
 
   get language(): string {
     return 'typescript';
+  }
+
+  get filename(): string {
+    return 'script.ts';
+  }
+
+  /**
+   * Forward the import map to modern-monaco's TypeScript LSP
+   * so that it can resolve bare specifier imports and fetch .d.ts files.
+   */
+  protected getLspOptions(): InitOptions['lsp'] {
+    const importMap = this.$options.importMap as Record<string, string> | undefined;
+
+    if (!importMap || Object.keys(importMap).length === 0) {
+      return {};
+    }
+
+    return {
+      typescript: {
+        importMap: {
+          imports: importMap,
+          scopes: {},
+        },
+      },
+    };
   }
 
   async getInitialValue() {
@@ -18,19 +48,5 @@ export default class ScriptEditor extends Editor {
 
   onContentChange({ args: [value] }) {
     setScript(value);
-  }
-
-  async mounted() {
-    await super.mounted();
-
-    this.autoTypings = await AutoTypings.create(this.editor, {
-      sourceCache: new LocalStorageCache(),
-      sourceResolver: new JsDelivrSourceResolver(),
-      monaco: this.monaco,
-    });
-  }
-
-  destroyed() {
-    this.autoTypings.dispose();
   }
 }

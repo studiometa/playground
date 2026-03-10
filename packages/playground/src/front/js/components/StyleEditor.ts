@@ -6,6 +6,10 @@ export default class StyleEditor extends Editor {
     return 'css';
   }
 
+  get filename(): string {
+    return 'style.css';
+  }
+
   async getInitialValue() {
     return getStyle();
   }

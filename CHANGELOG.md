@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- ⚠️ Replace `monaco-editor` with `modern-monaco` for built-in LSP, auto `.d.ts` fetching, Shiki syntax highlighting, and no webpack plugin needed
+
+### Added
+
+- Add `htmlLanguage` preset option to support HTML-superset template languages (Twig, Liquid, Blade, Handlebars, etc.) in the HTML editor
+
 ## v0.2.1 - 2025.10.17
 
 ### Added
