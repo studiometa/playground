@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## v0.3.0 - 2026.03.10
+
+### Changed
+
+- ⚠️ Replace `monaco-editor` with `modern-monaco` for built-in LSP, auto `.d.ts` fetching, Shiki syntax highlighting, and no webpack plugin needed ([#43](https://github.com/studiometa/playground/pull/43))
+- ⚠️ Replace `eslint` with `oxlint` ([#44](https://github.com/studiometa/playground/pull/44))
+- Update dependencies ([#45](https://github.com/studiometa/playground/pull/45))
+
+### Added
+
+- Add `htmlLanguage` preset option to support HTML-superset template languages (Twig, Liquid, Blade, Handlebars, etc.) in the HTML editor ([#43](https://github.com/studiometa/playground/pull/43))
+
 ## v0.2.1 - 2025.10.17
 
 ### Added

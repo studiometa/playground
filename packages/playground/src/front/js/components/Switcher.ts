@@ -29,8 +29,7 @@ export default class Switcher extends Base<SwitcherProps> {
     this.$emit('switch', this.value);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  switch(value: string) {
+  switch(_value: string) {
     throw new Error('The `switch` method must be implemented.');
   }
 }

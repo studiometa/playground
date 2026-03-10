@@ -1,12 +1,14 @@
 import { Base } from '@studiometa/js-toolkit';
 import type { BaseConfig, BaseProps } from '@studiometa/js-toolkit';
 import { debounce } from '@studiometa/js-toolkit/utils';
-import type { editor } from 'monaco-editor/esm/vs/editor/editor.api.js';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
-import { emmetHTML, emmetCSS } from 'emmet-monaco-es';
+import type { InitOptions } from 'modern-monaco';
+import { getMonaco, registerLspOptions, DARK_THEME, LIGHT_THEME } from '../utils/monaco.js';
+import type { MonacoNamespace } from '../utils/monaco.js';
 import { themeIsDark, watchTheme } from '../store/index.js';
 
 export type EditorProps = BaseProps;
+
+type MonacoEditor = ReturnType<MonacoNamespace['editor']['create']>;
 
 /**
  * Editor class.
@@ -21,16 +23,20 @@ export default class Editor extends Base<EditorProps> {
   };
 
   /**
-   * Editor.
-   * @type {editor.IStandaloneCodeEditor}
+   * Editor instance.
    */
-  editor: editor.IStandaloneCodeEditor;
+  editor: MonacoEditor;
 
   /**
-   * Monaco.
+   * Monaco namespace.
+   */
+  #monaco: MonacoNamespace;
+
+  /**
+   * Monaco namespace accessor.
    */
   get monaco() {
-    return monaco;
+    return this.#monaco;
   }
 
   /**
@@ -40,39 +46,59 @@ export default class Editor extends Base<EditorProps> {
     return '';
   }
 
+  /**
+   * Virtual filename for the editor model.
+   * Provides a `file://` URI so that LSP workers (especially TypeScript)
+   * can resolve the source. Subclasses should override this.
+   */
+  get filename() {
+    return '';
+  }
+
+  /**
+   * Get additional LSP options for modern-monaco.
+   * Subclasses can override this to provide language-specific LSP config.
+   */
+  protected getLspOptions(): InitOptions['lsp'] {
+    return {};
+  }
+
   async mounted() {
     const { addJsAutocompletion } = await import('../utils/js/index.js');
+
+    // Register LSP options before getMonaco() resolves.
+    // The singleton waits one microtask, so all editors that mount
+    // in the same tick will have their options merged.
+    registerLspOptions(this.getLspOptions());
+
+    const isDark = await themeIsDark();
+
+    this.#monaco = await getMonaco({
+      defaultTheme: isDark ? DARK_THEME : LIGHT_THEME,
+      themes: [DARK_THEME, LIGHT_THEME],
+    });
+
     const value = await this.getInitialValue();
 
-    this.editor = this.monaco.editor.create(this.$el, {
-      value,
-      language: this.language,
+    // Create a model with a file:// URI so LSP workers can resolve the source.
+    const uri = this.filename ? this.#monaco.Uri.file(this.filename) : undefined;
+    const model = this.#monaco.editor.createModel(value, this.language, uri);
+
+    this.editor = this.#monaco.editor.create(this.$el, {
+      model,
       minimap: { enabled: false },
       automaticLayout: true,
       fontLigatures: true,
       fontFamily: 'JetBrains Mono',
       fontSize: 14,
       tabSize: 2,
-      theme: (await themeIsDark()) ? 'vs-dark' : 'vs',
+      theme: isDark ? DARK_THEME : LIGHT_THEME,
     });
 
-    const disposeHTML = emmetHTML(this.monaco, ['html']);
-    const disposeCSS = emmetCSS(this.monaco, ['css']);
-    addJsAutocompletion(this.monaco.languages);
-
-    this.$on(
-      'destroyed',
-      () => {
-        disposeHTML();
-        disposeCSS();
-      },
-      { once: true },
-    );
+    addJsAutocompletion(this.#monaco.languages);
 
     watchTheme(async () => {
-      this.editor.updateOptions({
-        theme: (await themeIsDark()) ? 'vs-dark' : 'vs',
-      });
+      this.#monaco.editor.setTheme((await themeIsDark()) ? DARK_THEME : LIGHT_THEME);
     });
 
     this.editor.onDidChangeModelContent(

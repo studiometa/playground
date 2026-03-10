@@ -1,6 +1,6 @@
 {
   "name": "@studiometa/playground",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "type": "module",
   "publishConfig": {
     "access": "public"
@@ -56,17 +56,14 @@
     "build:types": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "@studiometa/js-toolkit": "^3.0.0-beta.3",
-    "@studiometa/webpack-config": "^6.3.2",
-    "@studiometa/webpack-config-preset-prototyping": "^6.3.2",
+    "@studiometa/js-toolkit": "^3.4.3",
+    "@studiometa/webpack-config": "^6.3.6",
+    "@studiometa/webpack-config-preset-prototyping": "^6.3.6",
     "@studiometa/webpack-config-preset-tailwindcss-4": "6.3.6",
-    "emmet-monaco-es": "^5.5.0",
-    "esbuild-wasm": "^0.24.0",
-    "fast-glob": "^3.3.2",
+    "esbuild-wasm": "^0.24.2",
+    "fast-glob": "^3.3.3",
     "fflate": "^0.8.2",
-    "monaco-editor": "^0.52.2",
-    "monaco-editor-auto-typings": "0.4.6",
-    "monaco-editor-webpack-plugin": "^7.1.0",
+    "modern-monaco": "^0.4.0",
     "path-browserify": "1.0.1",
     "tailwindcss": "4.1.13",
     "webpack-virtual-modules": "^0.6.2"

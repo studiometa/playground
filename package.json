@@ -1,6 +1,6 @@
 {
   "name": "@studiometa/playground-root",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "A packaged web development playground",
   "type": "module",
   "private": true,
@@ -17,25 +17,27 @@
     "demo:build": "npm run build --workspace=@studiometa/playground-demo",
     "demo:preview": "npm run preview --workspace=@studiometa/playground-demo",
     "lint": "npm run lint:scripts && npm run lint:styles && npm run lint:templates",
-    "lint:scripts": "eslint . --cache",
+    "lint:scripts": "oxlint",
     "lint:styles": "stylelint packages/*/src/**/*.css --cache",
     "lint:templates": "prettier -c --cache .",
     "fix": "npm run fix:scripts && npm run fix:styles && npm run fix:templates",
-    "fix:scripts": "npm run lint:scripts -- --fix",
+    "fix:scripts": "oxlint --fix",
     "fix:styles": "npm run lint:styles -- --fix",
     "fix:templates": "npm run lint:templates -- --write",
     "postversion": "npm version -ws $npm_package_version"
   },
   "dependencies": {
-    "@studiometa/eslint-config": "^4.2.0",
-    "@studiometa/prettier-config": "^4.1.0",
-    "@studiometa/stylelint-config": "^4.0.0",
+    "@studiometa/prettier-config": "^4.4.0",
+    "@studiometa/stylelint-config": "^4.1.1",
     "concurrently": "9.1.2",
-    "eslint": "^9.17.0",
-    "prettier": "^3.4.2",
-    "stylelint": "^16.12.0"
+    "prettier": "^3.8.1",
+    "stylelint": "^16.26.1"
   },
   "engines": {
     "node": ">=20.11.0"
+  },
+  "devDependencies": {
+    "@studiometa/oxlint-config": "0.2.0",
+    "oxlint": "1.52.0"
   }
 }
