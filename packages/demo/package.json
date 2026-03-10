@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@studiometa/playground": "*",
+    "@studiometa/playground-preview": "*",
     "esbuild": "0.27.3"
   }
 }
