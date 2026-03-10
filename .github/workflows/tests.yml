@@ -46,7 +46,7 @@ jobs:
       - uses: titouanmathis/export-size-action@main
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          build_script: npm run build
+          build_script: npm run build:esbuild --workspace=@studiometa/playground
           paths: packages/playground/
           bundler: esbuild
           node-version: '22'
