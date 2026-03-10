@@ -23,6 +23,30 @@ jobs:
       - name: Demo build
         run: npm run demo:build
 
+  test:
+    runs-on: macos-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: 'npm'
+      - name: Install modules
+        run: npm install --no-audit --no-fund
+      - name: Build
+        run: npm run build
+      - name: Run tests with coverage
+        run: npm run test:ci
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        if: ${{ !cancelled() }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+          flags: unittests
+
   code_quality:
     runs-on: macos-latest
     steps:
