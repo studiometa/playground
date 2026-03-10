@@ -40,7 +40,7 @@ jobs:
     runs-on: macos-latest
     if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           fetch-depth: '0'
       - uses: titouanmathis/export-size-action@main
