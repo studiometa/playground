@@ -1,6 +1,6 @@
 {
   "name": "@studiometa/playground-root",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A packaged web development playground",
   "type": "module",
   "private": true,
@@ -24,6 +24,9 @@
     "fix:scripts": "oxlint --fix",
     "fix:styles": "npm run lint:styles -- --fix",
     "fix:templates": "npm run lint:templates -- --write",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ci": "vitest run --coverage",
     "postversion": "npm version -ws $npm_package_version"
   },
   "dependencies": {
@@ -38,6 +41,8 @@
   },
   "devDependencies": {
     "@studiometa/oxlint-config": "0.2.0",
-    "oxlint": "1.52.0"
+    "@vitest/coverage-v8": "4.0.18",
+    "oxlint": "1.52.0",
+    "vitest": "4.0.18"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@studiometa/playground-demo",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "module",
   "private": true,
   "scripts": {
@@ -8,12 +8,10 @@
     "watch": "meta watch",
     "build": "meta build",
     "prepreview": "npm run build",
-    "preview": "esbuild --serve --servedir=dist"
+    "preview": "node preview.js"
   },
   "dependencies": {
-    "@studiometa/playground": "*"
-  },
-  "devDependencies": {
-    "esbuild": "0.24.0"
+    "@studiometa/playground": "*",
+    "esbuild": "0.27.3"
   }
 }

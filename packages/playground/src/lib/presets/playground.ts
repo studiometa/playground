@@ -1,4 +1,4 @@
-import { resolve } from 'node:path';
+import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { PartialDeep } from 'type-fest';
 import type { Preset } from '@studiometa/webpack-config';
@@ -8,6 +8,9 @@ import { htmlWebpackScriptTypeModulePreset } from './html-webpack-script-type-mo
 import { productionBuildPreset } from './production-build.js';
 import { PlaygroundLoadersPlugin } from '../plugins/PlaygroundLoadersPlugin.js';
 import type { PlaygroundLoadersOptions } from '../plugins/PlaygroundLoadersPlugin.js';
+import { PlaygroundDependenciesPlugin } from '../plugins/PlaygroundDependenciesPlugin.js';
+import { resolveDependencies } from '../utils/resolve-dependencies.js';
+import type { DependencyConfig } from '../utils/resolve-dependencies.js';
 
 export interface HTMLElementAttributes {
   [name: string]: unknown;
@@ -85,6 +88,30 @@ export interface PlaygroundPresetOptions {
   syncColorScheme: boolean;
   html_attr: Record<string, unknown>;
   body_attr: Record<string, unknown>;
+  /**
+   * Declarative dependencies available in the script editor.
+   * Automatically generates import map entries and bundles self-hosted
+   * dependencies into `.js` + `.d.ts` files with tsdown.
+   *
+   * - Plain string → resolved via [esm.sh](https://esm.sh) (zero-config)
+   * - Object with `source` → bundled with tsdown into `.js` + `.d.ts`
+   *
+   * @example
+   * dependencies: [
+   *   "deepmerge",
+   *   { specifier: "morphdom", source: "morphdom" },
+   *   { specifier: "@studiometa/ui", source: "../ui/**\/*.ts", entry: "../ui/index.ts" },
+   * ]
+   *
+   * @see https://github.com/studiometa/playground/issues/48
+   */
+  dependencies: DependencyConfig[];
+  /**
+   * Manual import map entries. Merged with entries generated from `dependencies`.
+   * Relative paths are resolved to absolute URLs at runtime.
+   * @deprecated Prefer using `dependencies` for new projects.
+   */
+  importMap: Record<string, string>;
 }
 
 /**
@@ -94,9 +121,30 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
   return {
     name: 'playground-preset',
     async handler(config, context) {
+      // Resolve consumer's config directory for dependency resolution
+      // @ts-expect-error config.PATH is an internal property
+      const configDir = config.PATH ? dirname(config.PATH as string) : process.cwd();
+
+      // Resolve declarative dependencies into an import map + self-hosted metadata
+      let mergedImportMap: Record<string, string> = { ...options?.importMap };
+      let selfHostedDeps: import('../utils/resolve-dependencies.js').ResolvedDependency[] = [];
+
+      if (options?.dependencies?.length) {
+        const packageJsonPath = resolve(configDir, 'package.json');
+        const resolved = resolveDependencies(options.dependencies, packageJsonPath);
+        // Dependencies go first, manual importMap entries take precedence
+        mergedImportMap = { ...resolved.importMap, ...mergedImportMap };
+        selfHostedDeps = resolved.selfHosted;
+      }
+
+      const twigData = {
+        ...options,
+        importMap: mergedImportMap,
+      };
+
       const { handler: prototypingHandler } = prototyping({
         twig: {
-          data: options,
+          data: twigData,
           namespaces: {
             playground: resolve(import.meta.dirname, '../../front/templates/'),
           },
@@ -114,6 +162,11 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
 
       await context.extendWebpack(config, (webpackConfig) => {
         webpackConfig.plugins.push(new PlaygroundLoadersPlugin(options.loaders));
+
+        // Add self-hosted dependencies plugin when needed
+        if (selfHostedDeps.length > 0) {
+          webpackConfig.plugins.push(new PlaygroundDependenciesPlugin(selfHostedDeps, configDir));
+        }
 
         webpackConfig.cache = {
           ...webpackConfig.cache,

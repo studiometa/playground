@@ -1,5 +1,6 @@
 import type { InitOptions } from 'modern-monaco';
 import { getScript, setScript } from '../store/index.js';
+import { resolveImportMapUrls } from '../utils/resolve-import-map-urls.js';
 import Editor from './Editor.js';
 
 export default class ScriptEditor extends Editor {
@@ -35,7 +36,7 @@ export default class ScriptEditor extends Editor {
     return {
       typescript: {
         importMap: {
-          imports: importMap,
+          imports: resolveImportMapUrls(importMap),
           scopes: {},
         },
       },

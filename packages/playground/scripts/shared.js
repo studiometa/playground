@@ -18,9 +18,12 @@ function getOptions() {
   const modernMonacoVersion = modernMonacoPkg.version;
 
   return {
-    entryPoints: glob.globSync(['src/**/*.ts', 'src/**/*.twig', 'src/**/*.json'], {
-      cwd: root,
-    }),
+    entryPoints: glob.globSync(
+      ['src/**/*.ts', 'src/**/*.twig', 'src/**/*.json', '!src/**/*.test.ts'],
+      {
+        cwd: root,
+      },
+    ),
     write: true,
     outdir: resolve(root, 'dist'),
     target: 'esnext',
