@@ -14,26 +14,26 @@ import type { ResolvedDependency } from '../utils/resolve-dependencies.js';
 export class PlaygroundDependenciesPlugin {
   dependencies: ResolvedDependency[];
   configDir: string;
-  basePath: string;
+  publicPath: string;
 
-  constructor(dependencies: ResolvedDependency[], configDir: string, basePath?: string) {
+  constructor(dependencies: ResolvedDependency[], configDir: string, publicPath?: string) {
     this.dependencies = dependencies;
     this.configDir = configDir;
-    this.basePath = basePath ?? '';
+    this.publicPath = publicPath ?? '';
   }
 
   /**
-   * Resolve the effective base path.
-   * Explicit `basePath` takes precedence, then webpack's `output.publicPath`.
+   * Resolve the effective public path.
+   * Explicit `publicPath` takes precedence, then webpack's `output.publicPath`.
    */
-  private resolveBasePath(compiler: Compiler): string {
-    if (this.basePath) {
-      return this.basePath.replace(/\/+$/, '');
+  private resolvePublicPath(compiler: Compiler): string {
+    if (this.publicPath) {
+      return this.publicPath.replace(/\/+$/, '');
     }
 
-    const publicPath = compiler.options.output?.publicPath;
-    if (typeof publicPath === 'string' && publicPath !== 'auto' && publicPath !== '/') {
-      return publicPath.replace(/\/+$/, '');
+    const webpackPublicPath = compiler.options.output?.publicPath;
+    if (typeof webpackPublicPath === 'string' && webpackPublicPath !== 'auto' && webpackPublicPath !== '/') {
+      return webpackPublicPath.replace(/\/+$/, '');
     }
 
     return '';
@@ -41,7 +41,7 @@ export class PlaygroundDependenciesPlugin {
 
   apply(compiler: Compiler) {
     const pluginName = 'PlaygroundDependenciesPlugin';
-    const basePath = this.resolveBasePath(compiler);
+    const publicPath = this.resolvePublicPath(compiler);
 
     compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
       compilation.hooks.processAssets.tapAsync(
@@ -58,8 +58,8 @@ export class PlaygroundDependenciesPlugin {
                 await this.processBundle(compilation, dep);
 
                 headerEntries.push({
-                  jsPath: `${basePath}/static/deps/${dep.specifier}/index.js`,
-                  dtsPath: `${basePath}/static/deps/${dep.specifier}/index.d.ts`,
+                  jsPath: `${publicPath}/static/deps/${dep.specifier}/index.js`,
+                  dtsPath: `${publicPath}/static/deps/${dep.specifier}/index.d.ts`,
                 });
               }
             }

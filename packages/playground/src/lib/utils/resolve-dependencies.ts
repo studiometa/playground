@@ -44,12 +44,12 @@ function cleanVersion(version: string): string {
 }
 
 /**
- * Normalize a base path: ensure it starts with `/` and has no trailing slash.
+ * Normalize a public path: ensure it starts with `/` and has no trailing slash.
  * Empty or `/` returns empty string.
  */
-function normalizeBasePath(basePath?: string): string {
-  if (!basePath || basePath === '/') return '';
-  let normalized = basePath;
+function normalizePublicPath(publicPath?: string): string {
+  if (!publicPath || publicPath === '/') return '';
+  let normalized = publicPath;
   if (!normalized.startsWith('/')) {
     normalized = '/' + normalized;
   }
@@ -62,12 +62,12 @@ function normalizeBasePath(basePath?: string): string {
  *
  * @param dependencies - Array of dependency configurations
  * @param packageJsonPath - Optional path to consumer's package.json for version inference
- * @param basePath - Optional base path prefix for self-hosted dependency URLs
+ * @param publicPath - Optional public path prefix for self-hosted dependency URLs
  */
 export function resolveDependencies(
   dependencies: DependencyConfig[],
   packageJsonPath?: string,
-  basePath?: string,
+  publicPath?: string,
 ): ResolvedDependencies {
   const importMap: Record<string, string> = {};
   const selfHosted: ResolvedDependency[] = [];
@@ -98,7 +98,7 @@ export function resolveDependencies(
       importMap[specifier] = esmUrl;
     } else {
       // Bundle with tsdown → single .js + .d.ts
-      const prefix = normalizeBasePath(basePath);
+      const prefix = normalizePublicPath(publicPath);
       const depPath = `${prefix}/static/deps/${specifier}/index.js`;
       importMap[specifier] = depPath;
       selfHosted.push({ specifier, importMapValue: depPath, type: 'bundle', source, entry });

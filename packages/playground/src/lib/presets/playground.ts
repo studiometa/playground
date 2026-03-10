@@ -113,7 +113,7 @@ export interface PlaygroundPresetOptions {
    */
   importMap: Record<string, string>;
   /**
-   * Base path prefix for self-hosted dependency URLs and `_headers` paths.
+   * Public path prefix for self-hosted dependency URLs and `_headers` paths.
    * Useful when the playground is deployed under a sub-path (e.g. `/play/`).
    *
    * When omitted, the plugin will try to infer it from webpack's
@@ -122,7 +122,7 @@ export interface PlaygroundPresetOptions {
    * @example '/play'
    * @see https://github.com/studiometa/playground/issues/54
    */
-  basePath: string;
+  publicPath: string;
 }
 
 /**
@@ -145,7 +145,7 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
         const resolved = resolveDependencies(
           options.dependencies,
           packageJsonPath,
-          options?.basePath,
+          options?.publicPath,
         );
         // Dependencies go first, manual importMap entries take precedence
         mergedImportMap = { ...resolved.importMap, ...mergedImportMap };
@@ -181,7 +181,7 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
         // Add self-hosted dependencies plugin when needed
         if (selfHostedDeps.length > 0) {
           webpackConfig.plugins.push(
-            new PlaygroundDependenciesPlugin(selfHostedDeps, configDir, options?.basePath),
+            new PlaygroundDependenciesPlugin(selfHostedDeps, configDir, options?.publicPath),
           );
         }
 
