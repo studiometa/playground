@@ -2,10 +2,10 @@ import { StorageProviderInterface } from './StorageProviderInterface.js';
 import { AbstractStorageProvider } from './AbstractStorageProvider.js';
 
 export class FallbackStorageProvider<
-    T extends StorageProviderInterface<V>,
-    U extends StorageProviderInterface<V>,
-    V = unknown,
-  >
+  T extends StorageProviderInterface<V>,
+  U extends StorageProviderInterface<V>,
+  V = unknown,
+>
   extends AbstractStorageProvider<T>
   implements StorageProviderInterface<V>
 {

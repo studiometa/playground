@@ -11,24 +11,11 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: 'npm'
-      - name: Get npm cache directory
-        id: npm-cache-dir
-        shell: bash
-        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
-      - uses: actions/cache@v4
-        id: npm-cache
-        with:
-          path: |
-            ${{ steps.npm-cache-dir.outputs.dir }}
-            **/node_modules
-            .eslintcache
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: ${{ runner.os }}-node-
       - name: Install modules
         run: npm install --no-audit --no-fund
       - name: Build
@@ -39,24 +26,11 @@ jobs:
   code_quality:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: 'npm'
-      - name: Get npm cache directory
-        id: npm-cache-dir
-        shell: bash
-        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
-      - uses: actions/cache@v4
-        id: npm-cache
-        with:
-          path: |
-            ${{ steps.npm-cache-dir.outputs.dir }}
-            **/node_modules
-            .eslintcache
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: ${{ runner.os }}-node-
       - name: Install modules
         run: npm install --no-audit --no-fund
       - name: Run code quality tests
@@ -72,7 +46,7 @@ jobs:
       - uses: titouanmathis/export-size-action@main
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          build_script: npm run build
+          build_script: npm run build:esbuild --workspace=@studiometa/playground
           paths: packages/playground/
           bundler: esbuild
           node-version: '22'

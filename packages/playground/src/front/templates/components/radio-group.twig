@@ -11,7 +11,9 @@
 #}
 
 <div class="relative flex items-stretch">
-  <span class="absolute -inset-y-1 inset-x-0 block rounded bg-accent-300/30 dark:bg-accent-500/30"></span>
+  <span class="absolute -inset-y-1 inset-x-0 block rounded bg-accent-300/30 dark:bg-accent-500/30">
+
+  </span>
   {% for item in items %}
     {% include './radio.twig' with item only %}
   {% endfor %}

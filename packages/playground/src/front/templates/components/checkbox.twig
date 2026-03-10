@@ -53,7 +53,8 @@
 <label {{ html_attributes(attributes) }}>
   <input {{ html_attributes(input_attributes) }} />
   <span {{ html_attributes(bg_attributes) }}></span>
-  <span class="relative inline-block px-2 peer-checked:text-accent-900 dark:peer-checked:text-white text-xs tracking-tighter sm:tracking-normal font-semibold">
+  <span
+    class="relative inline-block px-2 peer-checked:text-accent-900 dark:peer-checked:text-white text-xs tracking-tighter sm:tracking-normal font-semibold">
     {% block label %}
       {{ label }}
     {% endblock %}
