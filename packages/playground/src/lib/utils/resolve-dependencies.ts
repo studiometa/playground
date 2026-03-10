@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
  * A single dependency for the playground script editor.
  *
  * - Plain string → resolved via esm.sh (zero-config)
- * - Object with `source` → self-hosted (copy, bundle, or transpile)
+ * - Object with `source` → self-hosted, bundled with tsdown into `.js` + `.d.ts`
  */
 export type DependencyConfig =
   | string
@@ -14,24 +14,19 @@ export type DependencyConfig =
       /** Optional pinned version for esm.sh resolution */
       version?: string;
       /**
-       * Source to copy/bundle/transpile.
-       * - npm package name → copy pre-built .js + .d.ts from node_modules
-       * - glob pattern → transpile matching files
+       * Source to bundle into a single `.js` + `.d.ts` with tsdown.
+       * Can be an npm package name or a local file path / glob pattern.
        * Omit for esm.sh resolution.
        */
       source?: string;
-      /** Bundle the source into a single ESM file with esbuild */
-      bundle?: boolean;
-      /** Transpile TypeScript source → .js + generate .d.ts with tsgo */
-      typescript?: boolean;
-      /** Explicit entry point for .d.ts generation (for glob sources) */
+      /** Explicit entry point (useful when source is a glob pattern) */
       entry?: string;
     };
 
 export interface ResolvedDependency {
   specifier: string;
   importMapValue: string;
-  type: 'esm-sh' | 'copy' | 'bundle' | 'typescript';
+  type: 'esm-sh' | 'bundle';
   source?: string;
   entry?: string;
 }
@@ -75,7 +70,7 @@ export function resolveDependencies(
 
   for (const dep of dependencies) {
     const config = typeof dep === 'string' ? { specifier: dep } : dep;
-    const { specifier, version, source, bundle, typescript, entry } = config;
+    const { specifier, version, source, entry } = config;
 
     if (!source) {
       // esm.sh resolution
@@ -86,18 +81,11 @@ export function resolveDependencies(
         ? `https://esm.sh/${specifier}@${resolvedVersion}`
         : `https://esm.sh/${specifier}`;
       importMap[specifier] = esmUrl;
-    } else if (typescript) {
-      const depPath = `/static/deps/${specifier}/index.js`;
-      importMap[specifier] = depPath;
-      selfHosted.push({ specifier, importMapValue: depPath, type: 'typescript', source, entry });
-    } else if (bundle) {
-      const depPath = `/static/deps/${specifier}.js`;
-      importMap[specifier] = depPath;
-      selfHosted.push({ specifier, importMapValue: depPath, type: 'bundle', source });
     } else {
+      // Bundle with tsdown → single .js + .d.ts
       const depPath = `/static/deps/${specifier}/index.js`;
       importMap[specifier] = depPath;
-      selfHosted.push({ specifier, importMapValue: depPath, type: 'copy', source });
+      selfHosted.push({ specifier, importMapValue: depPath, type: 'bundle', source, entry });
     }
   }
 

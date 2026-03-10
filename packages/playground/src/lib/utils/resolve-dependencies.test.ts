@@ -1,7 +1,7 @@
 import { writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
-import { resolveDependencies } from '../resolve-dependencies.js';
+import { resolveDependencies } from './resolve-dependencies.js';
 
 describe('resolveDependencies', () => {
   it('resolves plain string to esm.sh URL', () => {
@@ -47,27 +47,10 @@ describe('resolveDependencies', () => {
     }
   });
 
-  it('resolves self-hosted copy dependency', () => {
-    const result = resolveDependencies([
-      { specifier: '@studiometa/js-toolkit', source: '@studiometa/js-toolkit' },
-    ]);
+  it('resolves bundle dependency for npm package', () => {
+    const result = resolveDependencies([{ specifier: 'morphdom', source: 'morphdom' }]);
     expect(result.importMap).toEqual({
-      '@studiometa/js-toolkit': '/static/deps/@studiometa/js-toolkit/index.js',
-    });
-    expect(result.selfHosted).toHaveLength(1);
-    expect(result.selfHosted[0]).toMatchObject({
-      specifier: '@studiometa/js-toolkit',
-      type: 'copy',
-      source: '@studiometa/js-toolkit',
-    });
-  });
-
-  it('resolves self-hosted bundle dependency', () => {
-    const result = resolveDependencies([
-      { specifier: 'morphdom', source: 'morphdom', bundle: true },
-    ]);
-    expect(result.importMap).toEqual({
-      morphdom: '/static/deps/morphdom.js',
+      morphdom: '/static/deps/morphdom/index.js',
     });
     expect(result.selfHosted).toHaveLength(1);
     expect(result.selfHosted[0]).toMatchObject({
@@ -77,27 +60,24 @@ describe('resolveDependencies', () => {
     });
   });
 
-  it('resolves self-hosted typescript dependency', () => {
-    const result = resolveDependencies([
-      { specifier: '@studiometa/ui', source: '../ui/**/*.ts', typescript: true },
-    ]);
+  it('resolves bundle dependency for local TypeScript source', () => {
+    const result = resolveDependencies([{ specifier: '@studiometa/ui', source: '../ui/**/*.ts' }]);
     expect(result.importMap).toEqual({
       '@studiometa/ui': '/static/deps/@studiometa/ui/index.js',
     });
     expect(result.selfHosted).toHaveLength(1);
     expect(result.selfHosted[0]).toMatchObject({
       specifier: '@studiometa/ui',
-      type: 'typescript',
+      type: 'bundle',
       source: '../ui/**/*.ts',
     });
   });
 
-  it('passes entry field for typescript dependencies', () => {
+  it('passes entry field for bundle dependencies', () => {
     const result = resolveDependencies([
       {
         specifier: '@studiometa/ui',
         source: '../ui/**/*.ts',
-        typescript: true,
         entry: '../ui/index.ts',
       },
     ]);
@@ -108,11 +88,12 @@ describe('resolveDependencies', () => {
     const result = resolveDependencies([
       'deepmerge',
       { specifier: '@studiometa/js-toolkit', source: '@studiometa/js-toolkit' },
-      { specifier: 'morphdom', source: 'morphdom', bundle: true },
+      { specifier: 'morphdom', source: 'morphdom' },
+      { specifier: 'demo-lib', source: './lib/**/*.ts', entry: './lib/index.ts' },
     ]);
-    expect(Object.keys(result.importMap)).toHaveLength(3);
-    expect(result.selfHosted).toHaveLength(2);
-    expect(result.selfHosted.map((d) => d.type)).toEqual(['copy', 'bundle']);
+    expect(Object.keys(result.importMap)).toHaveLength(4);
+    expect(result.selfHosted).toHaveLength(3);
+    expect(result.selfHosted.map((d) => d.type)).toEqual(['bundle', 'bundle', 'bundle']);
   });
 
   it('returns empty results for empty input', () => {

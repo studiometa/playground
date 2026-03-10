@@ -1,8 +1,5 @@
-import { resolve, relative, dirname, join, posix } from 'node:path';
-import { readFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { execFileSync } from 'node:child_process';
-import { createRequire } from 'node:module';
+import { resolve, dirname, posix } from 'node:path';
+import { writeFileSync, mkdtempSync, rmSync } from 'node:fs';
 import type { Compiler } from 'webpack';
 import glob from 'fast-glob';
 import type { ResolvedDependency } from '../utils/resolve-dependencies.js';
@@ -10,11 +7,9 @@ import type { ResolvedDependency } from '../utils/resolve-dependencies.js';
 /**
  * Webpack plugin that processes self-hosted playground dependencies.
  *
- * Handles three strategies:
- * - **copy**: copies `.js` + `.d.ts` files from a resolved npm package
- * - **bundle**: bundles an npm package into a single ESM file with esbuild
- * - **typescript**: transpiles `.ts` → `.js` with esbuild, generates `.d.ts` with tsgo,
- *   and rewrites `.js` → `.d.ts` import paths in the output
+ * Every dependency with a `source` is bundled into a single `.js` + `.d.ts`
+ * using tsdown (rolldown + rolldown-plugin-dts). Works with both npm packages
+ * and local TypeScript sources.
  */
 export class PlaygroundDependenciesPlugin {
   dependencies: ResolvedDependency[];
@@ -32,24 +27,47 @@ export class PlaygroundDependenciesPlugin {
       compilation.hooks.processAssets.tapAsync(
         {
           name: pluginName,
-          // Run before optimization so other plugins can see our assets
           stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
         },
         async (_assets, callback) => {
           try {
+            const headerEntries: Array<{ jsPath: string; dtsPath: string }> = [];
+
             for (const dep of this.dependencies) {
-              switch (dep.type) {
-                case 'copy':
-                  this.processCopy(compilation, dep);
-                  break;
-                case 'bundle':
-                  await this.processBundle(compilation, dep);
-                  break;
-                case 'typescript':
-                  await this.processTypescript(compilation, dep);
-                  break;
+              if (dep.type === 'bundle') {
+                await this.processBundle(compilation, dep);
+
+                headerEntries.push({
+                  jsPath: `/static/deps/${dep.specifier}/index.js`,
+                  dtsPath: `/static/deps/${dep.specifier}/index.d.ts`,
+                });
               }
             }
+
+            // Emit _headers file (Cloudflare Pages format) for x-typescript-types
+            if (headerEntries.length > 0) {
+              const headersContent =
+                headerEntries
+                  .map((e) => `${e.jsPath}\n  x-typescript-types: ${e.dtsPath}`)
+                  .join('\n\n') + '\n';
+
+              const existingHeaders = compilation.getAsset('_headers');
+              if (existingHeaders) {
+                const existing = existingHeaders.source.source().toString();
+                compilation.updateAsset(
+                  '_headers',
+                  new compilation.compiler.webpack.sources.RawSource(
+                    existing + '\n' + headersContent,
+                  ),
+                );
+              } else {
+                compilation.emitAsset(
+                  '_headers',
+                  new compilation.compiler.webpack.sources.RawSource(headersContent),
+                );
+              }
+            }
+
             callback();
           } catch (err) {
             callback(err as Error);
@@ -60,242 +78,109 @@ export class PlaygroundDependenciesPlugin {
   }
 
   /**
-   * Copy `.js` and `.d.ts` files from a resolved npm package into the output.
-   */
-  private processCopy(compilation: any, dep: ResolvedDependency) {
-    const require = createRequire(resolve(this.configDir, 'package.json'));
-    const pkgJsonPath = require.resolve(`${dep.source}/package.json`);
-    const pkgDir = dirname(pkgJsonPath);
-
-    // Find all .js and .d.ts files
-    const files = glob.globSync(['**/*.js', '**/*.d.ts'], {
-      cwd: pkgDir,
-      ignore: ['node_modules/**'],
-    });
-
-    const outputBase = `static/deps/${dep.specifier}`;
-
-    for (const file of files) {
-      const filePath = resolve(pkgDir, file);
-      const content = readFileSync(filePath);
-      const assetPath = posix.join(outputBase, file);
-      compilation.emitAsset(assetPath, new compilation.compiler.webpack.sources.RawSource(content));
-    }
-  }
-
-  /**
-   * Bundle an npm package into a single ESM file with esbuild.
+   * Bundle a dependency into a single `.js` + `.d.ts` using tsdown.
+   *
+   * For npm packages, a temporary re-export entry file is created so that
+   * tsdown can resolve the package from the consumer's `node_modules`.
+   * For local sources, the entry is resolved from the source pattern or
+   * explicit `entry` option.
    */
   private async processBundle(compilation: any, dep: ResolvedDependency) {
-    const esbuild = await import('esbuild');
-    const result = await esbuild.build({
-      entryPoints: [dep.source!],
-      bundle: true,
-      write: false,
-      format: 'esm',
-      target: 'es2020',
-      platform: 'browser',
-      // Resolve from the consumer's config directory
-      absWorkingDir: this.configDir,
-    });
-
-    const outputFile = result.outputFiles[0];
-    if (outputFile) {
-      const assetPath = `static/deps/${dep.specifier}.js`;
-      compilation.emitAsset(
-        assetPath,
-        new compilation.compiler.webpack.sources.RawSource(outputFile.contents),
+    let tsdown: typeof import('tsdown');
+    try {
+      tsdown = await import('tsdown');
+    } catch {
+      console.warn(
+        `[playground] tsdown not found, skipping processing for "${dep.specifier}". ` +
+          'Install it as a devDependency to enable this feature.',
       );
+      return;
+    }
+
+    const entryPoint = this.resolveEntryPoint(dep);
+    if (!entryPoint) return;
+
+    const isNpmSource = !this.isLocalSource(dep.source!);
+    const outputBase = `static/deps/${dep.specifier}`;
+
+    try {
+      const buildResults = await tsdown.build({
+        entry: [entryPoint],
+        format: 'esm',
+        dts: true,
+        outDir: '/tmp', // unused with write: false
+        clean: false,
+        platform: 'browser',
+        target: 'es2020',
+        config: false,
+        write: false,
+        logLevel: 'silent',
+      });
+
+      for (const buildResult of buildResults) {
+        for (const chunk of buildResult.chunks) {
+          if ('code' in chunk) {
+            const fileName = chunk.fileName.endsWith('.d.ts') ? 'index.d.ts' : 'index.js';
+            const assetPath = posix.join(outputBase, fileName);
+            compilation.emitAsset(
+              assetPath,
+              new compilation.compiler.webpack.sources.RawSource(chunk.code),
+            );
+          }
+        }
+      }
+    } finally {
+      if (isNpmSource) {
+        try {
+          rmSync(dirname(entryPoint), { recursive: true, force: true });
+        } catch {
+          // ignore
+        }
+      }
     }
   }
 
   /**
-   * Transpile TypeScript sources → `.js` with esbuild, generate `.d.ts` with tsgo,
-   * and rewrite relative `.js` imports to `.d.ts` in the declaration output.
+   * Check whether a source string refers to a local path (relative, absolute, or glob)
+   * as opposed to a bare npm package specifier.
    */
-  private async processTypescript(compilation: any, dep: ResolvedDependency) {
-    const sourcePattern = dep.source!;
-    const isGlob = sourcePattern.includes('*');
-    const resolvedPattern = resolve(this.configDir, sourcePattern);
+  private isLocalSource(source: string): boolean {
+    return source.startsWith('.') || source.startsWith('/') || source.includes('*');
+  }
 
-    // Find source files
+  /**
+   * Resolve the entry point for a dependency.
+   *
+   * - For npm package sources: creates a temporary `.ts` file that re-exports from the package
+   * - For local sources: resolves from source pattern or explicit entry
+   */
+  private resolveEntryPoint(dep: ResolvedDependency): string | null {
+    const source = dep.source!;
+
+    if (!this.isLocalSource(source)) {
+      // npm package — create a temporary re-export entry
+      const tmpDir = mkdtempSync(resolve(this.configDir, 'node_modules', '.playground-'));
+      const entryPath = resolve(tmpDir, 'entry.ts');
+      writeFileSync(entryPath, `export * from '${source}';\n`);
+      return entryPath;
+    }
+
+    // Local source — resolve from pattern or explicit entry
+    if (dep.entry) {
+      return resolve(this.configDir, dep.entry);
+    }
+
+    const isGlob = source.includes('*');
+    const resolvedPattern = resolve(this.configDir, source);
     const sourceFiles = isGlob ? glob.globSync(resolvedPattern) : [resolvedPattern];
 
     if (sourceFiles.length === 0) {
       console.warn(
-        `[playground] No files found for dependency "${dep.specifier}" with source "${dep.source}"`,
+        `[playground] No files found for dependency "${dep.specifier}" with source "${source}"`,
       );
-      return;
+      return null;
     }
 
-    // Determine the common root for relative path computation
-    const commonRoot = isGlob ? this.findCommonRoot(sourceFiles) : dirname(sourceFiles[0]);
-
-    const outputBase = `static/deps/${dep.specifier}`;
-
-    // Step 1: Transpile .ts → .js with esbuild
-    const esbuild = await import('esbuild');
-    for (const file of sourceFiles) {
-      const content = readFileSync(file, 'utf-8');
-      const result = await esbuild.transform(content, {
-        loader: 'ts',
-        format: 'esm',
-        target: 'es2020',
-        sourcefile: file,
-      });
-
-      const relPath = relative(commonRoot, file).replace(/\.ts$/, '.js');
-      const assetPath = posix.join(outputBase, relPath);
-      compilation.emitAsset(
-        assetPath,
-        new compilation.compiler.webpack.sources.RawSource(result.code),
-      );
-    }
-
-    // Step 2: Generate .d.ts with tsgo
-    this.generateDeclarations(compilation, dep, sourceFiles, commonRoot, outputBase);
-  }
-
-  /**
-   * Run tsgo to generate `.d.ts` files, then rewrite `.js` → `.d.ts` import paths.
-   */
-  private generateDeclarations(
-    compilation: any,
-    dep: ResolvedDependency,
-    sourceFiles: string[],
-    commonRoot: string,
-    outputBase: string,
-  ) {
-    // Find tsgo binary
-    const tsgoPath = this.findTsgoBinary();
-    if (!tsgoPath) {
-      console.warn(
-        '[playground] @typescript/native-preview not found, skipping .d.ts generation ' +
-          `for "${dep.specifier}". Install it as a devDependency to enable type generation.`,
-      );
-      return;
-    }
-
-    // Use a temp directory for tsgo output
-    const tmpDir = mkdtempSync(join(tmpdir(), 'playground-dts-'));
-
-    try {
-      const args = [
-        '--declaration',
-        '--emitDeclarationOnly',
-        '--noCheck',
-        '--outDir',
-        tmpDir,
-        '--rootDir',
-        commonRoot,
-        // Minimal compiler options for declaration emit
-        '--target',
-        'ESNext',
-        '--module',
-        'ESNext',
-        '--moduleResolution',
-        'bundler',
-        '--skipLibCheck',
-        ...sourceFiles,
-      ];
-
-      execFileSync(tsgoPath, args, {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        timeout: 30_000,
-      });
-
-      // Read generated .d.ts files and emit them as webpack assets
-      const dtsFiles = glob.globSync('**/*.d.ts', { cwd: tmpDir });
-      for (const dtsFile of dtsFiles) {
-        const dtsContent = readFileSync(resolve(tmpDir, dtsFile), 'utf-8');
-        // Rewrite relative .js imports to .d.ts so modern-monaco's TypeScript
-        // worker can resolve types when fetching over HTTP
-        const rewritten = this.rewriteDtsImports(dtsContent);
-        const assetPath = posix.join(outputBase, dtsFile);
-        compilation.emitAsset(
-          assetPath,
-          new compilation.compiler.webpack.sources.RawSource(rewritten),
-        );
-      }
-    } catch (err) {
-      console.warn(
-        `[playground] tsgo declaration generation failed for "${dep.specifier}":`,
-        (err as Error).message,
-      );
-    } finally {
-      rmSync(tmpDir, { recursive: true, force: true });
-    }
-  }
-
-  /**
-   * Rewrite relative `.js` imports to `.d.ts` in declaration files.
-   * modern-monaco's TypeScript worker resolves types by fetching over HTTP,
-   * so `from './foo.js'` must become `from './foo.d.ts'` in `.d.ts` files.
-   */
-  private rewriteDtsImports(content: string): string {
-    // Match: from './path.js' or from "../path.js"
-    return content.replace(/(from\s+['"])(\.\.?\/[^'"]*?)\.js(['"])/g, '$1$2.d.ts$3');
-  }
-
-  /**
-   * Find the tsgo native binary from @typescript/native-preview.
-   * Resolves the platform-specific native binary directly for best performance,
-   * falling back to the bin wrapper script.
-   */
-  private findTsgoBinary(): string | null {
-    const require = createRequire(resolve(this.configDir, 'package.json'));
-
-    // Try to resolve the platform-specific native binary directly
-    const platformPkg = `@typescript/native-preview-${process.platform}-${process.arch}`;
-    try {
-      const platformPkgJson = require.resolve(`${platformPkg}/package.json`);
-      const nativeBin = resolve(dirname(platformPkgJson), 'lib', 'tsgo');
-      if (existsSync(nativeBin)) {
-        return nativeBin;
-      }
-    } catch {
-      // platform package not found
-    }
-
-    // Fallback: use the bin wrapper (requires node to execute)
-    try {
-      const nativePreviewPkg = require.resolve('@typescript/native-preview/package.json');
-      const binPath = resolve(dirname(nativePreviewPkg), 'bin', 'tsgo.js');
-      if (existsSync(binPath)) {
-        return binPath;
-      }
-    } catch {
-      // not installed
-    }
-
-    // Last resort: try node_modules/.bin
-    const binCandidate = resolve(this.configDir, 'node_modules', '.bin', 'tsgo');
-    if (existsSync(binCandidate)) {
-      return binCandidate;
-    }
-
-    return null;
-  }
-
-  /**
-   * Find the common root directory of a list of file paths.
-   */
-  private findCommonRoot(files: string[]): string {
-    if (files.length === 0) return '';
-    if (files.length === 1) return dirname(files[0]);
-
-    const parts = files.map((f) => f.split('/'));
-    const common: string[] = [];
-
-    for (let i = 0; i < parts[0].length; i++) {
-      const segment = parts[0][i];
-      if (parts.every((p) => p[i] === segment)) {
-        common.push(segment);
-      } else {
-        break;
-      }
-    }
-
-    return common.join('/') || '/';
+    return sourceFiles.find((f) => f.endsWith('/index.ts')) ?? sourceFiles[0];
   }
 }

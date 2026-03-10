@@ -8,12 +8,10 @@
     "watch": "meta watch",
     "build": "meta build",
     "prepreview": "npm run build",
-    "preview": "esbuild --serve --servedir=dist"
+    "preview": "node preview.js"
   },
   "dependencies": {
-    "@studiometa/playground": "*"
-  },
-  "devDependencies": {
-    "esbuild": "0.24.0"
+    "@studiometa/playground": "*",
+    "esbuild": "0.27.3"
   }
 }

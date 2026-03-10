@@ -12,7 +12,14 @@ export default defineWebpackConfig({
       },
       tailwindcss: true,
       syncColorScheme: true,
-      dependencies: ['@studiometa/js-toolkit'],
+      dependencies: [
+        '@studiometa/js-toolkit',
+        {
+          specifier: 'demo-lib',
+          source: './lib/**/*.ts',
+          entry: './lib/index.ts',
+        },
+      ],
       loaders: {
         html: resolve('./html-loader.ts'),
       },
@@ -23,11 +30,18 @@ export default defineWebpackConfig({
   background-color: #222;
 }`,
         script: `import { Base, createApp } from '@studiometa/js-toolkit';
+import { greet, isDefined } from 'demo-lib';
 
 class App extends Base {
   static config = {
     name: 'App',
   };
+
+  mounted() {
+    if (isDefined(this.$el)) {
+      this.$el.textContent = greet('World', { shout: true });
+    }
+  }
 }
 
 createApp(App);`,

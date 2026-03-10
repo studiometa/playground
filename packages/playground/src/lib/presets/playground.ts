@@ -90,18 +90,17 @@ export interface PlaygroundPresetOptions {
   body_attr: Record<string, unknown>;
   /**
    * Declarative dependencies available in the script editor.
-   * Automatically generates import map entries, copies/bundles files,
-   * and generates `.d.ts` declarations as needed.
+   * Automatically generates import map entries and bundles self-hosted
+   * dependencies into `.js` + `.d.ts` files with tsdown.
    *
    * - Plain string → resolved via [esm.sh](https://esm.sh) (zero-config)
-   * - Object with `source` → self-hosted (copy, bundle, or transpile)
+   * - Object with `source` → bundled with tsdown into `.js` + `.d.ts`
    *
    * @example
    * dependencies: [
    *   "deepmerge",
-   *   { specifier: "@studiometa/js-toolkit", source: "@studiometa/js-toolkit" },
-   *   { specifier: "morphdom", source: "morphdom", bundle: true },
-   *   { specifier: "@studiometa/ui", source: "../ui/**\/*.ts", typescript: true },
+   *   { specifier: "morphdom", source: "morphdom" },
+   *   { specifier: "@studiometa/ui", source: "../ui/**\/*.ts", entry: "../ui/index.ts" },
    * ]
    *
    * @see https://github.com/studiometa/playground/issues/48
