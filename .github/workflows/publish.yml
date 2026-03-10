@@ -16,6 +16,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
+          registry-url: 'https://registry.npmjs.org'
       - run: npm i
       - run: |
           npm run build
@@ -31,12 +32,9 @@ jobs:
 
           echo "NPM_TAG=$NPM_TAG" >> $GITHUB_ENV
           echo "IS_PRERELEASE=$IS_PRERELEASE" >> $GITHUB_ENV
-      - uses: JS-DevTools/npm-publish@v4
-        with:
-          provenance: true
-          package: packages/playground/
-          tag: ${{ env.NPM_TAG }}
-          token: ${{ secrets.NPM_TOKEN }}
+      - run: npm publish --provenance --access public --tag ${{ env.NPM_TAG }} -w @studiometa/playground
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - uses: ncipollo/release-action@v1
         with:
           tag: ${{ github.ref }}
