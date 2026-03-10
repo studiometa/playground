@@ -14,9 +14,15 @@ export type DependencyConfig =
       /** Optional pinned version for esm.sh resolution */
       version?: string;
       /**
-       * Source to bundle into a single `.js` + `.d.ts` with tsdown.
-       * Can be an npm package name or a local file path / glob pattern.
-       * Omit for esm.sh resolution.
+       * Local file path or glob pattern to bundle into a single `.js` + `.d.ts`
+       * with tsdown. Must start with `.`, `/`, or contain `*` (glob).
+       *
+       * Bare npm package names (e.g. `"morphdom"`) are **not supported** as
+       * source values — npm packages should use esm.sh resolution instead
+       * (omit the `source` field).
+       *
+       * @example './lib/**\/*.ts'
+       * @example '../ui/index.ts'
        */
       source?: string;
       /** Explicit entry point (useful when source is a glob pattern) */
@@ -41,6 +47,45 @@ export interface ResolvedDependencies {
  */
 function cleanVersion(version: string): string {
   return version.replace(/^[^\d]*/, '');
+}
+
+/**
+ * Extract the package name from a specifier that may include a subpath.
+ *
+ * @example
+ * getPackageName('@studiometa/js-toolkit/utils') // → '@studiometa/js-toolkit'
+ * getPackageName('deepmerge')                     // → 'deepmerge'
+ * getPackageName('@motionone/easing')             // → '@motionone/easing'
+ */
+export function getPackageName(specifier: string): string {
+  if (specifier.startsWith('@')) {
+    return specifier.split('/').slice(0, 2).join('/');
+  }
+  return specifier.split('/')[0];
+}
+
+/**
+ * Extract the subpath from a specifier, if any.
+ * Returns `undefined` when the specifier has no subpath.
+ *
+ * @example
+ * getSubpath('@studiometa/js-toolkit/utils')  // → '/utils'
+ * getSubpath('@studiometa/js-toolkit')         // → undefined
+ * getSubpath('lodash/merge')                   // → '/merge'
+ * getSubpath('deepmerge')                      // → undefined
+ */
+export function getSubpath(specifier: string): string | undefined {
+  const pkgName = getPackageName(specifier);
+  const sub = specifier.slice(pkgName.length);
+  return sub || undefined;
+}
+
+/**
+ * Check whether a source string refers to a local path (relative, absolute, or glob)
+ * as opposed to a bare npm package specifier.
+ */
+function isLocalSource(source: string): boolean {
+  return source.startsWith('.') || source.startsWith('/') || source.includes('*');
 }
 
 /**
@@ -88,16 +133,32 @@ export function resolveDependencies(
     const { specifier, version, source, entry } = config;
 
     if (!source) {
-      // esm.sh resolution
-      const inferredVersion = pkgVersions[specifier];
+      // esm.sh resolution — split specifier into package name + optional subpath
+      const pkgName = getPackageName(specifier);
+      const subpath = getSubpath(specifier);
+      const inferredVersion = pkgVersions[pkgName];
       const resolvedVersion =
         version ?? (inferredVersion ? cleanVersion(inferredVersion) : undefined);
-      const esmUrl = resolvedVersion
-        ? `https://esm.sh/${specifier}@${resolvedVersion}`
-        : `https://esm.sh/${specifier}`;
+      const versionedPkg = resolvedVersion ? `${pkgName}@${resolvedVersion}` : pkgName;
+      const esmUrl = `https://esm.sh/${versionedPkg}${subpath ?? ''}`;
+      importMap[specifier] = esmUrl;
+    } else if (!isLocalSource(source)) {
+      // Bare npm package name used as source — warn and fall back to esm.sh
+      console.warn(
+        `[playground] Dependency "${specifier}" has a bare npm package name as source ("${source}"). ` +
+          'This is not supported — npm packages should use esm.sh resolution instead (omit the `source` field). ' +
+          'Falling back to esm.sh.',
+      );
+      const pkgName = getPackageName(specifier);
+      const subpath = getSubpath(specifier);
+      const inferredVersion = pkgVersions[pkgName];
+      const resolvedVersion =
+        version ?? (inferredVersion ? cleanVersion(inferredVersion) : undefined);
+      const versionedPkg = resolvedVersion ? `${pkgName}@${resolvedVersion}` : pkgName;
+      const esmUrl = `https://esm.sh/${versionedPkg}${subpath ?? ''}`;
       importMap[specifier] = esmUrl;
     } else {
-      // Bundle with tsdown → single .js + .d.ts
+      // Local source — bundle with tsdown → single .js + .d.ts
       const prefix = normalizePublicPath(publicPath);
       const depPath = `${prefix}/static/deps/${specifier}/index.js`;
       importMap[specifier] = depPath;

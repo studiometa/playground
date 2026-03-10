@@ -63,83 +63,6 @@ playgroundPreset({
 
 ## Dependencies
 
-The `dependencies` option provides a declarative way to manage packages available in the script editor. It automatically generates import map entries and, for self-hosted packages, configures the necessary build pipeline.
-
-### esm.sh (default)
-
-The simplest way to add a dependency is a plain string. It resolves via [esm.sh](https://esm.sh), which serves proper ESM bundles with TypeScript types out of the box:
-
-```js
-playgroundPreset({
-  dependencies: ['deepmerge', '@motionone/easing'],
-});
-```
-
-Versions are inferred from your `package.json` when available. You can also pin them explicitly:
-
-```js
-playgroundPreset({
-  dependencies: [{ specifier: 'deepmerge', version: '5.1.0' }],
-});
-```
-
-### Self-hosted: copy
-
-Copy pre-built `.js` and `.d.ts` files from an npm package in `node_modules`. Useful for packages that already ship ES modules and type declarations:
-
-```js
-playgroundPreset({
-  dependencies: [{ specifier: '@studiometa/js-toolkit', source: '@studiometa/js-toolkit' }],
-});
-```
-
-### Self-hosted: bundle
-
-Bundle an npm package into a single ESM file with esbuild. Useful for packages with many internal modules or CommonJS dependencies:
-
-```js
-playgroundPreset({
-  dependencies: [{ specifier: 'morphdom', source: 'morphdom', bundle: true }],
-});
-```
-
-### Self-hosted: TypeScript
-
-Transpile local TypeScript sources to `.js` with esbuild and generate `.d.ts` declarations with [tsgo](https://github.com/nicolo-ribaudo/typescript-go) (`@typescript/native-preview`). The `source` field supports glob patterns for multi-file packages:
-
-```js
-playgroundPreset({
-  dependencies: [
-    {
-      specifier: '@studiometa/ui',
-      source: '../ui/**/*.ts',
-      typescript: true,
-      entry: '../ui/index.ts', // optional, explicit entry for tsgo
-    },
-  ],
-});
-```
-
-> **Note:** TypeScript dependency processing requires `@typescript/native-preview` as a devDependency. Install it with `npm install -D @typescript/native-preview`.
-
-Relative `.js` imports in the generated `.d.ts` files are automatically rewritten to `.d.ts`, so modern-monaco's TypeScript worker can resolve types when fetching over HTTP.
-
-### Combining with `importMap`
-
-The `dependencies` option can be combined with the legacy `importMap` option. Manual `importMap` entries take precedence over entries generated from `dependencies`:
-
-```js
-playgroundPreset({
-  dependencies: ['deepmerge'],
-  importMap: {
-    // This overrides the esm.sh URL for deepmerge
-    deepmerge: '/static/custom/deepmerge.js',
-  },
-});
-```
-
-## Dependencies
-
 The `dependencies` option provides a declarative way to manage packages available in the script editor. It automatically generates import map entries and, for self-hosted dependencies, bundles them into `.js` + `.d.ts` files with [tsdown](https://tsdown.dev/).
 
 ### esm.sh (default)
@@ -160,20 +83,23 @@ playgroundPreset({
 });
 ```
 
-### Self-hosted
-
-Adding a `source` field bundles the dependency with tsdown into a single ESM file (`.js`) and a bundled type declaration (`.d.ts`). All npm types are inlined in the `.d.ts` output so the browser-based TypeScript editor can resolve them without additional fetches.
-
-**From an npm package:**
+**Subpath imports** are fully supported. The version is resolved from the package name and placed correctly in the esm.sh URL:
 
 ```js
 playgroundPreset({
   dependencies: [
-    { specifier: 'morphdom', source: 'morphdom' },
-    { specifier: '@studiometa/js-toolkit', source: '@studiometa/js-toolkit' },
+    '@studiometa/js-toolkit',
+    '@studiometa/js-toolkit/utils',
+    // → https://esm.sh/@studiometa/js-toolkit@<version>/utils
   ],
 });
 ```
+
+### Self-hosted
+
+Adding a `source` field bundles the dependency with tsdown into a single ESM file (`.js`) and a bundled type declaration (`.d.ts`). All npm types are inlined in the `.d.ts` output so the browser-based TypeScript editor can resolve them without additional fetches.
+
+The `source` field must be a **local file path** (relative, absolute, or glob). Bare npm package names (e.g. `"morphdom"`) are not supported as source values — npm packages should use esm.sh resolution instead (omit the `source` field).
 
 **From local TypeScript sources:**
 
@@ -214,6 +140,30 @@ playgroundPreset({
 ```
 
 > **Note:** Self-hosted dependencies require `tsdown` as a devDependency. Install it with `npm install -D tsdown`.
+
+### Bundle deduplication
+
+Self-hosted bundles automatically **externalize** any specifier that already exists in the import map. This prevents inlining shared dependencies that the browser already resolves via esm.sh.
+
+For example, if `@studiometa/ui` is self-hosted and depends on `@studiometa/js-toolkit`, and `@studiometa/js-toolkit` is also in the import map (via esm.sh), the bundled `@studiometa/ui/index.js` will contain `import ... from "@studiometa/js-toolkit"` instead of inlining it. The browser's import map resolves that to the esm.sh URL at runtime — no duplication.
+
+```js
+playgroundPreset({
+  dependencies: [
+    '@motionone/easing',
+    'deepmerge',
+    'morphdom',
+    '@studiometa/js-toolkit',
+    '@studiometa/js-toolkit/utils',
+    {
+      specifier: '@studiometa/ui',
+      source: '../ui/**/*.ts',
+      entry: '../ui/index.ts',
+    },
+  ],
+});
+// @studiometa/ui bundle will NOT inline @studiometa/js-toolkit, deepmerge, etc.
+```
 
 ### Type resolution
 
