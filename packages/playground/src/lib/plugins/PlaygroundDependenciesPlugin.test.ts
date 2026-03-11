@@ -68,4 +68,28 @@ describe('PlaygroundDependenciesPlugin', () => {
       expect(resolvePublicPath('/custom', '/play/')).toBe('/custom');
     });
   });
+
+  describe('importMapKeys', () => {
+    it('defaults to empty array when not provided', () => {
+      const p = new PlaygroundDependenciesPlugin([], '/tmp');
+      expect(p.importMapKeys).toEqual([]);
+    });
+
+    it('stores import map keys from constructor', () => {
+      const keys = ['@studiometa/js-toolkit', 'deepmerge', 'morphdom', '@studiometa/ui'];
+      const p = new PlaygroundDependenciesPlugin([], '/tmp', undefined, keys);
+      expect(p.importMapKeys).toEqual(keys);
+    });
+
+    it('accepts empty importMapKeys', () => {
+      const p = new PlaygroundDependenciesPlugin([], '/tmp', undefined, []);
+      expect(p.importMapKeys).toEqual([]);
+    });
+
+    it('preserves publicPath when importMapKeys are provided', () => {
+      const p = new PlaygroundDependenciesPlugin([], '/tmp', '/play', ['deepmerge']);
+      expect(p.publicPath).toBe('/play');
+      expect(p.importMapKeys).toEqual(['deepmerge']);
+    });
+  });
 });

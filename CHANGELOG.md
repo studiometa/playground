@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## v0.3.3 - 2026.03.10
+
+### Fixed
+
+- Fix subpath import resolution for esm.sh URLs (e.g. `@studiometa/js-toolkit/utils` now correctly resolves to `esm.sh/@studiometa/js-toolkit@x.y.z/utils`) ([#58](https://github.com/studiometa/playground/pull/58), [2f6994f](https://github.com/studiometa/playground/commit/2f6994f))
+- Fix version lookup for subpath imports using the package name instead of the full specifier ([#58](https://github.com/studiometa/playground/pull/58))
+- Reject bare npm package names as `source` values with a warning and esm.sh fallback — `source` now only supports local file paths/globs ([#58](https://github.com/studiometa/playground/pull/58))
+- Fix bundle duplication by auto-externalizing import map specifiers in self-hosted builds ([#58](https://github.com/studiometa/playground/pull/58))
+
 ## v0.3.2 - 2026.03.10
 
 ### Added

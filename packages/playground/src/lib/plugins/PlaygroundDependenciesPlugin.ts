@@ -15,11 +15,23 @@ export class PlaygroundDependenciesPlugin {
   dependencies: ResolvedDependency[];
   configDir: string;
   publicPath: string;
+  /**
+   * Specifiers from the merged import map that should be externalized in
+   * self-hosted bundles. This prevents inlining shared dependencies that
+   * the browser's import map already resolves (e.g. via esm.sh).
+   */
+  importMapKeys: string[];
 
-  constructor(dependencies: ResolvedDependency[], configDir: string, publicPath?: string) {
+  constructor(
+    dependencies: ResolvedDependency[],
+    configDir: string,
+    publicPath?: string,
+    importMapKeys?: string[],
+  ) {
     this.dependencies = dependencies;
     this.configDir = configDir;
     this.publicPath = publicPath ?? '';
+    this.importMapKeys = importMapKeys ?? [];
   }
 
   /**
@@ -128,6 +140,12 @@ export class PlaygroundDependenciesPlugin {
     const outputBase = `static/deps/${dep.specifier}`;
 
     try {
+      // Externalize any specifier that is already in the import map so that
+      // shared dependencies are not inlined (the browser resolves them via
+      // the import map at runtime). Exclude the current dependency's own
+      // specifier to avoid externalizing itself.
+      const external = this.importMapKeys.filter((key) => key !== dep.specifier);
+
       const buildResults = await tsdown.build({
         entry: [entryPoint],
         format: 'esm',
@@ -139,6 +157,7 @@ export class PlaygroundDependenciesPlugin {
         config: false,
         write: false,
         logLevel: 'silent',
+        external,
       });
 
       for (const buildResult of buildResults) {
