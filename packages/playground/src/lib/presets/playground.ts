@@ -11,7 +11,6 @@ import type { PlaygroundLoadersOptions } from '../plugins/PlaygroundLoadersPlugi
 import { PlaygroundDependenciesPlugin } from '../plugins/PlaygroundDependenciesPlugin.js';
 import { resolveDependencies } from '../utils/resolve-dependencies.js';
 import type { DependencyConfig } from '../utils/resolve-dependencies.js';
-import { resolvePublicPath } from '../utils/resolve-public-path.js';
 
 export interface HTMLElementAttributes {
   [name: string]: unknown;
@@ -176,31 +175,18 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
       await context.extendWebpack(config, (webpackConfig) => {
         webpackConfig.plugins.push(new PlaygroundLoadersPlugin(options.loaders));
 
-        // Resolve effective publicPath now that the consumer's webpack() callback
-        // has already run, so output.publicPath is available as a fallback.
-        const effectivePublicPath = resolvePublicPath(options?.publicPath, webpackConfig);
-
-        // Prefix self-hosted import map entries with the resolved publicPath.
-        // twigData.importMap is the same reference captured by prototyping's twig
-        // data function, so mutating it here is picked up when HtmlWebpackPlugin
-        // renders templates during compilation.
-        if (effectivePublicPath) {
-          for (const dep of selfHostedDeps) {
-            const currentValue = twigData.importMap[dep.specifier];
-            if (currentValue && !currentValue.startsWith('http')) {
-              twigData.importMap[dep.specifier] = effectivePublicPath + currentValue;
-            }
-          }
-        }
-
-        // Add self-hosted dependencies plugin when needed
+        // Add self-hosted dependencies plugin when needed.
+        // The plugin resolves the effective publicPath from either the explicit
+        // option or webpack's output.publicPath, and mutates twigData.importMap
+        // to prefix self-hosted entries — all during compilation hooks.
         if (selfHostedDeps.length > 0) {
           webpackConfig.plugins.push(
             new PlaygroundDependenciesPlugin(
               selfHostedDeps,
               configDir,
-              effectivePublicPath || undefined,
+              options?.publicPath,
               Object.keys(mergedImportMap),
+              twigData.importMap,
             ),
           );
         }

@@ -22,17 +22,26 @@ export class PlaygroundDependenciesPlugin {
    * the browser's import map already resolves (e.g. via esm.sh).
    */
   importMapKeys: string[];
+  /**
+   * Reference to the shared import map object (from twigData). Mutated
+   * at compilation time to prefix self-hosted entries with the resolved
+   * public path. This works because HtmlWebpackPlugin renders templates
+   * during compilation, after this plugin's hooks have run.
+   */
+  importMap?: Record<string, string>;
 
   constructor(
     dependencies: ResolvedDependency[],
     configDir: string,
     publicPath?: string,
     importMapKeys?: string[],
+    importMap?: Record<string, string>,
   ) {
     this.dependencies = dependencies;
     this.configDir = configDir;
     this.publicPath = publicPath ?? '';
     this.importMapKeys = importMapKeys ?? [];
+    this.importMap = importMap;
   }
 
   apply(compiler: Compiler) {
@@ -40,6 +49,18 @@ export class PlaygroundDependenciesPlugin {
     const publicPath = resolvePublicPath(this.publicPath, compiler.options);
 
     compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
+      // Prefix self-hosted import map entries with the resolved publicPath.
+      // The importMap reference is shared with prototyping's twig data, so
+      // mutating it here is picked up when HtmlWebpackPlugin renders templates.
+      if (publicPath && this.importMap) {
+        for (const dep of this.dependencies) {
+          const currentValue = this.importMap[dep.specifier];
+          if (currentValue && !currentValue.startsWith('http')) {
+            this.importMap[dep.specifier] = publicPath + currentValue;
+          }
+        }
+      }
+
       compilation.hooks.processAssets.tapAsync(
         {
           name: pluginName,
