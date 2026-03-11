@@ -7,13 +7,15 @@
  * 3. Empty string (no prefix)
  *
  * The returned string never has a trailing slash.
+ * Webpack's `output.publicPath` can be a string or a function — only string
+ * values are used; function values are ignored.
  *
  * @param explicitPublicPath - The preset's `publicPath` option, if any
  * @param webpackConfig - The webpack configuration object (optional)
  */
 export function resolvePublicPath(
   explicitPublicPath?: string,
-  webpackConfig?: { output?: { publicPath?: string } },
+  webpackConfig?: { output?: { publicPath?: string | ((...args: unknown[]) => string) } },
 ): string {
   if (explicitPublicPath) {
     return normalize(explicitPublicPath);
