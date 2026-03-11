@@ -272,58 +272,15 @@ describe('resolveDependencies', () => {
     expect(result.selfHosted).toEqual([]);
   });
 
-  describe('publicPath support', () => {
-    it('prepends publicPath to self-hosted dependency paths', () => {
-      const result = resolveDependencies(
-        [{ specifier: '@studiometa/ui', source: '../ui/**/*.ts' }],
-        undefined,
-        '/play',
-      );
+  describe('self-hosted paths have no publicPath prefix', () => {
+    it('self-hosted entries always get bare paths without prefix', () => {
+      const result = resolveDependencies([
+        { specifier: '@studiometa/ui', source: '../ui/**/*.ts' },
+      ]);
       expect(result.importMap).toEqual({
-        '@studiometa/ui': '/play/static/deps/@studiometa/ui/index.js',
+        '@studiometa/ui': '/static/deps/@studiometa/ui/index.js',
       });
-      expect(result.selfHosted[0].importMapValue).toBe('/play/static/deps/@studiometa/ui/index.js');
-    });
-
-    it('normalizes publicPath with trailing slash', () => {
-      const result = resolveDependencies(
-        [{ specifier: '@studiometa/ui', source: '../ui/**/*.ts' }],
-        undefined,
-        '/play/',
-      );
-      expect(result.importMap['@studiometa/ui']).toBe('/play/static/deps/@studiometa/ui/index.js');
-    });
-
-    it('normalizes publicPath without leading slash', () => {
-      const result = resolveDependencies(
-        [{ specifier: '@studiometa/ui', source: '../ui/**/*.ts' }],
-        undefined,
-        'play',
-      );
-      expect(result.importMap['@studiometa/ui']).toBe('/play/static/deps/@studiometa/ui/index.js');
-    });
-
-    it('does not affect esm.sh URLs', () => {
-      const result = resolveDependencies(['deepmerge'], undefined, '/play');
-      expect(result.importMap.deepmerge).toBe('https://esm.sh/deepmerge');
-    });
-
-    it('treats "/" publicPath as no prefix', () => {
-      const result = resolveDependencies(
-        [{ specifier: '@studiometa/ui', source: '../ui/**/*.ts' }],
-        undefined,
-        '/',
-      );
-      expect(result.importMap['@studiometa/ui']).toBe('/static/deps/@studiometa/ui/index.js');
-    });
-
-    it('treats empty publicPath as no prefix', () => {
-      const result = resolveDependencies(
-        [{ specifier: '@studiometa/ui', source: '../ui/**/*.ts' }],
-        undefined,
-        '',
-      );
-      expect(result.importMap['@studiometa/ui']).toBe('/static/deps/@studiometa/ui/index.js');
+      expect(result.selfHosted[0].importMapValue).toBe('/static/deps/@studiometa/ui/index.js');
     });
   });
 });
