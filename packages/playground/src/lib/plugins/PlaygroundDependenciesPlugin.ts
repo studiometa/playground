@@ -3,6 +3,7 @@ import { writeFileSync, mkdtempSync, rmSync } from 'node:fs';
 import type { Compiler } from 'webpack';
 import glob from 'fast-glob';
 import type { ResolvedDependency } from '../utils/resolve-dependencies.js';
+import { resolvePublicPath } from '../utils/resolve-public-path.js';
 
 /**
  * Webpack plugin that processes self-hosted playground dependencies.
@@ -34,30 +35,9 @@ export class PlaygroundDependenciesPlugin {
     this.importMapKeys = importMapKeys ?? [];
   }
 
-  /**
-   * Resolve the effective public path.
-   * Explicit `publicPath` takes precedence, then webpack's `output.publicPath`.
-   */
-  private resolvePublicPath(compiler: Compiler): string {
-    if (this.publicPath) {
-      return this.publicPath.replace(/\/+$/, '');
-    }
-
-    const webpackPublicPath = compiler.options.output?.publicPath;
-    if (
-      typeof webpackPublicPath === 'string' &&
-      webpackPublicPath !== 'auto' &&
-      webpackPublicPath !== '/'
-    ) {
-      return webpackPublicPath.replace(/\/+$/, '');
-    }
-
-    return '';
-  }
-
   apply(compiler: Compiler) {
     const pluginName = 'PlaygroundDependenciesPlugin';
-    const publicPath = this.resolvePublicPath(compiler);
+    const publicPath = resolvePublicPath(this.publicPath, compiler.options);
 
     compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
       compilation.hooks.processAssets.tapAsync(

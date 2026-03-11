@@ -11,6 +11,7 @@ import type { PlaygroundLoadersOptions } from '../plugins/PlaygroundLoadersPlugi
 import { PlaygroundDependenciesPlugin } from '../plugins/PlaygroundDependenciesPlugin.js';
 import { resolveDependencies } from '../utils/resolve-dependencies.js';
 import type { DependencyConfig } from '../utils/resolve-dependencies.js';
+import { resolvePublicPath } from '../utils/resolve-public-path.js';
 
 export interface HTMLElementAttributes {
   [name: string]: unknown;
@@ -116,11 +117,12 @@ export interface PlaygroundPresetOptions {
    * Public path prefix for self-hosted dependency URLs and `_headers` paths.
    * Useful when the playground is deployed under a sub-path (e.g. `/play/`).
    *
-   * When omitted, the plugin will try to infer it from webpack's
-   * `output.publicPath` configuration.
+   * When omitted, the value is automatically inferred from webpack's
+   * `output.publicPath` configuration — no need to duplicate the value.
    *
    * @example '/play'
    * @see https://github.com/studiometa/playground/issues/54
+   * @see https://github.com/studiometa/playground/issues/60
    */
   publicPath: string;
 }
@@ -142,11 +144,7 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
 
       if (options?.dependencies?.length) {
         const packageJsonPath = resolve(configDir, 'package.json');
-        const resolved = resolveDependencies(
-          options.dependencies,
-          packageJsonPath,
-          options?.publicPath,
-        );
+        const resolved = resolveDependencies(options.dependencies, packageJsonPath);
         // Dependencies go first, manual importMap entries take precedence
         mergedImportMap = { ...resolved.importMap, ...mergedImportMap };
         selfHostedDeps = resolved.selfHosted;
@@ -178,13 +176,30 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
       await context.extendWebpack(config, (webpackConfig) => {
         webpackConfig.plugins.push(new PlaygroundLoadersPlugin(options.loaders));
 
+        // Resolve effective publicPath now that the consumer's webpack() callback
+        // has already run, so output.publicPath is available as a fallback.
+        const effectivePublicPath = resolvePublicPath(options?.publicPath, webpackConfig);
+
+        // Prefix self-hosted import map entries with the resolved publicPath.
+        // twigData.importMap is the same reference captured by prototyping's twig
+        // data function, so mutating it here is picked up when HtmlWebpackPlugin
+        // renders templates during compilation.
+        if (effectivePublicPath) {
+          for (const dep of selfHostedDeps) {
+            const currentValue = twigData.importMap[dep.specifier];
+            if (currentValue && !currentValue.startsWith('http')) {
+              twigData.importMap[dep.specifier] = effectivePublicPath + currentValue;
+            }
+          }
+        }
+
         // Add self-hosted dependencies plugin when needed
         if (selfHostedDeps.length > 0) {
           webpackConfig.plugins.push(
             new PlaygroundDependenciesPlugin(
               selfHostedDeps,
               configDir,
-              options?.publicPath,
+              effectivePublicPath || undefined,
               Object.keys(mergedImportMap),
             ),
           );
