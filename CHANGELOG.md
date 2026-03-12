@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## v0.3.4 - 2026.03.12
+
+### Changed
+
+- Move import map `publicPath` prefixing into `PlaygroundDependenciesPlugin`, automatically inferring it from webpack's `output.publicPath` ([#61](https://github.com/studiometa/playground/pull/61), [fe758c0](https://github.com/studiometa/playground/commit/fe758c0))
+
+### Fixed
+
+- Fix TypeScript error by accepting function type for webpack `output.publicPath` ([#61](https://github.com/studiometa/playground/pull/61), [319ec0b](https://github.com/studiometa/playground/commit/319ec0b))
+
 ## v0.3.3 - 2026.03.10
 
 ### Fixed

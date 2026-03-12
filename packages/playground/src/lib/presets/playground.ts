@@ -116,11 +116,12 @@ export interface PlaygroundPresetOptions {
    * Public path prefix for self-hosted dependency URLs and `_headers` paths.
    * Useful when the playground is deployed under a sub-path (e.g. `/play/`).
    *
-   * When omitted, the plugin will try to infer it from webpack's
-   * `output.publicPath` configuration.
+   * When omitted, the value is automatically inferred from webpack's
+   * `output.publicPath` configuration — no need to duplicate the value.
    *
    * @example '/play'
    * @see https://github.com/studiometa/playground/issues/54
+   * @see https://github.com/studiometa/playground/issues/60
    */
   publicPath: string;
 }
@@ -142,11 +143,7 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
 
       if (options?.dependencies?.length) {
         const packageJsonPath = resolve(configDir, 'package.json');
-        const resolved = resolveDependencies(
-          options.dependencies,
-          packageJsonPath,
-          options?.publicPath,
-        );
+        const resolved = resolveDependencies(options.dependencies, packageJsonPath);
         // Dependencies go first, manual importMap entries take precedence
         mergedImportMap = { ...resolved.importMap, ...mergedImportMap };
         selfHostedDeps = resolved.selfHosted;
@@ -178,7 +175,10 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
       await context.extendWebpack(config, (webpackConfig) => {
         webpackConfig.plugins.push(new PlaygroundLoadersPlugin(options.loaders));
 
-        // Add self-hosted dependencies plugin when needed
+        // Add self-hosted dependencies plugin when needed.
+        // The plugin resolves the effective publicPath from either the explicit
+        // option or webpack's output.publicPath, and mutates twigData.importMap
+        // to prefix self-hosted entries — all during compilation hooks.
         if (selfHostedDeps.length > 0) {
           webpackConfig.plugins.push(
             new PlaygroundDependenciesPlugin(
@@ -186,6 +186,7 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
               configDir,
               options?.publicPath,
               Object.keys(mergedImportMap),
+              twigData.importMap,
             ),
           );
         }

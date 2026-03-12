@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { PlaygroundDependenciesPlugin } from './PlaygroundDependenciesPlugin.js';
+import type { ResolvedDependency } from '../utils/resolve-dependencies.js';
 
 describe('PlaygroundDependenciesPlugin', () => {
   const plugin = new PlaygroundDependenciesPlugin([], '/tmp');
@@ -31,44 +32,6 @@ describe('PlaygroundDependenciesPlugin', () => {
     });
   });
 
-  describe('resolvePublicPath', () => {
-    const resolvePublicPath = (publicPath: string | undefined, webpackPublicPath?: string) => {
-      const p = new PlaygroundDependenciesPlugin([], '/tmp', publicPath);
-      const fakeCompiler = {
-        options: { output: { publicPath: webpackPublicPath ?? 'auto' } },
-      };
-      return (p as any).resolvePublicPath(fakeCompiler);
-    };
-
-    it('uses explicit publicPath when provided', () => {
-      expect(resolvePublicPath('/play')).toBe('/play');
-    });
-
-    it('strips trailing slash from explicit publicPath', () => {
-      expect(resolvePublicPath('/play/')).toBe('/play');
-    });
-
-    it('infers from webpack publicPath when no explicit publicPath', () => {
-      expect(resolvePublicPath(undefined, '/play/')).toBe('/play');
-    });
-
-    it('returns empty string when webpack publicPath is "auto"', () => {
-      expect(resolvePublicPath(undefined, 'auto')).toBe('');
-    });
-
-    it('returns empty string when webpack publicPath is "/"', () => {
-      expect(resolvePublicPath(undefined, '/')).toBe('');
-    });
-
-    it('returns empty string when no publicPath at all', () => {
-      expect(resolvePublicPath(undefined)).toBe('');
-    });
-
-    it('prefers explicit publicPath over webpack publicPath', () => {
-      expect(resolvePublicPath('/custom', '/play/')).toBe('/custom');
-    });
-  });
-
   describe('importMapKeys', () => {
     it('defaults to empty array when not provided', () => {
       const p = new PlaygroundDependenciesPlugin([], '/tmp');
@@ -90,6 +53,162 @@ describe('PlaygroundDependenciesPlugin', () => {
       const p = new PlaygroundDependenciesPlugin([], '/tmp', '/play', ['deepmerge']);
       expect(p.publicPath).toBe('/play');
       expect(p.importMapKeys).toEqual(['deepmerge']);
+    });
+  });
+
+  describe('importMap', () => {
+    it('defaults to undefined when not provided', () => {
+      const p = new PlaygroundDependenciesPlugin([], '/tmp');
+      expect(p.importMap).toBeUndefined();
+    });
+
+    it('stores import map reference from constructor', () => {
+      const importMap = { deepmerge: 'https://esm.sh/deepmerge' };
+      const p = new PlaygroundDependenciesPlugin([], '/tmp', undefined, [], importMap);
+      expect(p.importMap).toBe(importMap);
+    });
+  });
+
+  describe('import map publicPath prefixing', () => {
+    /**
+     * Helper that simulates the plugin's `apply()` import map mutation
+     * by calling the `thisCompilation` hook callback directly.
+     */
+    function applyAndGetImportMap(
+      deps: ResolvedDependency[],
+      importMap: Record<string, string>,
+      publicPath?: string,
+      webpackPublicPath?: string,
+    ): Record<string, string> {
+      const p = new PlaygroundDependenciesPlugin(deps, '/tmp', publicPath, [], importMap);
+
+      // Minimal fake compiler that captures the thisCompilation tap callback
+      let compilationCallback: ((compilation: unknown) => void) | undefined;
+      const fakeCompiler = {
+        options: { output: { publicPath: webpackPublicPath ?? 'auto' } },
+        webpack: { Compilation: { PROCESS_ASSETS_STAGE_ADDITIONAL: 0 } },
+        hooks: {
+          thisCompilation: {
+            tap(_name: string, cb: (compilation: unknown) => void) {
+              compilationCallback = cb;
+            },
+          },
+        },
+      };
+
+      p.apply(fakeCompiler as any);
+
+      // Trigger the compilation hook with a minimal fake compilation
+      compilationCallback?.({
+        hooks: {
+          processAssets: { tapAsync() {} },
+        },
+      });
+
+      return importMap;
+    }
+
+    it('prefixes self-hosted entries with explicit publicPath', () => {
+      const deps: ResolvedDependency[] = [
+        {
+          specifier: '@studiometa/ui',
+          importMapValue: '/static/deps/@studiometa/ui/index.js',
+          type: 'bundle',
+          source: '../ui/**/*.ts',
+        },
+      ];
+      const importMap = {
+        '@studiometa/ui': '/static/deps/@studiometa/ui/index.js',
+        deepmerge: 'https://esm.sh/deepmerge',
+      };
+
+      applyAndGetImportMap(deps, importMap, '/play');
+
+      expect(importMap['@studiometa/ui']).toBe('/play/static/deps/@studiometa/ui/index.js');
+      expect(importMap.deepmerge).toBe('https://esm.sh/deepmerge');
+    });
+
+    it('infers publicPath from webpack output.publicPath', () => {
+      const deps: ResolvedDependency[] = [
+        {
+          specifier: 'demo-lib',
+          importMapValue: '/static/deps/demo-lib/index.js',
+          type: 'bundle',
+          source: './lib/index.ts',
+        },
+      ];
+      const importMap = { 'demo-lib': '/static/deps/demo-lib/index.js' };
+
+      applyAndGetImportMap(deps, importMap, undefined, '/app/');
+
+      expect(importMap['demo-lib']).toBe('/app/static/deps/demo-lib/index.js');
+    });
+
+    it('does not prefix when no publicPath is resolved', () => {
+      const deps: ResolvedDependency[] = [
+        {
+          specifier: 'demo-lib',
+          importMapValue: '/static/deps/demo-lib/index.js',
+          type: 'bundle',
+          source: './lib/index.ts',
+        },
+      ];
+      const importMap = { 'demo-lib': '/static/deps/demo-lib/index.js' };
+
+      applyAndGetImportMap(deps, importMap);
+
+      expect(importMap['demo-lib']).toBe('/static/deps/demo-lib/index.js');
+    });
+
+    it('does not prefix http URLs', () => {
+      const deps: ResolvedDependency[] = [
+        {
+          specifier: 'deepmerge',
+          importMapValue: 'https://esm.sh/deepmerge',
+          type: 'esm-sh',
+        },
+      ];
+      const importMap = { deepmerge: 'https://esm.sh/deepmerge' };
+
+      applyAndGetImportMap(deps, importMap, '/play');
+
+      expect(importMap.deepmerge).toBe('https://esm.sh/deepmerge');
+    });
+
+    it('does nothing when no importMap reference is provided', () => {
+      const deps: ResolvedDependency[] = [
+        {
+          specifier: 'demo-lib',
+          importMapValue: '/static/deps/demo-lib/index.js',
+          type: 'bundle',
+          source: './lib/index.ts',
+        },
+      ];
+      const p = new PlaygroundDependenciesPlugin(deps, '/tmp', '/play');
+
+      let compilationCallback: ((compilation: unknown) => void) | undefined;
+      const fakeCompiler = {
+        options: { output: { publicPath: 'auto' } },
+        webpack: { Compilation: { PROCESS_ASSETS_STAGE_ADDITIONAL: 0 } },
+        hooks: {
+          thisCompilation: {
+            tap(_name: string, cb: (compilation: unknown) => void) {
+              compilationCallback = cb;
+            },
+          },
+        },
+      };
+
+      p.apply(fakeCompiler as any);
+
+      // Should not throw
+      compilationCallback?.({
+        hooks: {
+          processAssets: { tapAsync() {} },
+        },
+      });
+
+      expect(p.importMap).toBeUndefined();
     });
   });
 });
