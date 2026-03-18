@@ -3,41 +3,50 @@ name: Publish
 on:
   push:
     tags:
-      - '*.*.*'
+      - "[0-9]*"
 
 jobs:
-  release:
+  publish:
+    name: Build & Publish
     runs-on: ubuntu-latest
-    environment: publish
     permissions:
       contents: write
       id-token: write
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 22
-          registry-url: 'https://registry.npmjs.org'
-      - run: npm i
-      - run: |
+          node-version: "22"
+          cache: "npm"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build all packages
+        run: |
           npm run build
-          cp README.md packages/playground/
-      - run: |
-          NPM_TAG='latest'
-          IS_PRERELEASE=false
+          npm run build -w @studiometa/playground-preview
 
-          if [[ $GITHUB_REF_NAME =~ 'alpha' || $GITHUB_REF_NAME =~ 'beta' || $GITHUB_REF_NAME =~ 'rc' ]]; then
-            NPM_TAG='next'
-            IS_PRERELEASE=true
-          fi
+      - name: Run tests
+        run: npm test
 
-          echo "NPM_TAG=$NPM_TAG" >> $GITHUB_ENV
-          echo "IS_PRERELEASE=$IS_PRERELEASE" >> $GITHUB_ENV
-      - run: npm i -g npm@^11 && cd packages/playground && npm publish --provenance --access public --tag ${{ env.NPM_TAG }}
-      - uses: ncipollo/release-action@v1
+      - name: Copy README
+        run: cp README.md packages/playground/
+
+      - name: Publish @studiometa/playground
+        run: npm publish -w @studiometa/playground --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @studiometa/playground-preview
+        run: npm publish -w @studiometa/playground-preview --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          tag: ${{ github.ref }}
-          name: v${{ github.ref_name }}
-          body: Please refer to [CHANGELOG.md](https://github.com/studiometa/playground/blob/${{ github.ref_name }}/CHANGELOG.md) for details.
-          draft: false
-          prerelease: ${{ env.IS_PRERELEASE }}
+          generate_release_notes: true
