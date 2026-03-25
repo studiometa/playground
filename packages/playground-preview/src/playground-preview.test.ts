@@ -21,6 +21,75 @@ function createElement(attrs: Record<string, string> = {}, innerHTML = ''): Play
   return el;
 }
 
+/**
+ * Wait for an iframe to appear inside the element's shadow DOM.
+ */
+function waitForIframe(el: PlaygroundPreview, timeout = 3000): Promise<HTMLIFrameElement> {
+  return new Promise((resolve, reject) => {
+    const shadow = el.shadowRoot!;
+
+    // Already there?
+    const existing = shadow.querySelector('iframe');
+    if (existing) return resolve(existing);
+
+    const observer = new MutationObserver(() => {
+      const iframe = shadow.querySelector('iframe');
+      if (iframe) {
+        observer.disconnect();
+        resolve(iframe);
+      }
+    });
+
+    observer.observe(shadow.querySelector('.iframe-wrapper')!, { childList: true });
+
+    setTimeout(() => {
+      observer.disconnect();
+      reject(new Error('Timed out waiting for iframe'));
+    }, timeout);
+  });
+}
+
+/**
+ * Wait for the iframe inside the element to be replaced (new element).
+ */
+function waitForIframeChange(
+  el: PlaygroundPreview,
+  previousIframe: HTMLIFrameElement,
+  timeout = 3000,
+): Promise<HTMLIFrameElement> {
+  return new Promise((resolve, reject) => {
+    const shadow = el.shadowRoot!;
+
+    const check = () => {
+      const current = shadow.querySelector('iframe');
+      if (current && current !== previousIframe) return resolve(current);
+      return null;
+    };
+
+    // Already changed?
+    const result = check();
+    if (result) return;
+
+    const observer = new MutationObserver(() => {
+      check();
+    });
+
+    observer.observe(shadow.querySelector('.iframe-wrapper')!, { childList: true });
+
+    setTimeout(() => {
+      observer.disconnect();
+      reject(new Error('Timed out waiting for iframe change'));
+    }, timeout);
+  });
+}
+
+/**
+ * Wait a number of milliseconds.
+ */
+function wait(ms = 50): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 describe('PlaygroundPreview', () => {
   afterEach(() => {
     document.body.innerHTML = '';
@@ -31,19 +100,20 @@ describe('PlaygroundPreview', () => {
   // -------------------------------------------
 
   describe('content resolution', () => {
-    it('reads content from attributes', () => {
+    it('reads content from attributes', async () => {
       const el = createElement({
         html: '<h1>Hi</h1>',
         script: 'console.log(1)',
         css: 'h1 { color: red }',
       });
 
-      const shadow = el.shadowRoot!;
-      // Component should have rendered
-      expect(shadow.querySelector('.container')).not.toBeNull();
+      const iframe = await waitForIframe(el);
+      expect(iframe.src).toContain('html=');
+      expect(iframe.src).toContain('script=');
+      expect(iframe.src).toContain('style=');
     });
 
-    it('reads content from <script type="playground/..."> children', () => {
+    it('reads content from <script type="playground/..."> children', async () => {
       const el = createElement(
         {},
         `
@@ -53,18 +123,26 @@ describe('PlaygroundPreview', () => {
       `,
       );
 
-      const shadow = el.shadowRoot!;
-      expect(shadow.querySelector('.container')).not.toBeNull();
+      const iframe = await waitForIframe(el);
+      expect(iframe.src).toContain('html=');
+      expect(iframe.src).toContain('script=');
+      expect(iframe.src).toContain('style=');
     });
 
-    it('children take precedence over attributes', () => {
+    it('children take precedence over attributes', async () => {
       const el = createElement(
         { html: '<p>From attr</p>' },
         `<script type="playground/html"><p>From child</p></script>`,
       );
 
-      const shadow = el.shadowRoot!;
-      expect(shadow.querySelector('.container')).not.toBeNull();
+      const iframe = await waitForIframe(el);
+      // Both produce different zipped values — child content should win.
+      // Build a reference element with only the attribute to compare.
+      const refEl = createElement({ html: '<p>From attr</p>' });
+      const refIframe = await waitForIframe(refEl);
+
+      // The two iframes should have different src (different html content)
+      expect(iframe.src).not.toBe(refIframe.src);
     });
   });
 
@@ -159,6 +237,30 @@ describe('PlaygroundPreview', () => {
       el.removeAttribute('no-controls');
       expect(shadow.querySelector('.controls')).not.toBeNull();
     });
+
+    it('rebuilds iframe when theme attribute changes on a visible element', async () => {
+      const el = createElement({ theme: 'light' });
+      const firstIframe = await waitForIframe(el);
+      expect(firstIframe.src).toContain('theme=light');
+
+      el.setAttribute('theme', 'dark');
+
+      const secondIframe = await waitForIframeChange(el, firstIframe);
+      expect(secondIframe.src).toContain('theme=dark');
+      // Iframe was replaced (not the same element)
+      expect(secondIframe).not.toBe(firstIframe);
+    });
+
+    it('rebuilds iframe when html attribute changes on a visible element', async () => {
+      const el = createElement({ html: '<p>Initial</p>' });
+      const firstIframe = await waitForIframe(el);
+
+      el.setAttribute('html', '<p>Updated</p>');
+
+      const secondIframe = await waitForIframeChange(el, firstIframe);
+      expect(secondIframe).not.toBe(firstIframe);
+      expect(secondIframe.src).not.toBe(firstIframe.src);
+    });
   });
 
   // -------------------------------------------
@@ -186,12 +288,22 @@ describe('PlaygroundPreview', () => {
   // -------------------------------------------
 
   describe('lazy loading', () => {
-    it('does not create an iframe immediately', () => {
+    it('does not create an iframe immediately (element off-screen)', () => {
+      // Position the element far off-screen so IntersectionObserver doesn't fire
       const el = createElement();
-      const shadow = el.shadowRoot!;
+      el.style.position = 'absolute';
+      el.style.top = '999999px';
 
-      // No iframe until IntersectionObserver fires
-      expect(shadow.querySelector('iframe')).toBeNull();
+      // Give it a tick — iframe should still not exist
+      expect(el.shadowRoot!.querySelector('iframe')).toBeNull();
+    });
+
+    it('creates an iframe when element is in viewport', async () => {
+      const el = createElement({ html: '<h1>Test</h1>' });
+      const iframe = await waitForIframe(el);
+
+      expect(iframe).not.toBeNull();
+      expect(iframe.src).toContain('studiometa-playground.pages.dev');
     });
   });
 
@@ -199,58 +311,146 @@ describe('PlaygroundPreview', () => {
   // Dynamic child content (MutationObserver) — #64
   // -------------------------------------------
 
-  describe('dynamic child content', () => {
+  describe('dynamic child content (#64)', () => {
     it('picks up dynamically added <script type="playground/..."> children', async () => {
       const el = createElement();
-      const shadow = el.shadowRoot!;
+      const firstIframe = await waitForIframe(el);
+      const srcBefore = firstIframe.src;
 
-      // Initially no child content
-      expect(shadow.querySelector('.container')).not.toBeNull();
-
-      // Dynamically add script children
+      // Dynamically add a script child
       const script = document.createElement('script');
       script.type = 'playground/html';
       script.textContent = '<h1>Dynamic</h1>';
       el.appendChild(script);
 
-      // MutationObserver fires asynchronously — wait a microtask
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      // The element should have processed the new child
-      // (we can't easily inspect the private #childHtml, but we can
-      // verify no errors were thrown and the component is still intact)
-      expect(shadow.querySelector('.container')).not.toBeNull();
+      // MutationObserver should trigger a reload
+      const newIframe = await waitForIframeChange(el, firstIframe);
+      expect(newIframe.src).not.toBe(srcBefore);
     });
 
-    it('handles removal of <script> children', async () => {
+    it('updates iframe when <script> children are replaced', async () => {
       const el = createElement({}, '<script type="playground/html"><h1>Initial</h1></script>');
+      const firstIframe = await waitForIframe(el);
+      const srcBefore = firstIframe.src;
 
-      const script = el.querySelector('script')!;
-      el.removeChild(script);
+      // Remove old script and add new one
+      const oldScript = el.querySelector('script')!;
+      el.removeChild(oldScript);
 
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      const newScript = document.createElement('script');
+      newScript.type = 'playground/html';
+      newScript.textContent = '<h1>Replaced</h1>';
+      el.appendChild(newScript);
 
-      // Should not throw
-      expect(el.shadowRoot!.querySelector('.container')).not.toBeNull();
+      const newIframe = await waitForIframeChange(el, firstIframe);
+      expect(newIframe.src).not.toBe(srcBefore);
+    });
+
+    it('uses dynamically added content when element becomes visible later', async () => {
+      // Start off-screen
+      const el = createElement();
+      el.style.position = 'absolute';
+      el.style.top = '999999px';
+
+      await wait(50);
+      expect(el.shadowRoot!.querySelector('iframe')).toBeNull();
+
+      // Add content while off-screen
+      const script = document.createElement('script');
+      script.type = 'playground/html';
+      script.textContent = '<h1>Added Before Visible</h1>';
+      el.appendChild(script);
+
+      await wait(50);
+
+      // Scroll into view
+      el.style.position = '';
+      el.style.top = '';
+
+      const iframe = await waitForIframe(el);
+      expect(iframe).not.toBeNull();
+      expect(iframe.src).toContain('html=');
+    });
+
+    it('cleans up MutationObserver on disconnect', async () => {
+      const el = createElement();
+      await waitForIframe(el);
+
+      el.remove();
+
+      // Adding a script after disconnect should not throw
+      const script = document.createElement('script');
+      script.type = 'playground/html';
+      script.textContent = '<h1>After disconnect</h1>';
+      el.appendChild(script);
+
+      await wait(50);
+      // No error thrown — observer was cleaned up
     });
   });
 
   // -------------------------------------------
-  // Hash-only URL changes — #65
+  // Iframe reload on src change — #65
   // -------------------------------------------
 
-  describe('iframe reload on attribute change', () => {
-    it('uses #reloadIframe to avoid hash-only load event issue', () => {
-      const el = createElement();
+  describe('iframe reload on src change (#65)', () => {
+    it('destroys and recreates iframe instead of just setting src', async () => {
+      const el = createElement({ theme: 'light' });
+      const firstIframe = await waitForIframe(el);
 
-      // Simulate visibility by triggering the IntersectionObserver
-      // We can't easily do that in happy-dom, but we can verify the
-      // component structure is sound after attribute changes
       el.setAttribute('theme', 'dark');
-      el.setAttribute('theme', 'light');
 
-      // Should not leave a stale loader
-      expect(el.shadowRoot!.querySelector('.container')).not.toBeNull();
+      const secondIframe = await waitForIframeChange(el, firstIframe);
+      // Must be a different DOM element (full reload)
+      expect(secondIframe).not.toBe(firstIframe);
+      // Old iframe removed from DOM
+      expect(firstIframe.parentElement).toBeNull();
+    });
+
+    it('shows loader during iframe reload', async () => {
+      const el = createElement({ theme: 'light' });
+      const firstIframe = await waitForIframe(el);
+      const loader = el.shadowRoot!.querySelector('.loader')!;
+
+      // Simulate load completing
+      firstIframe.dispatchEvent(new Event('load'));
+      expect(loader.classList.contains('hidden')).toBe(true);
+
+      // Trigger reload
+      el.setAttribute('theme', 'dark');
+      await waitForIframeChange(el, firstIframe);
+
+      // Loader should be visible again (new iframe is loading)
+      expect(loader.classList.contains('hidden')).toBe(false);
+    });
+
+    it('updates open link href after reload', async () => {
+      const el = createElement({ theme: 'light' });
+      const firstIframe = await waitForIframe(el);
+
+      const openLink = el.shadowRoot!.querySelector('.open-link') as HTMLAnchorElement;
+      expect(openLink.href).toContain('theme=light');
+
+      el.setAttribute('theme', 'dark');
+      await waitForIframeChange(el, firstIframe);
+
+      expect(openLink.href).toContain('theme=dark');
+    });
+
+    it('hides loader once new iframe fires load event', async () => {
+      const el = createElement({ theme: 'light' });
+      const firstIframe = await waitForIframe(el);
+      firstIframe.dispatchEvent(new Event('load'));
+
+      el.setAttribute('theme', 'dark');
+      const secondIframe = await waitForIframeChange(el, firstIframe);
+
+      const loader = el.shadowRoot!.querySelector('.loader')!;
+      expect(loader.classList.contains('hidden')).toBe(false);
+
+      // Simulate load on the new iframe
+      secondIframe.dispatchEvent(new Event('load'));
+      expect(loader.classList.contains('hidden')).toBe(true);
     });
   });
 
