@@ -61,6 +61,7 @@ export class PlaygroundPreview extends HTMLElement {
   #scale: number = DEFAULT_ZOOM;
   #iframe: HTMLIFrameElement | null = null;
   #observer: IntersectionObserver | null = null;
+  #childObserver: MutationObserver | null = null;
   #mediaQuery: MediaQueryList | null = null;
   #mediaQueryHandler: ((e: MediaQueryListEvent) => void) | null = null;
   #isVisible = false;
@@ -88,6 +89,7 @@ export class PlaygroundPreview extends HTMLElement {
     this.#readChildContent();
     this.#render();
     this.#setupIntersectionObserver();
+    this.#setupChildObserver();
     this.#setupMediaQuery();
   }
 
@@ -95,6 +97,8 @@ export class PlaygroundPreview extends HTMLElement {
     this.#isConnected = false;
     this.#observer?.disconnect();
     this.#observer = null;
+    this.#childObserver?.disconnect();
+    this.#childObserver = null;
 
     if (this.#mediaQuery && this.#mediaQueryHandler) {
       this.#mediaQuery.removeEventListener('change', this.#mediaQueryHandler);
@@ -343,11 +347,12 @@ export class PlaygroundPreview extends HTMLElement {
   #updateIframeSrc() {
     if (!this.#iframe) return;
 
-    const src = this.#buildSrc();
-    this.#iframe.classList.add('loading');
-    this.#loader?.classList.remove('hidden');
-    this.#iframe.src = src;
-    this.#updateOpenLink();
+    // Reload the iframe entirely instead of just setting src.
+    // Browsers do not fire a `load` event when only the hash portion
+    // of the URL changes, which would leave the loader visible
+    // indefinitely. Destroying and re-creating the iframe guarantees
+    // a fresh load event every time. (see #65)
+    this.#reloadIframe();
   }
 
   #updateIframeScale() {
@@ -412,6 +417,26 @@ export class PlaygroundPreview extends HTMLElement {
     );
 
     this.#observer.observe(this);
+  }
+
+  // -------------------------------------------------------
+  // Child mutation observer
+  // -------------------------------------------------------
+
+  #setupChildObserver() {
+    this.#childObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList') {
+          this.#readChildContent();
+          if (this.#isVisible) {
+            this.#updateIframeSrc();
+          }
+          break;
+        }
+      }
+    });
+
+    this.#childObserver.observe(this, { childList: true });
   }
 
   // -------------------------------------------------------

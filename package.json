@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=@studiometa/playground",
+    "build": "npm run build --workspace=@studiometa/playground && npm run build --workspace=@studiometa/playground-preview",
     "watch": "npm run watch --workspace=@studiometa/playground",
     "dev": "concurrently 'npm run watch' 'npm run demo:dev' --names 'playground,demo'",
     "demo:dev": "npm run dev --workspace=@studiometa/playground-demo",
@@ -41,9 +41,11 @@
   },
   "devDependencies": {
     "@studiometa/oxlint-config": "0.2.0",
+    "@vitest/browser": "^4.0.18",
     "@vitest/coverage-v8": "4.0.18",
     "happy-dom": "^20.8.3",
     "oxlint": "1.52.0",
+    "playwright": "^1.58.2",
     "vitest": "4.0.18"
   }
 }
