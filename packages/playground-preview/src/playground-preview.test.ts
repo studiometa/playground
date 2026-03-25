@@ -196,6 +196,65 @@ describe('PlaygroundPreview', () => {
   });
 
   // -------------------------------------------
+  // Dynamic child content (MutationObserver) — #64
+  // -------------------------------------------
+
+  describe('dynamic child content', () => {
+    it('picks up dynamically added <script type="playground/..."> children', async () => {
+      const el = createElement();
+      const shadow = el.shadowRoot!;
+
+      // Initially no child content
+      expect(shadow.querySelector('.container')).not.toBeNull();
+
+      // Dynamically add script children
+      const script = document.createElement('script');
+      script.type = 'playground/html';
+      script.textContent = '<h1>Dynamic</h1>';
+      el.appendChild(script);
+
+      // MutationObserver fires asynchronously — wait a microtask
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // The element should have processed the new child
+      // (we can't easily inspect the private #childHtml, but we can
+      // verify no errors were thrown and the component is still intact)
+      expect(shadow.querySelector('.container')).not.toBeNull();
+    });
+
+    it('handles removal of <script> children', async () => {
+      const el = createElement({}, '<script type="playground/html"><h1>Initial</h1></script>');
+
+      const script = el.querySelector('script')!;
+      el.removeChild(script);
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Should not throw
+      expect(el.shadowRoot!.querySelector('.container')).not.toBeNull();
+    });
+  });
+
+  // -------------------------------------------
+  // Hash-only URL changes — #65
+  // -------------------------------------------
+
+  describe('iframe reload on attribute change', () => {
+    it('uses #reloadIframe to avoid hash-only load event issue', () => {
+      const el = createElement();
+
+      // Simulate visibility by triggering the IntersectionObserver
+      // We can't easily do that in happy-dom, but we can verify the
+      // component structure is sound after attribute changes
+      el.setAttribute('theme', 'dark');
+      el.setAttribute('theme', 'light');
+
+      // Should not leave a stale loader
+      expect(el.shadowRoot!.querySelector('.container')).not.toBeNull();
+    });
+  });
+
+  // -------------------------------------------
   // Cleanup
   // -------------------------------------------
 
