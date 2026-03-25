@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- **playground-preview:** Support dynamically injected `<script type="playground/...">` children via `MutationObserver`, enabling framework compatibility (Vue, Svelte, etc.) ([#66](https://github.com/studiometa/playground/pull/66), [f1c21b1](https://github.com/studiometa/playground/commit/f1c21b1))
+
+### Fixed
+
+- **playground-preview:** Fix iframe `load` event not firing on hash-only URL changes, which left the loader visible indefinitely ([#66](https://github.com/studiometa/playground/pull/66), [f1c21b1](https://github.com/studiometa/playground/commit/f1c21b1))
+
+### Changed
+
+- Switch playground-preview tests from happy-dom to real browser via `@vitest/browser` + Playwright for reliable `IntersectionObserver`, `MutationObserver`, and iframe behavior ([#66](https://github.com/studiometa/playground/pull/66), [f2477dc](https://github.com/studiometa/playground/commit/f2477dc))
+- Include `@studiometa/playground-preview` in compressed size analysis and root `build` script ([#66](https://github.com/studiometa/playground/pull/66), [a34fed6](https://github.com/studiometa/playground/commit/a34fed6))
+- Add `codecov.yml` with per-package project coverage targets ([#66](https://github.com/studiometa/playground/pull/66), [33cbbb6](https://github.com/studiometa/playground/commit/33cbbb6))
+
 ## v0.3.5 - 2026.03.25
 
 ### Changed
