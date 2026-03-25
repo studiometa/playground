@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=@studiometa/playground",
+    "build": "npm run build --workspace=@studiometa/playground && npm run build --workspace=@studiometa/playground-preview",
     "watch": "npm run watch --workspace=@studiometa/playground",
     "dev": "concurrently 'npm run watch' 'npm run demo:dev' --names 'playground,demo'",
     "demo:dev": "npm run dev --workspace=@studiometa/playground-demo",

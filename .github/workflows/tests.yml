@@ -23,9 +23,7 @@ jobs:
         run: npm ci
 
       - name: Build all packages
-        run: |
-          npm run build
-          npm run build -w @studiometa/playground-preview
+        run: npm run build
 
       - name: Demo build
         run: npm run demo:build
@@ -65,9 +63,7 @@ jobs:
         run: npm ci
 
       - name: Build all packages
-        run: |
-          npm run build
-          npm run build -w @studiometa/playground-preview
+        run: npm run build
 
       - name: Install Playwright browsers
         run: npx playwright install chromium
@@ -94,6 +90,6 @@ jobs:
       - uses: preactjs/compressed-size-action@v2
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          build-script: 'build && npm run build -w @studiometa/playground-preview'
+          build-script: 'build'
           pattern: 'packages/*/dist/**/*.{js,css}'
           strip-hash: '\\b\\w{8}\\.'
