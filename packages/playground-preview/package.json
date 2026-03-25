@@ -1,6 +1,6 @@
 {
   "name": "@studiometa/playground-preview",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "type": "module",
   "description": "A web component to embed @studiometa/playground previews anywhere",
   "publishConfig": {
