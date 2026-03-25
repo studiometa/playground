@@ -60,7 +60,8 @@ The `dependencies` option in `playgroundPreset()` goes through:
 ## Git & branching
 
 - **Trunk-based:** single `main` branch (default)
-- **Feature branches:** `feature/#<issue>-description` → PR into `main`
+- **Feature branches:** `feat/#<issue>-description` → PR into `main`
+- **Bugfix branches:** `fix/#<issue>-description` → PR into `main`
 - **Push new branches immediately** after creation
 
 ## Commit messages
