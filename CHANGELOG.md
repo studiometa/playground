@@ -4,7 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## v0.3.5 - 2026.03.25
+
+### Changed
+
+- Rework publish workflow: split into test + publish jobs, add prerelease support, switch to `ncipollo/release-action` ([#63](https://github.com/studiometa/playground/pull/63), [7455f8b](https://github.com/studiometa/playground/commit/7455f8b))
+- Align tests workflow with publish workflow conventions: `npm ci`, consistent naming, build playground-preview ([#63](https://github.com/studiometa/playground/pull/63), [d69f1f8](https://github.com/studiometa/playground/commit/d69f1f8))
+- Replace `export-size-action` with `preactjs/compressed-size-action` ([#63](https://github.com/studiometa/playground/pull/63), [806fa6f](https://github.com/studiometa/playground/commit/806fa6f))
+- Switch from git-flow to trunk-based workflow with single `main` branch ([b192f37](https://github.com/studiometa/playground/commit/b192f37))
+
+### Added
+
+- Add `@studiometa/playground-preview` to publish workflow ([#63](https://github.com/studiometa/playground/pull/63), [bd3721c](https://github.com/studiometa/playground/commit/bd3721c))
 
 ## v0.3.4 - 2026.03.12
 
