@@ -59,8 +59,8 @@ The `dependencies` option in `playgroundPreset()` goes through:
 
 ## Git & branching
 
-- **Git Flow:** `main` (production) + `develop` (integration)
-- **Branches:** `feature/#<issue>-description`, `release/<version>`, `hotfix/<version>`
+- **Trunk-based:** single `main` branch (default)
+- **Feature branches:** `feature/#<issue>-description` → PR into `main`
 - **Push new branches immediately** after creation
 
 ## Commit messages
@@ -94,10 +94,9 @@ git commit -m "feat: fix imports"
 - **Semantic Versioning:** `MAJOR.MINOR.PATCH`
 - Root `package.json` has a `postversion` script that syncs workspace versions
 - Release process:
-  1. Create `release/X.Y.Z` branch from `develop`
-  2. `npm version X.Y.Z --no-git-tag-version` (bumps all packages)
-  3. Update `CHANGELOG.md`
-  4. PR into `main`, merge, tag → triggers npm publish via GitHub Actions
+  1. `npm version X.Y.Z --no-git-tag-version` on `main`
+  2. Update `CHANGELOG.md`
+  3. Commit, tag, push → triggers npm publish via GitHub Actions
 
 ## Testing
 
@@ -110,6 +109,5 @@ git commit -m "feat: fix imports"
 
 1. **Never use `git add .`** — stage specific files only
 2. **Always run lint + tests** before committing
-3. **Ask before merging/finishing** release/hotfix branches
-4. **The `source` field** in dependency configs only supports local file paths (not bare npm names)
-5. **Self-hosted bundles** auto-externalize import map specifiers to prevent duplication
+3. **The `source` field** in dependency configs only supports local file paths (not bare npm names)
+4. **Self-hosted bundles** auto-externalize import map specifiers to prevent duplication
