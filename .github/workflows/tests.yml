@@ -82,7 +82,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
           fail_ci_if_error: false
-          flags: unittests
+          flags: playground,playground-preview
 
   compressed_size:
     name: Compressed Size
@@ -94,6 +94,6 @@ jobs:
       - uses: preactjs/compressed-size-action@v2
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          build-script: 'build'
-          pattern: 'packages/playground/dist/**/*.{js,css}'
+          build-script: 'build && npm run build -w @studiometa/playground-preview'
+          pattern: 'packages/*/dist/**/*.{js,css}'
           strip-hash: '\\b\\w{8}\\.'

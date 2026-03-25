@@ -1,0 +1,21 @@
+coverage:
+  status:
+    project:
+      playground:
+        paths:
+          - packages/playground/src/**
+        target: auto
+        threshold: 2%
+      playground-preview:
+        paths:
+          - packages/playground-preview/src/**
+        target: auto
+        threshold: 2%
+    patch:
+      default:
+        target: 80%
+
+ignore:
+  - packages/demo/**
+  - '**/*.test.ts'
+  - '**/*.d.ts'
