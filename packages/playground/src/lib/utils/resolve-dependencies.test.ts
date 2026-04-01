@@ -59,6 +59,10 @@ describe('serializeEsmShOptions', () => {
   it('ignores external (handled separately)', () => {
     expect(serializeEsmShOptions({ external: true })).toBe('');
   });
+
+  it('skips empty alias object', () => {
+    expect(serializeEsmShOptions({ alias: {} })).toBe('');
+  });
 });
 
 describe('getPackageName', () => {
@@ -384,6 +388,32 @@ describe('resolveDependencies', () => {
       } finally {
         rmSync(tmpDir, { recursive: true });
       }
+    });
+
+    it('applies esmSh options on bare npm source fallback', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const result = resolveDependencies([
+        { specifier: 'morphdom', source: 'morphdom', esmSh: { bundle: false } },
+      ]);
+      expect(result.importMap).toEqual({
+        morphdom: 'https://esm.sh/morphdom?bundle=false',
+      });
+
+      warn.mockRestore();
+    });
+
+    it('applies external prefix on bare npm source fallback', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const result = resolveDependencies([
+        { specifier: 'morphdom', source: 'morphdom', esmSh: { external: true } },
+      ]);
+      expect(result.importMap).toEqual({
+        morphdom: 'https://esm.sh/*morphdom',
+      });
+
+      warn.mockRestore();
     });
 
     it('ignores esmSh options for self-hosted dependencies', () => {
