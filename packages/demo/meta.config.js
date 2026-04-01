@@ -13,7 +13,10 @@ export default defineWebpackConfig({
       tailwindcss: true,
       syncColorScheme: true,
       dependencies: [
-        '@studiometa/js-toolkit',
+        {
+          specifier: '@studiometa/js-toolkit',
+          esmSh: { bundle: false },
+        },
         {
           specifier: 'demo-lib',
           source: './lib/**/*.ts',
