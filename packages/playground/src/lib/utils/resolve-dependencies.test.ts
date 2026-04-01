@@ -1,7 +1,65 @@
 import { writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it, expect, vi } from 'vitest';
-import { resolveDependencies, getPackageName, getSubpath } from './resolve-dependencies.js';
+import {
+  resolveDependencies,
+  getPackageName,
+  getSubpath,
+  serializeEsmShOptions,
+} from './resolve-dependencies.js';
+
+describe('serializeEsmShOptions', () => {
+  it('returns empty string for empty options', () => {
+    expect(serializeEsmShOptions({})).toBe('');
+  });
+
+  it('serializes bundle=false', () => {
+    expect(serializeEsmShOptions({ bundle: false })).toBe('bundle=false');
+  });
+
+  it('does not serialize bundle=true', () => {
+    expect(serializeEsmShOptions({ bundle: true })).toBe('');
+  });
+
+  it('serializes boolean flags', () => {
+    expect(serializeEsmShOptions({ standalone: true })).toBe('standalone');
+    expect(serializeEsmShOptions({ raw: true })).toBe('raw');
+    expect(serializeEsmShOptions({ dev: true })).toBe('dev');
+    expect(serializeEsmShOptions({ noDts: true })).toBe('no-dts');
+    expect(serializeEsmShOptions({ keepNames: true })).toBe('keep-names');
+    expect(serializeEsmShOptions({ ignoreAnnotations: true })).toBe('ignore-annotations');
+  });
+
+  it('serializes target', () => {
+    expect(serializeEsmShOptions({ target: 'es2022' })).toBe('target=es2022');
+  });
+
+  it('serializes array options', () => {
+    expect(serializeEsmShOptions({ exports: ['foo', 'bar'] })).toBe('exports=foo,bar');
+    expect(serializeEsmShOptions({ deps: ['react@19', 'react-dom@19'] })).toBe(
+      'deps=react@19,react-dom@19',
+    );
+    expect(serializeEsmShOptions({ conditions: ['custom1', 'custom2'] })).toBe(
+      'conditions=custom1,custom2',
+    );
+  });
+
+  it('serializes alias', () => {
+    expect(serializeEsmShOptions({ alias: { react: 'preact/compat' } })).toBe(
+      'alias=react:preact/compat',
+    );
+  });
+
+  it('combines multiple options', () => {
+    expect(serializeEsmShOptions({ dev: true, bundle: false, target: 'es2022' })).toBe(
+      'bundle=false&dev&target=es2022',
+    );
+  });
+
+  it('ignores external (handled separately)', () => {
+    expect(serializeEsmShOptions({ external: true })).toBe('');
+  });
+});
 
 describe('getPackageName', () => {
   it('returns unscoped package name', () => {
@@ -270,6 +328,72 @@ describe('resolveDependencies', () => {
     const result = resolveDependencies([]);
     expect(result.importMap).toEqual({});
     expect(result.selfHosted).toEqual([]);
+  });
+
+  describe('esmSh options', () => {
+    it('appends ?bundle=false when bundle is false', () => {
+      const result = resolveDependencies([
+        { specifier: '@studiometa/js-toolkit', esmSh: { bundle: false } },
+      ]);
+      expect(result.importMap).toEqual({
+        '@studiometa/js-toolkit': 'https://esm.sh/@studiometa/js-toolkit?bundle=false',
+      });
+    });
+
+    it('uses * prefix for external option', () => {
+      const result = resolveDependencies([
+        { specifier: 'preact-render-to-string', version: '5.2.0', esmSh: { external: true } },
+      ]);
+      expect(result.importMap).toEqual({
+        'preact-render-to-string': 'https://esm.sh/*preact-render-to-string@5.2.0',
+      });
+    });
+
+    it('combines multiple options', () => {
+      const result = resolveDependencies([
+        {
+          specifier: 'swr',
+          version: '2.0.0',
+          esmSh: { dev: true, deps: ['react@19'], target: 'es2022' },
+        },
+      ]);
+      expect(result.importMap['swr']).toBe(
+        'https://esm.sh/swr@2.0.0?dev&target=es2022&deps=react@19',
+      );
+    });
+
+    it('infers version from package.json with esmSh options', () => {
+      const tmpDir = join('/tmp', 'test-resolve-deps-esmsh-' + Date.now());
+      mkdirSync(tmpDir, { recursive: true });
+      const pkgPath = join(tmpDir, 'package.json');
+      writeFileSync(
+        pkgPath,
+        JSON.stringify({
+          dependencies: { '@studiometa/js-toolkit': '^3.4.0' },
+        }),
+      );
+
+      try {
+        const result = resolveDependencies(
+          [{ specifier: '@studiometa/js-toolkit', esmSh: { bundle: false } }],
+          pkgPath,
+        );
+        expect(result.importMap).toEqual({
+          '@studiometa/js-toolkit': 'https://esm.sh/@studiometa/js-toolkit@3.4.0?bundle=false',
+        });
+      } finally {
+        rmSync(tmpDir, { recursive: true });
+      }
+    });
+
+    it('ignores esmSh options for self-hosted dependencies', () => {
+      const result = resolveDependencies([
+        { specifier: 'demo-lib', source: './lib/index.ts', esmSh: { bundle: false } as any },
+      ]);
+      expect(result.importMap).toEqual({
+        'demo-lib': '/static/deps/demo-lib/index.js',
+      });
+    });
   });
 
   describe('self-hosted paths have no publicPath prefix', () => {
