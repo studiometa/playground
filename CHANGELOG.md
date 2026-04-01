@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Add typed `esmSh` option to `DependencyConfig` for controlling esm.sh query parameters per dependency (e.g. `{ bundle: false }` to prevent singleton duplication) ([#69](https://github.com/studiometa/playground/pull/69), [e06c5b6](https://github.com/studiometa/playground/commit/e06c5b6))
+
+### Fixed
+
+- Disable esm.sh bundling for `@studiometa/js-toolkit` in demo to fix singleton service duplication ([#69](https://github.com/studiometa/playground/pull/69), [a5e5e83](https://github.com/studiometa/playground/commit/a5e5e83))
+
 ## v0.3.6 - 2026.03.23
 
 ### Added

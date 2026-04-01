@@ -1,6 +1,40 @@
 import { readFileSync } from 'node:fs';
 
 /**
+ * Options passed as query parameters to esm.sh URLs.
+ *
+ * @see https://esm.sh/#docs
+ */
+export interface EsmShOptions {
+  /** Disable default bundling of sub-modules (`?bundle=false`) */
+  bundle?: boolean;
+  /** Bundle with all external deps into a single file (`?standalone`) */
+  standalone?: boolean;
+  /** Import raw source without transformation (`?raw`) */
+  raw?: boolean;
+  /** Development build with process.env.NODE_ENV="development" (`?dev`) */
+  dev?: boolean;
+  /** Disable X-TypeScript-Types header (`?no-dts`) */
+  noDts?: boolean;
+  /** Tree-shake: only export specific members (`?exports=foo,bar`) */
+  exports?: string[];
+  /** Pin dependency versions (`?deps=react@19,react-dom@19`) */
+  deps?: string[];
+  /** Alias dependencies (`?alias=react:preact/compat`) */
+  alias?: Record<string, string>;
+  /** Esbuild target (`?target=es2022`) */
+  target?: string;
+  /** Esbuild conditions (`?conditions=custom1,custom2`) */
+  conditions?: string[];
+  /** Keep original names (`?keep-names`) */
+  keepNames?: boolean;
+  /** Ignore side-effect annotations (`?ignore-annotations`) */
+  ignoreAnnotations?: boolean;
+  /** Mark all deps as external for import map resolution (`*` prefix) */
+  external?: boolean;
+}
+
+/**
  * A single dependency for the playground script editor.
  *
  * - Plain string → resolved via esm.sh (zero-config)
@@ -27,6 +61,14 @@ export type DependencyConfig =
       source?: string;
       /** Explicit entry point (useful when source is a glob pattern) */
       entry?: string;
+      /**
+       * Options passed as query parameters to the esm.sh URL.
+       * Only applies to esm.sh-resolved dependencies (ignored when `source` is set).
+       *
+       * @example { bundle: false }
+       * @example { dev: true, exports: ['foo', 'bar'] }
+       */
+      esmSh?: EsmShOptions;
     };
 
 export interface ResolvedDependency {
@@ -89,6 +131,35 @@ function isLocalSource(source: string): boolean {
 }
 
 /**
+ * Serialize `EsmShOptions` into a query string (without leading `?`).
+ * Returns an empty string when no options produce query params.
+ * The `external` option is handled separately (via `*` URL prefix).
+ */
+export function serializeEsmShOptions(options: EsmShOptions): string {
+  const params: string[] = [];
+
+  if (options.bundle === false) params.push('bundle=false');
+  if (options.standalone) params.push('standalone');
+  if (options.raw) params.push('raw');
+  if (options.dev) params.push('dev');
+  if (options.noDts) params.push('no-dts');
+  if (options.keepNames) params.push('keep-names');
+  if (options.ignoreAnnotations) params.push('ignore-annotations');
+  if (options.target) params.push(`target=${options.target}`);
+  if (options.exports?.length) params.push(`exports=${options.exports.join(',')}`);
+  if (options.deps?.length) params.push(`deps=${options.deps.join(',')}`);
+  if (options.conditions?.length) params.push(`conditions=${options.conditions.join(',')}`);
+  if (options.alias) {
+    const aliasStr = Object.entries(options.alias)
+      .map(([k, v]) => `${k}:${v}`)
+      .join(',');
+    if (aliasStr) params.push(`alias=${aliasStr}`);
+  }
+
+  return params.join('&');
+}
+
+/**
  * Resolve a list of dependency configs into import map entries and
  * self-hosted dependency metadata.
  *
@@ -121,6 +192,8 @@ export function resolveDependencies(
     const config = typeof dep === 'string' ? { specifier: dep } : dep;
     const { specifier, version, source, entry } = config;
 
+    const esmSh = 'esmSh' in config ? config.esmSh : undefined;
+
     if (!source) {
       // esm.sh resolution — split specifier into package name + optional subpath
       const pkgName = getPackageName(specifier);
@@ -129,7 +202,9 @@ export function resolveDependencies(
       const resolvedVersion =
         version ?? (inferredVersion ? cleanVersion(inferredVersion) : undefined);
       const versionedPkg = resolvedVersion ? `${pkgName}@${resolvedVersion}` : pkgName;
-      const esmUrl = `https://esm.sh/${versionedPkg}${subpath ?? ''}`;
+      const prefix = esmSh?.external ? '*' : '';
+      const query = esmSh ? serializeEsmShOptions(esmSh) : '';
+      const esmUrl = `https://esm.sh/${prefix}${versionedPkg}${subpath ?? ''}${query ? `?${query}` : ''}`;
       importMap[specifier] = esmUrl;
     } else if (!isLocalSource(source)) {
       // Bare npm package name used as source — warn and fall back to esm.sh
@@ -144,7 +219,9 @@ export function resolveDependencies(
       const resolvedVersion =
         version ?? (inferredVersion ? cleanVersion(inferredVersion) : undefined);
       const versionedPkg = resolvedVersion ? `${pkgName}@${resolvedVersion}` : pkgName;
-      const esmUrl = `https://esm.sh/${versionedPkg}${subpath ?? ''}`;
+      const prefix = esmSh?.external ? '*' : '';
+      const query = esmSh ? serializeEsmShOptions(esmSh) : '';
+      const esmUrl = `https://esm.sh/${prefix}${versionedPkg}${subpath ?? ''}${query ? `?${query}` : ''}`;
       importMap[specifier] = esmUrl;
     } else {
       // Local source — bundle with tsdown → single .js + .d.ts
