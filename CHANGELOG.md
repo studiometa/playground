@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Watch local dependency source files in dev/watch mode — changes now trigger webpack rebuilds ([#70](https://github.com/studiometa/playground/pull/70), [0c08ef0](https://github.com/studiometa/playground/commit/0c08ef0))
+
 ## v0.3.7 - 2026.04.01
 
 ### Added
