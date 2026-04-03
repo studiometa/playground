@@ -61,6 +61,18 @@ export class PlaygroundDependenciesPlugin {
         }
       }
 
+      // Watch local source files so webpack rebuilds when they change
+      for (const dep of this.dependencies) {
+        if (dep.type === 'bundle' && dep.source && this.isLocalSource(dep.source)) {
+          const resolvedPattern = resolve(this.configDir, dep.source);
+          const isGlob = dep.source.includes('*');
+          const sourceFiles = isGlob ? glob.globSync(resolvedPattern) : [resolvedPattern];
+          for (const file of sourceFiles) {
+            compilation.fileDependencies.add(file);
+          }
+        }
+      }
+
       compilation.hooks.processAssets.tapAsync(
         {
           name: pluginName,

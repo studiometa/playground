@@ -100,6 +100,7 @@ describe('PlaygroundDependenciesPlugin', () => {
 
       // Trigger the compilation hook with a minimal fake compilation
       compilationCallback?.({
+        fileDependencies: new Set(),
         hooks: {
           processAssets: { tapAsync() {} },
         },
@@ -203,12 +204,87 @@ describe('PlaygroundDependenciesPlugin', () => {
 
       // Should not throw
       compilationCallback?.({
+        fileDependencies: new Set(),
         hooks: {
           processAssets: { tapAsync() {} },
         },
       });
 
       expect(p.importMap).toBeUndefined();
+    });
+  });
+
+  describe('file watching for local sources', () => {
+    function applyAndGetFileDependencies(
+      deps: ResolvedDependency[],
+      configDir: string,
+    ): Set<string> {
+      const p = new PlaygroundDependenciesPlugin(deps, configDir);
+      let compilationCallback: ((compilation: unknown) => void) | undefined;
+      const fakeCompiler = {
+        options: { output: { publicPath: 'auto' } },
+        webpack: { Compilation: { PROCESS_ASSETS_STAGE_ADDITIONAL: 0 } },
+        hooks: {
+          thisCompilation: {
+            tap(_name: string, cb: (compilation: unknown) => void) {
+              compilationCallback = cb;
+            },
+          },
+        },
+      };
+
+      p.apply(fakeCompiler as any);
+
+      const fileDependencies = new Set<string>();
+      compilationCallback?.({
+        fileDependencies,
+        hooks: {
+          processAssets: { tapAsync() {} },
+        },
+      });
+
+      return fileDependencies;
+    }
+
+    it('adds local source files to compilation fileDependencies', () => {
+      const deps: ResolvedDependency[] = [
+        {
+          specifier: 'my-lib',
+          importMapValue: '/static/deps/my-lib/index.js',
+          type: 'bundle',
+          source: './src/index.ts',
+        },
+      ];
+
+      const fileDeps = applyAndGetFileDependencies(deps, '/project');
+      expect(fileDeps.size).toBe(1);
+      expect([...fileDeps][0]).toContain('src/index.ts');
+    });
+
+    it('does not add esm-sh dependencies to fileDependencies', () => {
+      const deps: ResolvedDependency[] = [
+        {
+          specifier: 'deepmerge',
+          importMapValue: 'https://esm.sh/deepmerge',
+          type: 'esm-sh',
+        },
+      ];
+
+      const fileDeps = applyAndGetFileDependencies(deps, '/project');
+      expect(fileDeps.size).toBe(0);
+    });
+
+    it('does not add bundle deps without source to fileDependencies', () => {
+      const deps: ResolvedDependency[] = [
+        {
+          specifier: 'my-lib',
+          importMapValue: '/static/deps/my-lib/index.js',
+          type: 'bundle',
+        },
+      ];
+
+      const fileDeps = applyAndGetFileDependencies(deps, '/project');
+      expect(fileDeps.size).toBe(0);
     });
   });
 });
