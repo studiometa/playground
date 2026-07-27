@@ -78,6 +78,29 @@ function buildLspConfig(): InitOptions['lsp'] {
     Object.assign(merged, lsp);
   }
 
+  // Pin the TypeScript compiler loaded by modern-monaco's TS worker.
+  //
+  // modern-monaco declares `typescript: ">= 5.0.0"` as a peer dependency, so
+  // esm.sh bakes `import ts from "/typescript@>= 5.0.0"` into the worker it
+  // serves. That open-ended range now resolves to TypeScript 7.x, which esm.sh
+  // cannot build (`cjsModuleLexer: exit status 1`) — the request 500s, the
+  // module worker fails to load, and Monaco falls back to running the language
+  // service on the main thread (the "Could not create web worker(s)" warning).
+  //
+  // Override what modern-monaco requests via esm.sh's `&deps=` path segment,
+  // pinning the compiler to the 6.x line (the newest TypeScript esm.sh can
+  // build). We load the *deps-pinned* setup module so the pin propagates to the
+  // worker automatically: modern-monaco derives the worker URL from this
+  // module's `import.meta.url`, so `./worker.mjs` inherits the `&deps=` segment.
+  const tsSetupUrl = `https://esm.sh/modern-monaco@${__MODERN_MONACO_VERSION__}&deps=typescript@^6.0.0/es2022/lsp/typescript/setup.mjs`;
+  merged.providers = {
+    ...merged.providers,
+    typescript: {
+      aliases: ['javascript', 'jsx', 'tsx'],
+      import: () => import(/* webpackIgnore: true */ tsSetupUrl),
+    },
+  };
+
   // Override the HTML LSP provider to include template language aliases.
   // The import() must resolve to the same CDN-hosted HTML setup module
   // that modern-monaco uses internally. We build the URL using the same
