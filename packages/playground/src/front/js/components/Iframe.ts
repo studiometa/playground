@@ -9,6 +9,7 @@ import {
   getTransformedScript as getScript,
 } from '../store/index.js';
 import { resolveImportMapUrls } from '../utils/resolve-import-map-urls.js';
+import { createPatchedUrl } from '../utils/patch-iframe-url.js';
 
 type esbuildType = typeof import('esbuild-wasm');
 
@@ -77,6 +78,13 @@ export default class Iframe extends Base<IframeProps> {
     // Enable dev mode in render
     // @ts-expect-error Enable dev mode.
     this.window.__DEV__ = true;
+
+    // The iframe renders from `srcdoc`, so its `window.location.href` is `about:srcdoc`.
+    // This breaks `new URL('/some-path', window.location.href)`. `window.location` is
+    // unforgeable and cannot be mocked, so patch the iframe's `URL` global instead to
+    // resolve the opaque base against a real origin.
+    const iframeWindow = this.window as Window & typeof globalThis;
+    iframeWindow.URL = createPatchedUrl(iframeWindow.URL);
 
     const html = await getHtml();
     this.doc.documentElement.innerHTML = `
