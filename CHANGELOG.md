@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Pin the TypeScript compiler used by modern-monaco's editor worker to the 6.x line, fixing the worker failing to load since the TypeScript 7 release ([#72](https://github.com/studiometa/playground/pull/72), [d89092b](https://github.com/studiometa/playground/commit/d89092b))
+
 ## v0.3.9 - 2026.07.27
 
 ### Fixed
