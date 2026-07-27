@@ -1,6 +1,6 @@
 {
   "name": "@studiometa/playground-root",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "A packaged web development playground",
   "type": "module",
   "private": true,
