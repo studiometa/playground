@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Resolve the opaque `about:srcdoc` base in the preview iframe so `new URL('/some-path', window.location.href)` no longer throws `Invalid URL` ([#71](https://github.com/studiometa/playground/pull/71), [c04bca9](https://github.com/studiometa/playground/commit/c04bca9))
+
 ## v0.3.8 - 2026.04.03
 
 ### Fixed
