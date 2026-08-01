@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Emit code-split self-hosted dependency chunks without filename collision — a dependency that uses a dynamic `import()` no longer aborts the webpack build with `Conflict: Multiple assets emit different content to the same filename static/deps/<specifier>/index.js` ([#73](https://github.com/studiometa/playground/pull/73), [39fbb2c](https://github.com/studiometa/playground/commit/39fbb2c))
+
 ## v0.3.10 - 2026.07.27
 
 ### Fixed

@@ -287,4 +287,154 @@ describe('PlaygroundDependenciesPlugin', () => {
       expect(fileDeps.size).toBe(0);
     });
   });
+
+  describe('emitBundleChunks', () => {
+    interface FakeChunk {
+      fileName: string;
+      code?: string;
+      isEntry?: boolean;
+    }
+
+    /**
+     * Call the private `emitBundleChunks` method with a fake compilation that
+     * records every emitted asset, mirroring how `processBundle` feeds tsdown
+     * build results into webpack. Returns a `path -> code` map of emitted
+     * assets, throwing if the same path is emitted twice (the regression the
+     * multi-chunk fix guards against).
+     */
+    function emitAndCollect(chunks: FakeChunk[], outputBase: string): Map<string, string> {
+      const emitted = new Map<string, string>();
+      const fakeCompilation = {
+        compiler: {
+          webpack: {
+            sources: {
+              RawSource: class {
+                value: string;
+                constructor(value: string) {
+                  this.value = value;
+                }
+              },
+            },
+          },
+        },
+        emitAsset(assetPath: string, source: { value: string }) {
+          if (emitted.has(assetPath)) {
+            throw new Error(`Conflict: multiple assets emit to the same filename ${assetPath}`);
+          }
+          emitted.set(assetPath, source.value);
+        },
+      };
+
+      (plugin as any).emitBundleChunks(fakeCompilation, [{ chunks }], outputBase);
+
+      return emitted;
+    }
+
+    it('emits a single-chunk build as index.js + index.d.ts (back-compat)', () => {
+      const emitted = emitAndCollect(
+        [
+          { fileName: 'entry.js', code: 'export const a = 1;', isEntry: true },
+          { fileName: 'entry.d.ts', code: 'export declare const a: number;', isEntry: true },
+        ],
+        'static/deps/demo-lib',
+      );
+
+      expect([...emitted.keys()].sort()).toEqual([
+        'static/deps/demo-lib/index.d.ts',
+        'static/deps/demo-lib/index.js',
+      ]);
+      expect(emitted.get('static/deps/demo-lib/index.js')).toBe('export const a = 1;');
+      expect(emitted.get('static/deps/demo-lib/index.d.ts')).toBe(
+        'export declare const a: number;',
+      );
+    });
+
+    it('pins the entry to index.js/index.d.ts and keeps sibling chunk names on a code-split build', () => {
+      const emitted = emitAndCollect(
+        [
+          {
+            fileName: 'entry.js',
+            code: "await import('./child-CGcNIa1l.js');",
+            isEntry: true,
+          },
+          { fileName: 'entry.d.ts', code: 'export declare const root: string;', isEntry: true },
+          { fileName: 'child-CGcNIa1l.js', code: 'export const child = 1;', isEntry: false },
+        ],
+        'static/deps/@studiometa/ui-mapbox',
+      );
+
+      const paths = [...emitted.keys()].sort();
+
+      // Exactly one entry index.js and one entry index.d.ts.
+      expect(paths.filter((p) => p.endsWith('/index.js'))).toEqual([
+        'static/deps/@studiometa/ui-mapbox/index.js',
+      ]);
+      expect(paths.filter((p) => p.endsWith('/index.d.ts'))).toEqual([
+        'static/deps/@studiometa/ui-mapbox/index.d.ts',
+      ]);
+
+      // The non-entry chunk keeps its own hashed filename, emitted as a sibling.
+      expect(emitted.has('static/deps/@studiometa/ui-mapbox/child-CGcNIa1l.js')).toBe(true);
+
+      // Three distinct paths — no two chunks collapse onto the same filename.
+      expect(paths.length).toBe(3);
+    });
+
+    it('does not collide when multiple non-entry chunks are emitted', () => {
+      // The previous implementation renamed every chunk to index.js, so a
+      // second non-entry chunk threw the webpack seal-time "Conflict" error.
+      expect(() =>
+        emitAndCollect(
+          [
+            { fileName: 'entry.js', code: 'entry', isEntry: true },
+            { fileName: 'entry.d.ts', code: 'entry types', isEntry: true },
+            { fileName: 'child-aaaaaaaa.js', code: 'child a', isEntry: false },
+            { fileName: 'child-bbbbbbbb.js', code: 'child b', isEntry: false },
+          ],
+          'static/deps/multi',
+        ),
+      ).not.toThrow();
+    });
+
+    it('emits non-entry .d.ts chunks under their own name', () => {
+      const emitted = emitAndCollect(
+        [
+          { fileName: 'entry.js', code: 'entry', isEntry: true },
+          { fileName: 'entry.d.ts', code: 'entry types', isEntry: true },
+          { fileName: 'child-aaaaaaaa.js', code: 'child', isEntry: false },
+          { fileName: 'child-aaaaaaaa.d.ts', code: 'child types', isEntry: false },
+        ],
+        'static/deps/multi',
+      );
+
+      expect(emitted.has('static/deps/multi/child-aaaaaaaa.d.ts')).toBe(true);
+      // The single entry dts is still pinned to index.d.ts.
+      expect(emitted.get('static/deps/multi/index.d.ts')).toBe('entry types');
+    });
+
+    it('keeps the import map / _headers pointing at .../index.js and .../index.d.ts', () => {
+      // The import map value and the _headers x-typescript-types entry are both
+      // derived from the specifier as `.../index.js` and `.../index.d.ts`. The
+      // emit path must keep those exact entry filenames stable even when the
+      // dependency code-splits.
+      const specifier = '@studiometa/ui-mapbox';
+      const outputBase = `static/deps/${specifier}`;
+      const emitted = emitAndCollect(
+        [
+          { fileName: 'entry.js', code: 'entry', isEntry: true },
+          { fileName: 'entry.d.ts', code: 'types', isEntry: true },
+          { fileName: 'child-CGcNIa1l.js', code: 'child', isEntry: false },
+        ],
+        outputBase,
+      );
+
+      const importMapValue = `/static/deps/${specifier}/index.js`;
+      const headersJsPath = `/static/deps/${specifier}/index.js`;
+      const headersDtsPath = `/static/deps/${specifier}/index.d.ts`;
+
+      expect(emitted.has(importMapValue.replace(/^\//, ''))).toBe(true);
+      expect(emitted.has(headersJsPath.replace(/^\//, ''))).toBe(true);
+      expect(emitted.has(headersDtsPath.replace(/^\//, ''))).toBe(true);
+    });
+  });
 });
