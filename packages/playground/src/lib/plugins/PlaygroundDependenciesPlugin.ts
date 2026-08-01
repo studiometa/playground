@@ -8,9 +8,11 @@ import { resolvePublicPath } from '../utils/resolve-public-path.js';
 /**
  * Webpack plugin that processes self-hosted playground dependencies.
  *
- * Every dependency with a `source` is bundled into a single `.js` + `.d.ts`
- * using tsdown (rolldown + rolldown-plugin-dts). Works with both npm packages
- * and local TypeScript sources.
+ * Every dependency with a `source` is bundled with tsdown (rolldown +
+ * rolldown-plugin-dts). The entry is emitted as `index.js` + `index.d.ts`;
+ * when the dependency code-splits via dynamic `import()`, the extra chunks are
+ * emitted alongside under their own content-hashed filenames. Works with both
+ * npm packages and local TypeScript sources.
  */
 export class PlaygroundDependenciesPlugin {
   dependencies: ResolvedDependency[];
@@ -127,7 +129,8 @@ export class PlaygroundDependenciesPlugin {
   }
 
   /**
-   * Bundle a dependency into a single `.js` + `.d.ts` using tsdown.
+   * Bundle a dependency into `index.js` + `index.d.ts` (plus any code-split
+   * sibling chunks) using tsdown.
    *
    * For npm packages, a temporary re-export entry file is created so that
    * tsdown can resolve the package from the consumer's `node_modules`.
@@ -173,24 +176,57 @@ export class PlaygroundDependenciesPlugin {
         external,
       });
 
-      for (const buildResult of buildResults) {
-        for (const chunk of buildResult.chunks) {
-          if ('code' in chunk) {
-            const fileName = chunk.fileName.endsWith('.d.ts') ? 'index.d.ts' : 'index.js';
-            const assetPath = posix.join(outputBase, fileName);
-            compilation.emitAsset(
-              assetPath,
-              new compilation.compiler.webpack.sources.RawSource(chunk.code),
-            );
-          }
-        }
-      }
+      this.emitBundleChunks(compilation, buildResults, outputBase);
     } finally {
       if (isNpmSource) {
         try {
           rmSync(dirname(entryPoint), { recursive: true, force: true });
         } catch {
           // ignore
+        }
+      }
+    }
+  }
+
+  /**
+   * Emit every chunk of a tsdown build result as a webpack asset under
+   * `outputBase`.
+   *
+   * The entry chunks are pinned to the stable `index.js` / `index.d.ts`
+   * filenames because the import map (see `resolve-dependencies.ts`) and the
+   * `_headers` file both point at `.../index.js` and `.../index.d.ts` — that
+   * contract must not change.
+   *
+   * Every non-entry chunk (produced when a dependency code-splits via a
+   * dynamic `import()`, e.g. `@studiometa/ui-mapbox`'s lazy `MapboxMap`
+   * children) keeps its real, content-hashed filename. The entry chunk's
+   * internal `import('./child-<hash>.js')` calls are relative, so those
+   * chunks resolve as siblings in the same emitted directory — no import map
+   * or runtime change is required.
+   *
+   * Renaming every chunk to `index.js` (the previous behaviour, which assumed
+   * a single-chunk bundle) collapses all non-entry chunks onto the same path
+   * and makes webpack abort at seal time with:
+   * `Conflict: Multiple assets emit different content to the same filename
+   * static/deps/<specifier>/index.js`.
+   *
+   * @private
+   */
+  private emitBundleChunks(
+    compilation: any,
+    buildResults: Array<{ chunks: Array<{ fileName: string; code?: string; isEntry?: boolean }> }>,
+    outputBase: string,
+  ) {
+    for (const buildResult of buildResults) {
+      for (const chunk of buildResult.chunks) {
+        if ('code' in chunk && typeof chunk.code === 'string') {
+          const isDts = chunk.fileName.endsWith('.d.ts');
+          const fileName = chunk.isEntry ? (isDts ? 'index.d.ts' : 'index.js') : chunk.fileName;
+          const assetPath = posix.join(outputBase, fileName);
+          compilation.emitAsset(
+            assetPath,
+            new compilation.compiler.webpack.sources.RawSource(chunk.code),
+          );
         }
       }
     }
