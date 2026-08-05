@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Support multiple entry points for a single self-hosted dependency via the new `entries` map on `DependencyConfig`. All subpaths of a workspace package (e.g. a barrel `.` and a lazy `./manifest`) are built together in one code-split tsdown build, so modules shared between entries are emitted once as a shared chunk and referenced by every entry — a single runtime instance, eliminating the singleton/identity hazard of bundling each subpath separately ([#74](https://github.com/studiometa/playground/pull/74))
+
 ## v0.3.11 - 2026.08.01
 
 ### Fixed

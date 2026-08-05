@@ -62,6 +62,33 @@ export type DependencyConfig =
       /** Explicit entry point (useful when source is a glob pattern) */
       entry?: string;
       /**
+       * Multiple entry points for a single workspace package, keyed by their
+       * export subpath (Node `exports`-style: `.`, `./manifest`, …). All entries
+       * are built together in **one** tsdown build with code-splitting, so
+       * modules shared between entries (e.g. component classes referenced by
+       * both a barrel and a lazy manifest) are emitted **once** as a shared
+       * chunk and referenced by every entry — a single runtime instance, no
+       * singleton/identity hazard.
+       *
+       * Each key becomes an import-map specifier: `.` maps to `specifier`,
+       * `./manifest` maps to `specifier/manifest`, etc. Each entry is emitted at
+       * `static/deps/<specifier>/<name>.js` (the `.` entry keeps the
+       * `index.js` name for backward compatibility), sharing chunks emitted in
+       * the same base directory.
+       *
+       * Values are local file paths (relative to the consumer config, absolute,
+       * or glob) — bare npm names are not supported here. Mutually exclusive
+       * with `entry`; when set, `source` is only used for dev file-watching.
+       *
+       * @example
+       * {
+       *   specifier: '@studiometa/ui',
+       *   source: '../ui/**\/*.ts',
+       *   entries: { '.': '../ui/index.ts', './manifest': '../ui/manifest.ts' },
+       * }
+       */
+      entries?: Record<string, string>;
+      /**
        * Options passed as query parameters to the esm.sh URL.
        * Only applies to esm.sh-resolved dependencies (ignored when `source` is set).
        *
@@ -71,12 +98,38 @@ export type DependencyConfig =
       esmSh?: EsmShOptions;
     };
 
+/**
+ * A single resolved entry point of a multi-entry self-hosted dependency.
+ * Every entry of a package is produced by one shared tsdown build.
+ */
+export interface ResolvedDependencyEntry {
+  /** Export subpath as declared in the config (`.`, `./manifest`, …). */
+  subpath: string;
+  /** Full import-map specifier (`@studiometa/ui`, `@studiometa/ui/manifest`, …). */
+  specifier: string;
+  /**
+   * tsdown/rolldown entry name. Drives the emitted filename `<name>.js`.
+   * The `.` subpath uses `index` so it keeps the `index.js` contract.
+   */
+  name: string;
+  /** Local entry source file (relative to the consumer config, or absolute). */
+  source: string;
+  /** Import-map value (`/static/deps/<specifier>/<name>.js`). */
+  importMapValue: string;
+}
+
 export interface ResolvedDependency {
   specifier: string;
   importMapValue: string;
   type: 'esm-sh' | 'bundle';
   source?: string;
   entry?: string;
+  /**
+   * Present when the dependency declares multiple entry points. All entries
+   * are built together (one tsdown build, code-split) under the base
+   * `static/deps/<specifier>/` directory.
+   */
+  entries?: ResolvedDependencyEntry[];
 }
 
 export interface ResolvedDependencies {
@@ -191,8 +244,54 @@ export function resolveDependencies(
   for (const dep of dependencies) {
     const config = typeof dep === 'string' ? { specifier: dep } : dep;
     const { specifier, version, source, entry } = config;
+    const entries = 'entries' in config ? config.entries : undefined;
 
     const esmSh = 'esmSh' in config ? config.esmSh : undefined;
+
+    if (entries && Object.keys(entries).length > 0) {
+      // Multi-entry: one code-split build, shared chunks emitted once.
+      const resolvedEntries: ResolvedDependencyEntry[] = [];
+
+      for (const [subpath, entrySource] of Object.entries(entries)) {
+        if (!isLocalSource(entrySource)) {
+          console.warn(
+            `[playground] Multi-entry dependency "${specifier}" subpath "${subpath}" has a ` +
+              `non-local source ("${entrySource}"). Only local file paths are supported for ` +
+              'entries — this entry is skipped.',
+          );
+          continue;
+        }
+
+        const fullSpecifier = subpath === '.' ? specifier : `${specifier}${subpath.slice(1)}`;
+        // `.` keeps the historical `index` name (→ `index.js`); other subpaths
+        // reuse their path as the rolldown entry name so shared-chunk relative
+        // imports resolve against the emitted layout.
+        const name = subpath === '.' ? 'index' : subpath.replace(/^\.\//, '');
+        const importMapValue = `/static/deps/${specifier}/${name}.js`;
+
+        importMap[fullSpecifier] = importMapValue;
+        resolvedEntries.push({
+          subpath,
+          specifier: fullSpecifier,
+          name,
+          source: entrySource,
+          importMapValue,
+        });
+      }
+
+      if (resolvedEntries.length > 0) {
+        const base = resolvedEntries.find((e) => e.subpath === '.') ?? resolvedEntries[0];
+        selfHosted.push({
+          specifier,
+          importMapValue: base.importMapValue,
+          type: 'bundle',
+          source,
+          entries: resolvedEntries,
+        });
+      }
+
+      continue;
+    }
 
     if (!source) {
       // esm.sh resolution — split specifier into package name + optional subpath

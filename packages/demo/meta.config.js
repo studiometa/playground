@@ -20,7 +20,10 @@ export default defineWebpackConfig({
         {
           specifier: 'demo-lib',
           source: './lib/**/*.ts',
-          entry: './lib/index.ts',
+          entries: {
+            '.': './lib/index.ts',
+            './manifest': './lib/manifest.ts',
+          },
         },
       ],
       loaders: {

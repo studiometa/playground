@@ -426,6 +426,112 @@ describe('resolveDependencies', () => {
     });
   });
 
+  describe('multi-entry dependencies', () => {
+    it('resolves one import-map entry per subpath and a single self-hosted build', () => {
+      const result = resolveDependencies([
+        {
+          specifier: '@studiometa/ui',
+          source: '../ui/**/*.ts',
+          entries: {
+            '.': '../ui/index.ts',
+            './manifest': '../ui/manifest.ts',
+          },
+        },
+      ]);
+
+      // The barrel keeps the historical index.js filename.
+      expect(result.importMap).toEqual({
+        '@studiometa/ui': '/static/deps/@studiometa/ui/index.js',
+        '@studiometa/ui/manifest': '/static/deps/@studiometa/ui/manifest.js',
+      });
+
+      // One self-hosted entry → one shared tsdown build.
+      expect(result.selfHosted).toHaveLength(1);
+      const dep = result.selfHosted[0];
+      expect(dep).toMatchObject({
+        specifier: '@studiometa/ui',
+        type: 'bundle',
+        source: '../ui/**/*.ts',
+        importMapValue: '/static/deps/@studiometa/ui/index.js',
+      });
+      expect(dep.entries).toEqual([
+        {
+          subpath: '.',
+          specifier: '@studiometa/ui',
+          name: 'index',
+          source: '../ui/index.ts',
+          importMapValue: '/static/deps/@studiometa/ui/index.js',
+        },
+        {
+          subpath: './manifest',
+          specifier: '@studiometa/ui/manifest',
+          name: 'manifest',
+          source: '../ui/manifest.ts',
+          importMapValue: '/static/deps/@studiometa/ui/manifest.js',
+        },
+      ]);
+    });
+
+    it('supports side-effect subpaths (e.g. autoload) alongside a barrel', () => {
+      const result = resolveDependencies([
+        {
+          specifier: '@studiometa/ui-autoload',
+          entries: {
+            '.': '../ui-autoload/index.ts',
+            './ui': '../ui-autoload/ui.ts',
+            './ui-mapbox': '../ui-autoload/ui-mapbox.ts',
+          },
+        },
+      ]);
+
+      expect(result.importMap).toEqual({
+        '@studiometa/ui-autoload': '/static/deps/@studiometa/ui-autoload/index.js',
+        '@studiometa/ui-autoload/ui': '/static/deps/@studiometa/ui-autoload/ui.js',
+        '@studiometa/ui-autoload/ui-mapbox': '/static/deps/@studiometa/ui-autoload/ui-mapbox.js',
+      });
+      expect(result.selfHosted).toHaveLength(1);
+      expect(result.selfHosted[0].entries).toHaveLength(3);
+    });
+
+    it('skips non-local entry sources with a warning', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const result = resolveDependencies([
+        {
+          specifier: '@studiometa/ui',
+          entries: {
+            '.': '../ui/index.ts',
+            './manifest': '@studiometa/ui/manifest', // bare npm — unsupported
+          },
+        },
+      ]);
+
+      expect(result.importMap).toEqual({
+        '@studiometa/ui': '/static/deps/@studiometa/ui/index.js',
+      });
+      expect(result.selfHosted[0].entries).toHaveLength(1);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('non-local source'));
+
+      warn.mockRestore();
+    });
+
+    it('produces no self-hosted build when every entry is skipped', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const result = resolveDependencies([
+        {
+          specifier: '@studiometa/ui',
+          entries: { '.': 'bare-npm-name' },
+        },
+      ]);
+
+      expect(result.importMap).toEqual({});
+      expect(result.selfHosted).toEqual([]);
+
+      warn.mockRestore();
+    });
+  });
+
   describe('self-hosted paths have no publicPath prefix', () => {
     it('self-hosted entries always get bare paths without prefix', () => {
       const result = resolveDependencies([
