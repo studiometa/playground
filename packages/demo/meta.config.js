@@ -16,14 +16,12 @@ export default defineWebpackConfig({
         {
           specifier: '@studiometa/js-toolkit',
           esmSh: { bundle: false },
+          subpaths: true,
         },
         {
           specifier: 'demo-lib',
           source: './lib/**/*.ts',
-          entries: {
-            '.': './lib/index.ts',
-            './manifest': './lib/manifest.ts',
-          },
+          subpaths: true,
         },
       ],
       loaders: {

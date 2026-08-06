@@ -1,11 +1,14 @@
-import { writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { describe, it, expect, vi } from 'vitest';
 import {
   resolveDependencies,
   getPackageName,
   getSubpath,
   serializeEsmShOptions,
+  extractSubpathKeys,
+  resolveExportTarget,
 } from './resolve-dependencies.js';
 
 describe('serializeEsmShOptions', () => {
@@ -109,30 +112,89 @@ describe('getSubpath', () => {
   });
 });
 
+describe('extractSubpathKeys', () => {
+  it('returns ["."] for a string exports value', () => {
+    expect(extractSubpathKeys('./index.js')).toEqual(['.']);
+  });
+
+  it('returns ["."] for an array exports value', () => {
+    expect(extractSubpathKeys(['./index.js'])).toEqual(['.']);
+  });
+
+  it('returns ["."] for a conditions-only object (no dotted keys)', () => {
+    expect(extractSubpathKeys({ import: './index.js', default: './index.js' })).toEqual(['.']);
+  });
+
+  it('returns dotted keys from a subpath exports object', () => {
+    expect(extractSubpathKeys({ '.': './index.js', './utils': './utils/index.js' })).toEqual([
+      '.',
+      './utils',
+    ]);
+  });
+
+  it('excludes ./package.json and wildcard keys', () => {
+    expect(
+      extractSubpathKeys({
+        '.': './index.js',
+        './utils': './utils/index.js',
+        './package.json': './package.json',
+        './*': './*.js',
+      }),
+    ).toEqual(['.', './utils']);
+  });
+
+  it('returns ["."] for undefined exports', () => {
+    expect(extractSubpathKeys(undefined)).toEqual(['.']);
+  });
+});
+
+describe('resolveExportTarget', () => {
+  it('returns a string value directly', () => {
+    expect(resolveExportTarget('./index.js')).toBe('./index.js');
+  });
+
+  it('resolves import over default', () => {
+    expect(resolveExportTarget({ import: './a.js', default: './b.js' })).toBe('./a.js');
+  });
+
+  it('falls back to default when import is missing', () => {
+    expect(resolveExportTarget({ default: './b.js' })).toBe('./b.js');
+  });
+
+  it('resolves a nested conditions object one level deep', () => {
+    expect(resolveExportTarget({ import: { default: './nested.js' } })).toBe('./nested.js');
+  });
+
+  it('returns undefined for a non-resolvable value', () => {
+    expect(resolveExportTarget(undefined)).toBeUndefined();
+    expect(resolveExportTarget(42)).toBeUndefined();
+  });
+});
+
 describe('resolveDependencies', () => {
-  it('resolves plain string to esm.sh URL', () => {
-    const result = resolveDependencies(['deepmerge']);
+  it('resolves plain string to esm.sh URL', async () => {
+    const result = await resolveDependencies(['deepmerge']);
     expect(result.importMap).toEqual({
       deepmerge: 'https://esm.sh/deepmerge',
     });
     expect(result.selfHosted).toEqual([]);
   });
 
-  it('resolves scoped package to esm.sh URL', () => {
-    const result = resolveDependencies(['@motionone/easing']);
+  it('resolves scoped package to esm.sh URL', async () => {
+    const result = await resolveDependencies(['@motionone/easing']);
     expect(result.importMap).toEqual({
       '@motionone/easing': 'https://esm.sh/@motionone/easing',
     });
   });
 
-  it('uses explicit version', () => {
-    const result = resolveDependencies([{ specifier: 'deepmerge', version: '5.1.0' }]);
+  it('uses explicit version', async () => {
+    const result = await resolveDependencies([{ specifier: 'deepmerge', version: '5.1.0' }]);
     expect(result.importMap).toEqual({
       deepmerge: 'https://esm.sh/deepmerge@5.1.0',
     });
   });
 
-  it('infers version from package.json', () => {
+  it('infers version from package.json', async () => {
     const tmpDir = join('/tmp', 'test-resolve-deps-' + Date.now());
     mkdirSync(tmpDir, { recursive: true });
     const pkgPath = join(tmpDir, 'package.json');
@@ -144,7 +206,7 @@ describe('resolveDependencies', () => {
     );
 
     try {
-      const result = resolveDependencies(['deepmerge'], pkgPath);
+      const result = await resolveDependencies(['deepmerge'], pkgPath);
       expect(result.importMap).toEqual({
         deepmerge: 'https://esm.sh/deepmerge@5.1.0',
       });
@@ -154,15 +216,15 @@ describe('resolveDependencies', () => {
   });
 
   describe('subpath imports', () => {
-    it('resolves scoped package with subpath to correct esm.sh URL', () => {
-      const result = resolveDependencies(['@studiometa/js-toolkit/utils']);
+    it('resolves scoped package with subpath to correct esm.sh URL', async () => {
+      const result = await resolveDependencies(['@studiometa/js-toolkit/utils']);
       expect(result.importMap).toEqual({
         '@studiometa/js-toolkit/utils': 'https://esm.sh/@studiometa/js-toolkit/utils',
       });
     });
 
-    it('resolves scoped package with subpath and version', () => {
-      const result = resolveDependencies([
+    it('resolves scoped package with subpath and version', async () => {
+      const result = await resolveDependencies([
         { specifier: '@studiometa/js-toolkit/utils', version: '3.4.3' },
       ]);
       expect(result.importMap).toEqual({
@@ -170,7 +232,7 @@ describe('resolveDependencies', () => {
       });
     });
 
-    it('infers version from package.json for subpath imports', () => {
+    it('infers version from package.json for subpath imports', async () => {
       const tmpDir = join('/tmp', 'test-resolve-deps-subpath-' + Date.now());
       mkdirSync(tmpDir, { recursive: true });
       const pkgPath = join(tmpDir, 'package.json');
@@ -182,7 +244,7 @@ describe('resolveDependencies', () => {
       );
 
       try {
-        const result = resolveDependencies(['@studiometa/js-toolkit/utils'], pkgPath);
+        const result = await resolveDependencies(['@studiometa/js-toolkit/utils'], pkgPath);
         expect(result.importMap).toEqual({
           '@studiometa/js-toolkit/utils': 'https://esm.sh/@studiometa/js-toolkit@3.4.3/utils',
         });
@@ -191,15 +253,15 @@ describe('resolveDependencies', () => {
       }
     });
 
-    it('resolves unscoped package with subpath', () => {
-      const result = resolveDependencies([{ specifier: 'lodash/merge', version: '4.17.21' }]);
+    it('resolves unscoped package with subpath', async () => {
+      const result = await resolveDependencies([{ specifier: 'lodash/merge', version: '4.17.21' }]);
       expect(result.importMap).toEqual({
         'lodash/merge': 'https://esm.sh/lodash@4.17.21/merge',
       });
     });
 
-    it('resolves deep subpath correctly', () => {
-      const result = resolveDependencies([
+    it('resolves deep subpath correctly', async () => {
+      const result = await resolveDependencies([
         { specifier: '@studiometa/js-toolkit/utils/css', version: '3.4.3' },
       ]);
       expect(result.importMap).toEqual({
@@ -208,11 +270,63 @@ describe('resolveDependencies', () => {
     });
   });
 
+  describe('esm.sh subpath auto-detection', () => {
+    it('adds each subpath from an explicit list without reading disk/network', async () => {
+      const result = await resolveDependencies([
+        { specifier: '@studiometa/js-toolkit', subpaths: ['./utils'] },
+      ]);
+      expect(result.importMap['@studiometa/js-toolkit']).toBe(
+        'https://esm.sh/@studiometa/js-toolkit',
+      );
+      expect(result.importMap['@studiometa/js-toolkit/utils']).toBe(
+        'https://esm.sh/@studiometa/js-toolkit/utils',
+      );
+    });
+
+    it('detects all subpaths from node_modules exports when subpaths is true', async () => {
+      // @studiometa/js-toolkit is installed with exports { ".", "./utils" }.
+      const result = await resolveDependencies([
+        { specifier: '@studiometa/js-toolkit', subpaths: true },
+      ]);
+      expect(result.importMap['@studiometa/js-toolkit']).toBe(
+        'https://esm.sh/@studiometa/js-toolkit',
+      );
+      expect(result.importMap['@studiometa/js-toolkit/utils']).toBe(
+        'https://esm.sh/@studiometa/js-toolkit/utils',
+      );
+    });
+
+    it('falls back to the npm registry when the package is not on disk', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => ({
+          ok: true,
+          json: async () => ({
+            'dist-tags': { latest: '1.0.0' },
+            versions: { '1.0.0': { exports: { '.': {}, './sub': {} } } },
+          }),
+        })),
+      );
+
+      try {
+        const result = await resolveDependencies([
+          { specifier: 'not-installed-pkg', subpaths: true },
+        ]);
+        expect(result.importMap['not-installed-pkg']).toBe('https://esm.sh/not-installed-pkg');
+        expect(result.importMap['not-installed-pkg/sub']).toBe(
+          'https://esm.sh/not-installed-pkg/sub',
+        );
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+  });
+
   describe('bare npm source rejection', () => {
-    it('warns and falls back to esm.sh for bare npm source', () => {
+    it('warns and falls back to esm.sh for bare npm source', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      const result = resolveDependencies([{ specifier: 'morphdom', source: 'morphdom' }]);
+      const result = await resolveDependencies([{ specifier: 'morphdom', source: 'morphdom' }]);
       expect(result.importMap).toEqual({
         morphdom: 'https://esm.sh/morphdom',
       });
@@ -222,10 +336,10 @@ describe('resolveDependencies', () => {
       warn.mockRestore();
     });
 
-    it('warns and falls back for scoped npm source', () => {
+    it('warns and falls back for scoped npm source', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      const result = resolveDependencies([
+      const result = await resolveDependencies([
         { specifier: '@studiometa/js-toolkit', source: '@studiometa/js-toolkit' },
       ]);
       expect(result.importMap).toEqual({
@@ -236,7 +350,7 @@ describe('resolveDependencies', () => {
       warn.mockRestore();
     });
 
-    it('uses inferred version when falling back from bare npm source', () => {
+    it('uses inferred version when falling back from bare npm source', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const tmpDir = join('/tmp', 'test-resolve-deps-npm-' + Date.now());
       mkdirSync(tmpDir, { recursive: true });
@@ -249,7 +363,7 @@ describe('resolveDependencies', () => {
       );
 
       try {
-        const result = resolveDependencies(
+        const result = await resolveDependencies(
           [{ specifier: 'morphdom', source: 'morphdom' }],
           pkgPath,
         );
@@ -264,8 +378,10 @@ describe('resolveDependencies', () => {
     });
   });
 
-  it('resolves bundle dependency for local TypeScript source', () => {
-    const result = resolveDependencies([{ specifier: '@studiometa/ui', source: '../ui/**/*.ts' }]);
+  it('resolves bundle dependency for local TypeScript source', async () => {
+    const result = await resolveDependencies([
+      { specifier: '@studiometa/ui', source: '../ui/**/*.ts' },
+    ]);
     expect(result.importMap).toEqual({
       '@studiometa/ui': '/static/deps/@studiometa/ui/index.js',
     });
@@ -277,8 +393,8 @@ describe('resolveDependencies', () => {
     });
   });
 
-  it('resolves bundle dependency for relative path source', () => {
-    const result = resolveDependencies([{ specifier: 'demo-lib', source: './lib/index.ts' }]);
+  it('resolves bundle dependency for relative path source', async () => {
+    const result = await resolveDependencies([{ specifier: 'demo-lib', source: './lib/index.ts' }]);
     expect(result.importMap).toEqual({
       'demo-lib': '/static/deps/demo-lib/index.js',
     });
@@ -290,8 +406,8 @@ describe('resolveDependencies', () => {
     });
   });
 
-  it('resolves bundle dependency for absolute path source', () => {
-    const result = resolveDependencies([
+  it('resolves bundle dependency for absolute path source', async () => {
+    const result = await resolveDependencies([
       { specifier: 'demo-lib', source: '/home/user/lib/index.ts' },
     ]);
     expect(result.importMap).toEqual({
@@ -300,8 +416,8 @@ describe('resolveDependencies', () => {
     expect(result.selfHosted).toHaveLength(1);
   });
 
-  it('passes entry field for bundle dependencies', () => {
-    const result = resolveDependencies([
+  it('passes entry field for bundle dependencies', async () => {
+    const result = await resolveDependencies([
       {
         specifier: '@studiometa/ui',
         source: '../ui/**/*.ts',
@@ -311,10 +427,10 @@ describe('resolveDependencies', () => {
     expect(result.selfHosted[0].entry).toBe('../ui/index.ts');
   });
 
-  it('handles mixed dependencies', () => {
+  it('handles mixed dependencies', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-    const result = resolveDependencies([
+    const result = await resolveDependencies([
       'deepmerge',
       '@studiometa/js-toolkit/utils',
       { specifier: 'morphdom', source: 'morphdom' }, // bare npm → falls back to esm.sh
@@ -328,15 +444,15 @@ describe('resolveDependencies', () => {
     warn.mockRestore();
   });
 
-  it('returns empty results for empty input', () => {
-    const result = resolveDependencies([]);
+  it('returns empty results for empty input', async () => {
+    const result = await resolveDependencies([]);
     expect(result.importMap).toEqual({});
     expect(result.selfHosted).toEqual([]);
   });
 
   describe('esmSh options', () => {
-    it('appends ?bundle=false when bundle is false', () => {
-      const result = resolveDependencies([
+    it('appends ?bundle=false when bundle is false', async () => {
+      const result = await resolveDependencies([
         { specifier: '@studiometa/js-toolkit', esmSh: { bundle: false } },
       ]);
       expect(result.importMap).toEqual({
@@ -344,8 +460,8 @@ describe('resolveDependencies', () => {
       });
     });
 
-    it('uses * prefix for external option', () => {
-      const result = resolveDependencies([
+    it('uses * prefix for external option', async () => {
+      const result = await resolveDependencies([
         { specifier: 'preact-render-to-string', version: '5.2.0', esmSh: { external: true } },
       ]);
       expect(result.importMap).toEqual({
@@ -353,8 +469,8 @@ describe('resolveDependencies', () => {
       });
     });
 
-    it('combines multiple options', () => {
-      const result = resolveDependencies([
+    it('combines multiple options', async () => {
+      const result = await resolveDependencies([
         {
           specifier: 'swr',
           version: '2.0.0',
@@ -366,7 +482,7 @@ describe('resolveDependencies', () => {
       );
     });
 
-    it('infers version from package.json with esmSh options', () => {
+    it('infers version from package.json with esmSh options', async () => {
       const tmpDir = join('/tmp', 'test-resolve-deps-esmsh-' + Date.now());
       mkdirSync(tmpDir, { recursive: true });
       const pkgPath = join(tmpDir, 'package.json');
@@ -378,7 +494,7 @@ describe('resolveDependencies', () => {
       );
 
       try {
-        const result = resolveDependencies(
+        const result = await resolveDependencies(
           [{ specifier: '@studiometa/js-toolkit', esmSh: { bundle: false } }],
           pkgPath,
         );
@@ -390,10 +506,10 @@ describe('resolveDependencies', () => {
       }
     });
 
-    it('applies esmSh options on bare npm source fallback', () => {
+    it('applies esmSh options on bare npm source fallback', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      const result = resolveDependencies([
+      const result = await resolveDependencies([
         { specifier: 'morphdom', source: 'morphdom', esmSh: { bundle: false } },
       ]);
       expect(result.importMap).toEqual({
@@ -403,10 +519,10 @@ describe('resolveDependencies', () => {
       warn.mockRestore();
     });
 
-    it('applies external prefix on bare npm source fallback', () => {
+    it('applies external prefix on bare npm source fallback', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      const result = resolveDependencies([
+      const result = await resolveDependencies([
         { specifier: 'morphdom', source: 'morphdom', esmSh: { external: true } },
       ]);
       expect(result.importMap).toEqual({
@@ -416,8 +532,8 @@ describe('resolveDependencies', () => {
       warn.mockRestore();
     });
 
-    it('ignores esmSh options for self-hosted dependencies', () => {
-      const result = resolveDependencies([
+    it('ignores esmSh options for self-hosted dependencies', async () => {
+      const result = await resolveDependencies([
         { specifier: 'demo-lib', source: './lib/index.ts', esmSh: { bundle: false } as any },
       ]);
       expect(result.importMap).toEqual({
@@ -427,8 +543,8 @@ describe('resolveDependencies', () => {
   });
 
   describe('multi-entry dependencies', () => {
-    it('resolves one import-map entry per subpath and a single self-hosted build', () => {
-      const result = resolveDependencies([
+    it('resolves one import-map entry per subpath and a single self-hosted build', async () => {
+      const result = await resolveDependencies([
         {
           specifier: '@studiometa/ui',
           source: '../ui/**/*.ts',
@@ -472,8 +588,8 @@ describe('resolveDependencies', () => {
       ]);
     });
 
-    it('supports side-effect subpaths (e.g. autoload) alongside a barrel', () => {
-      const result = resolveDependencies([
+    it('supports side-effect subpaths (e.g. autoload) alongside a barrel', async () => {
+      const result = await resolveDependencies([
         {
           specifier: '@studiometa/ui-autoload',
           entries: {
@@ -493,10 +609,10 @@ describe('resolveDependencies', () => {
       expect(result.selfHosted[0].entries).toHaveLength(3);
     });
 
-    it('skips non-local entry sources with a warning', () => {
+    it('skips non-local entry sources with a warning', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      const result = resolveDependencies([
+      const result = await resolveDependencies([
         {
           specifier: '@studiometa/ui',
           entries: {
@@ -515,10 +631,10 @@ describe('resolveDependencies', () => {
       warn.mockRestore();
     });
 
-    it('produces no self-hosted build when every entry is skipped', () => {
+    it('produces no self-hosted build when every entry is skipped', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      const result = resolveDependencies([
+      const result = await resolveDependencies([
         {
           specifier: '@studiometa/ui',
           entries: { '.': 'bare-npm-name' },
@@ -532,9 +648,102 @@ describe('resolveDependencies', () => {
     });
   });
 
+  describe('local self-hosted subpath auto-detection', () => {
+    it('derives entries from exports and aliases `.js`-suffix keys to one build', async () => {
+      const fixtureDir = mkdtempSync(join(tmpdir(), 'playground-subpaths-'));
+      writeFileSync(
+        join(fixtureDir, 'package.json'),
+        JSON.stringify({
+          name: 'demo',
+          exports: {
+            '.': './index.ts',
+            './Foo': './Foo.ts',
+            './Foo.js': './Foo.ts',
+          },
+        }),
+      );
+
+      try {
+        // configDir derives from packageJsonPath's directory (the fixture dir),
+        // so a source root of './' lands on the fixture package.
+        const result = await resolveDependencies(
+          [{ specifier: 'demo', source: './**/*.ts', subpaths: true }],
+          join(fixtureDir, 'package.json'),
+        );
+
+        expect(result.selfHosted).toHaveLength(1);
+        const dep = result.selfHosted[0];
+
+        // `.` → index entry, `./Foo` → Foo entry; `./Foo.js` is NOT a separate entry.
+        expect(dep.entries).toEqual([
+          {
+            subpath: '.',
+            specifier: 'demo',
+            name: 'index',
+            source: join(fixtureDir, 'index.ts'),
+            importMapValue: '/static/deps/demo/index.js',
+          },
+          {
+            subpath: './Foo',
+            specifier: 'demo/Foo',
+            name: 'Foo',
+            source: join(fixtureDir, 'Foo.ts'),
+            importMapValue: '/static/deps/demo/Foo.js',
+          },
+        ]);
+
+        // `demo/Foo` and `demo/Foo.js` both resolve to the same built file.
+        expect(result.importMap['demo/Foo']).toBe('/static/deps/demo/Foo.js');
+        expect(result.importMap['demo/Foo.js']).toBe('/static/deps/demo/Foo.js');
+        expect(result.importMap['demo/Foo']).toBe(result.importMap['demo/Foo.js']);
+
+        expect(dep.aliasSpecifiers).toContain('demo/Foo.js');
+      } finally {
+        rmSync(fixtureDir, { recursive: true, force: true });
+      }
+    });
+
+    it('lets explicit entries win over subpaths (no derivation)', async () => {
+      const fixtureDir = mkdtempSync(join(tmpdir(), 'playground-subpaths-explicit-'));
+      writeFileSync(
+        join(fixtureDir, 'package.json'),
+        JSON.stringify({
+          name: 'demo',
+          exports: {
+            '.': './index.ts',
+            './Foo': './Foo.ts',
+          },
+        }),
+      );
+
+      try {
+        const result = await resolveDependencies(
+          [
+            {
+              specifier: 'demo',
+              source: './**/*.ts',
+              subpaths: true,
+              entries: { '.': './index.ts' },
+            },
+          ],
+          join(fixtureDir, 'package.json'),
+        );
+
+        // Only the explicit entry is used; `./Foo` from exports is ignored.
+        expect(result.importMap).toEqual({
+          demo: '/static/deps/demo/index.js',
+        });
+        expect(result.selfHosted[0].entries).toHaveLength(1);
+        expect(result.selfHosted[0].aliasSpecifiers).toBeUndefined();
+      } finally {
+        rmSync(fixtureDir, { recursive: true, force: true });
+      }
+    });
+  });
+
   describe('self-hosted paths have no publicPath prefix', () => {
-    it('self-hosted entries always get bare paths without prefix', () => {
-      const result = resolveDependencies([
+    it('self-hosted entries always get bare paths without prefix', async () => {
+      const result = await resolveDependencies([
         { specifier: '@studiometa/ui', source: '../ui/**/*.ts' },
       ]);
       expect(result.importMap).toEqual({

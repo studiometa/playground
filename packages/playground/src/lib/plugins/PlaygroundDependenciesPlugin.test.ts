@@ -169,6 +169,35 @@ describe('PlaygroundDependenciesPlugin', () => {
       );
     });
 
+    it('prefixes alias specifiers of a multi-entry dependency', () => {
+      const deps: ResolvedDependency[] = [
+        {
+          specifier: 'demo',
+          importMapValue: '/static/deps/demo/index.js',
+          type: 'bundle',
+          entries: [
+            {
+              subpath: './Foo',
+              specifier: 'demo/Foo',
+              name: 'Foo',
+              source: '../demo/Foo.ts',
+              importMapValue: '/static/deps/demo/Foo.js',
+            },
+          ],
+          aliasSpecifiers: ['demo/Foo.js'],
+        },
+      ];
+      const importMap = {
+        'demo/Foo': '/static/deps/demo/Foo.js',
+        'demo/Foo.js': '/static/deps/demo/Foo.js',
+      };
+
+      applyAndGetImportMap(deps, importMap, '/play');
+
+      expect(importMap['demo/Foo']).toBe('/play/static/deps/demo/Foo.js');
+      expect(importMap['demo/Foo.js']).toBe('/play/static/deps/demo/Foo.js');
+    });
+
     it('infers publicPath from webpack output.publicPath', () => {
       const deps: ResolvedDependency[] = [
         {

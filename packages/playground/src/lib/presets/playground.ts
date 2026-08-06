@@ -143,7 +143,7 @@ export function playgroundPreset(options?: PartialDeep<PlaygroundPresetOptions>)
 
       if (options?.dependencies?.length) {
         const packageJsonPath = resolve(configDir, 'package.json');
-        const resolved = resolveDependencies(options.dependencies, packageJsonPath);
+        const resolved = await resolveDependencies(options.dependencies, packageJsonPath);
         // Dependencies go first, manual importMap entries take precedence
         mergedImportMap = { ...resolved.importMap, ...mergedImportMap };
         selfHostedDeps = resolved.selfHosted;

@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, extname, join, resolve } from 'node:path';
 
 /**
  * Options passed as query parameters to esm.sh URLs.
@@ -89,6 +90,30 @@ export type DependencyConfig =
        */
       entries?: Record<string, string>;
       /**
+       * Auto-detect export subpaths from the package's `exports` field so each
+       * subpath does not have to be declared by hand.
+       *
+       * - `true` → detect **all** subpaths from the package's `exports` map.
+       * - `string[]` (e.g. `['./utils']`) → an explicit subset; no
+       *   `package.json` read is performed.
+       *
+       * Behaviour depends on how the dependency is resolved:
+       *
+       * - **esm.sh deps** (no `source`): each detected subpath is added to the
+       *   import map as its own esm.sh URL (same version/query/prefix as the
+       *   base specifier). When `true`, the `exports` map is read from disk
+       *   (`node_modules`) when available, otherwise fetched from the npm
+       *   registry.
+       * - **Local self-hosted deps** (local `source`): each subpath becomes an
+       *   entry of the multi-entry code-split build; its target `.ts`/`.js`
+       *   file is taken from the `exports` map. Ignored when explicit `entries`
+       *   are already set.
+       *
+       * @example true
+       * @example ['./utils', './utils/css']
+       */
+      subpaths?: boolean | string[];
+      /**
        * Options passed as query parameters to the esm.sh URL.
        * Only applies to esm.sh-resolved dependencies (ignored when `source` is set).
        *
@@ -130,6 +155,12 @@ export interface ResolvedDependency {
    * `static/deps/<specifier>/` directory.
    */
   entries?: ResolvedDependencyEntry[];
+  /**
+   * Extra import-map specifiers (e.g. `./Foo.js` aliases) that resolve to an
+   * existing built entry's file. Used by the plugin to prefix them with
+   * publicPath.
+   */
+  aliasSpecifiers?: string[];
 }
 
 export interface ResolvedDependencies {
@@ -184,6 +215,173 @@ function isLocalSource(source: string): boolean {
 }
 
 /**
+ * Walk up directories from `fromDir` to locate a package's `package.json` in a
+ * `node_modules` folder.
+ *
+ * `require.resolve('<pkg>/package.json')` is blocked by the package's `exports`
+ * field in modern packages, so the file is resolved manually.
+ *
+ * @returns The first matching path, or `undefined` when none is found.
+ */
+export function findPackageJsonOnDisk(pkgName: string, fromDir: string): string | undefined {
+  const parts = pkgName.split('/');
+  let dir = fromDir;
+  for (;;) {
+    const candidate = join(dir, 'node_modules', ...parts, 'package.json');
+    if (existsSync(candidate)) return candidate;
+    const parent = dirname(dir);
+    if (parent === dir) return undefined;
+    dir = parent;
+  }
+}
+
+/**
+ * Read the raw `exports` value of a package — from disk (`node_modules`) when
+ * available, otherwise from the npm registry.
+ *
+ * The returned value is the untouched `exports` field (string, array, or
+ * object) or `undefined` when it cannot be read.
+ */
+export async function readPackageExports(
+  pkgName: string,
+  version: string | undefined,
+  fromDir: string,
+): Promise<unknown> {
+  const diskPath = findPackageJsonOnDisk(pkgName, fromDir);
+  if (diskPath) {
+    try {
+      const pkg = JSON.parse(readFileSync(diskPath, 'utf-8'));
+      return pkg.exports;
+    } catch {
+      // Fall through to the registry.
+    }
+  }
+
+  try {
+    const response = await fetch(`https://registry.npmjs.org/${pkgName}`);
+    if (!response.ok) {
+      console.warn(
+        `[playground] Failed to fetch package metadata for "${pkgName}" from the npm registry ` +
+          `(status ${response.status}). No subpaths detected.`,
+      );
+      return undefined;
+    }
+    const data = await response.json();
+    const ver = version && data.versions?.[version] ? version : data['dist-tags']?.latest;
+    return data.versions?.[ver]?.exports;
+  } catch (error) {
+    console.warn(
+      `[playground] Could not read exports for "${pkgName}" from the npm registry: ${String(error)}. ` +
+        'No subpaths detected.',
+    );
+    return undefined;
+  }
+}
+
+/**
+ * Extract the list of export subpath keys from a raw `exports` value.
+ *
+ * When `exports` is an object whose keys are subpaths (start with `.`), returns
+ * those keys, excluding `./package.json` and any wildcard (`*`) key. Otherwise
+ * (string/array/conditions-only object) returns `['.']`. The result is unique.
+ */
+export function extractSubpathKeys(exports: unknown): string[] {
+  if (exports && typeof exports === 'object' && !Array.isArray(exports)) {
+    const keys = Object.keys(exports as Record<string, unknown>);
+    const dotted = keys.filter((key) => key.startsWith('.'));
+    if (dotted.length > 0) {
+      const filtered = dotted.filter((key) => key !== './package.json' && !key.includes('*'));
+      return [...new Set(filtered)];
+    }
+  }
+  return ['.'];
+}
+
+/**
+ * Resolve an `exports` entry value to a target file path.
+ *
+ * Strings are returned as-is. For conditions objects, `import`, `module`,
+ * `browser`, then `default` are tried in order; a nested conditions object is
+ * resolved one level deep with the same order.
+ */
+export function resolveExportTarget(value: unknown, depth = 0): string | undefined {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object' && depth < 2) {
+    const obj = value as Record<string, unknown>;
+    for (const key of ['import', 'module', 'browser', 'default']) {
+      if (key in obj) {
+        const resolved = resolveExportTarget(obj[key], depth + 1);
+        if (resolved) return resolved;
+      }
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Derive multi-entry `entries` (and `.js`-suffix aliases) for a local
+ * self-hosted dependency from its `package.json` `exports` field.
+ *
+ * Subpaths that resolve to the **same** target file are grouped: the group's
+ * canonical key (the first non-`.js`-suffixed key) becomes the build entry;
+ * every other key becomes an alias pointing at that entry's file. This avoids
+ * duplicate entries (and filenames like `Foo.js.js`) for packages that expose
+ * both `./Foo` and `./Foo.js` mapping to one source file.
+ */
+export function deriveLocalEntries(
+  source: string,
+  subpaths: boolean | string[],
+  configDir: string,
+): { entries: Record<string, string>; aliases: Record<string, string> } {
+  const rootRel = source.includes('*') ? source.slice(0, source.indexOf('*')) : source;
+  const pkgRoot = resolve(configDir, rootRel);
+  const pkgJsonPath = join(pkgRoot, 'package.json');
+
+  let pkg: { exports?: unknown };
+  try {
+    pkg = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'));
+  } catch {
+    console.warn(
+      `[playground] Could not read "${pkgJsonPath}" to derive subpaths. No entries derived.`,
+    );
+    return { entries: {}, aliases: {} };
+  }
+
+  const exports = pkg.exports as Record<string, unknown> | undefined;
+  const keys = Array.isArray(subpaths) ? subpaths : extractSubpathKeys(exports);
+
+  const allowedExtensions = new Set(['.ts', '.tsx', '.js', '.mjs', '.jsx']);
+  const byTarget = new Map<string, string[]>();
+
+  for (const key of keys) {
+    const target = resolveExportTarget(exports?.[key]);
+    if (!target) {
+      console.warn(
+        `[playground] No resolvable export target for subpath "${key}" in "${pkgRoot}". Skipped.`,
+      );
+      continue;
+    }
+    const abs = resolve(pkgRoot, target);
+    if (!allowedExtensions.has(extname(abs))) continue;
+    const list = byTarget.get(abs) ?? [];
+    list.push(key);
+    byTarget.set(abs, list);
+  }
+
+  const entries: Record<string, string> = {};
+  const aliases: Record<string, string> = {};
+  for (const [abs, keyList] of byTarget) {
+    const canonical = keyList.find((key) => !key.endsWith('.js')) ?? keyList[0];
+    entries[canonical] = abs;
+    for (const key of keyList) {
+      if (key !== canonical) aliases[key] = canonical;
+    }
+  }
+
+  return { entries, aliases };
+}
+
+/**
  * Serialize `EsmShOptions` into a query string (without leading `?`).
  * Returns an empty string when no options produce query params.
  * The `external` option is handled separately (via `*` URL prefix).
@@ -223,12 +421,14 @@ export function serializeEsmShOptions(options: EsmShOptions): string {
  * @param dependencies - Array of dependency configurations
  * @param packageJsonPath - Optional path to consumer's package.json for version inference
  */
-export function resolveDependencies(
+export async function resolveDependencies(
   dependencies: DependencyConfig[],
   packageJsonPath?: string,
-): ResolvedDependencies {
+): Promise<ResolvedDependencies> {
   const importMap: Record<string, string> = {};
   const selfHosted: ResolvedDependency[] = [];
+
+  const configDir = packageJsonPath ? dirname(packageJsonPath) : process.cwd();
 
   // Try to read versions from consumer's package.json
   let pkgVersions: Record<string, string> = {};
@@ -244,9 +444,17 @@ export function resolveDependencies(
   for (const dep of dependencies) {
     const config = typeof dep === 'string' ? { specifier: dep } : dep;
     const { specifier, version, source, entry } = config;
-    const entries = 'entries' in config ? config.entries : undefined;
-
     const esmSh = 'esmSh' in config ? config.esmSh : undefined;
+    const subpaths = 'subpaths' in config ? config.subpaths : undefined;
+
+    // `aliasSubpaths` maps a `.js`-suffix alias subpath to its canonical subpath.
+    let entries = 'entries' in config ? config.entries : undefined;
+    let aliasSubpaths: Record<string, string> = {};
+    if (!entries && subpaths && source && isLocalSource(source)) {
+      const derived = deriveLocalEntries(source, subpaths, configDir);
+      entries = derived.entries;
+      aliasSubpaths = derived.aliases;
+    }
 
     if (entries && Object.keys(entries).length > 0) {
       // Multi-entry: one code-split build, shared chunks emitted once.
@@ -281,12 +489,24 @@ export function resolveDependencies(
 
       if (resolvedEntries.length > 0) {
         const base = resolvedEntries.find((e) => e.subpath === '.') ?? resolvedEntries[0];
+
+        // Emit `.js`-suffix alias specifiers that reuse an existing entry's file.
+        const aliasSpecifiers: string[] = [];
+        for (const [aliasSub, canonicalSub] of Object.entries(aliasSubpaths)) {
+          const canonicalEntry = resolvedEntries.find((e) => e.subpath === canonicalSub);
+          if (!canonicalEntry) continue;
+          const aliasSpecifier = aliasSub === '.' ? specifier : `${specifier}${aliasSub.slice(1)}`;
+          importMap[aliasSpecifier] = canonicalEntry.importMapValue;
+          aliasSpecifiers.push(aliasSpecifier);
+        }
+
         selfHosted.push({
           specifier,
           importMapValue: base.importMapValue,
           type: 'bundle',
           source,
           entries: resolvedEntries,
+          ...(aliasSpecifiers.length ? { aliasSpecifiers } : {}),
         });
       }
 
@@ -303,8 +523,22 @@ export function resolveDependencies(
       const versionedPkg = resolvedVersion ? `${pkgName}@${resolvedVersion}` : pkgName;
       const prefix = esmSh?.external ? '*' : '';
       const query = esmSh ? serializeEsmShOptions(esmSh) : '';
-      const esmUrl = `https://esm.sh/${prefix}${versionedPkg}${subpath ?? ''}${query ? `?${query}` : ''}`;
-      importMap[specifier] = esmUrl;
+      const buildEsmUrl = (suffix: string) =>
+        `https://esm.sh/${prefix}${versionedPkg}${suffix}${query ? `?${query}` : ''}`;
+
+      importMap[specifier] = buildEsmUrl(subpath ?? '');
+
+      if (subpaths) {
+        const subpathKeys =
+          subpaths === true
+            ? extractSubpathKeys(await readPackageExports(pkgName, resolvedVersion, configDir))
+            : subpaths;
+        for (const key of subpathKeys) {
+          if (key === '.') continue;
+          const suffix = key.slice(1);
+          importMap[pkgName + suffix] = buildEsmUrl(suffix);
+        }
+      }
     } else if (!isLocalSource(source)) {
       // Bare npm package name used as source — warn and fall back to esm.sh
       console.warn(
