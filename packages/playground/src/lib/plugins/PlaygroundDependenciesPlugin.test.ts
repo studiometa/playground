@@ -1,3 +1,6 @@
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, posix } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { PlaygroundDependenciesPlugin } from './PlaygroundDependenciesPlugin.js';
 import type { ResolvedDependency } from '../utils/resolve-dependencies.js';
@@ -127,6 +130,43 @@ describe('PlaygroundDependenciesPlugin', () => {
 
       expect(importMap['@studiometa/ui']).toBe('/play/static/deps/@studiometa/ui/index.js');
       expect(importMap.deepmerge).toBe('https://esm.sh/deepmerge');
+    });
+
+    it('prefixes every subpath of a multi-entry dependency', () => {
+      const deps: ResolvedDependency[] = [
+        {
+          specifier: '@studiometa/ui',
+          importMapValue: '/static/deps/@studiometa/ui/index.js',
+          type: 'bundle',
+          entries: [
+            {
+              subpath: '.',
+              specifier: '@studiometa/ui',
+              name: 'index',
+              source: '../ui/index.ts',
+              importMapValue: '/static/deps/@studiometa/ui/index.js',
+            },
+            {
+              subpath: './manifest',
+              specifier: '@studiometa/ui/manifest',
+              name: 'manifest',
+              source: '../ui/manifest.ts',
+              importMapValue: '/static/deps/@studiometa/ui/manifest.js',
+            },
+          ],
+        },
+      ];
+      const importMap = {
+        '@studiometa/ui': '/static/deps/@studiometa/ui/index.js',
+        '@studiometa/ui/manifest': '/static/deps/@studiometa/ui/manifest.js',
+      };
+
+      applyAndGetImportMap(deps, importMap, '/play');
+
+      expect(importMap['@studiometa/ui']).toBe('/play/static/deps/@studiometa/ui/index.js');
+      expect(importMap['@studiometa/ui/manifest']).toBe(
+        '/play/static/deps/@studiometa/ui/manifest.js',
+      );
     });
 
     it('infers publicPath from webpack output.publicPath', () => {
@@ -436,5 +476,119 @@ describe('PlaygroundDependenciesPlugin', () => {
       expect(emitted.has(headersJsPath.replace(/^\//, ''))).toBe(true);
       expect(emitted.has(headersDtsPath.replace(/^\//, ''))).toBe(true);
     });
+  });
+
+  describe('multi-entry singleton (real tsdown build)', () => {
+    /**
+     * Build a fake compilation that records every emitted asset into a
+     * `path -> code` map, throwing on a duplicate path (mirrors webpack's
+     * seal-time conflict guard).
+     */
+    function makeFakeCompilation(emitted: Map<string, string>) {
+      return {
+        compiler: {
+          webpack: {
+            sources: {
+              RawSource: class {
+                value: string;
+                constructor(value: string) {
+                  this.value = value;
+                }
+                source() {
+                  return this.value;
+                }
+              },
+            },
+          },
+        },
+        emitAsset(assetPath: string, source: { value: string }) {
+          if (emitted.has(assetPath)) {
+            throw new Error(`Conflict: multiple assets emit to the same filename ${assetPath}`);
+          }
+          emitted.set(assetPath, source.value);
+        },
+      };
+    }
+
+    it('emits shared modules ONCE and references the same chunk from every entry', async () => {
+      // A workspace package with a barrel (static import) and a manifest
+      // (dynamic import) that both use the same shared module — the exact
+      // singleton hazard multi-entry builds are meant to eliminate.
+      const dir = mkdtempSync(join(tmpdir(), 'playground-multi-entry-'));
+      try {
+        mkdirSync(join(dir, 'src'), { recursive: true });
+        writeFileSync(
+          join(dir, 'src/shared.ts'),
+          // A distinctive marker proves where the class body actually lives.
+          'export class Shared {\n  greet() {\n    return "SINGLETON_MARKER";\n  }\n}\n',
+        );
+        writeFileSync(
+          join(dir, 'src/index.ts'),
+          "import { Shared } from './shared.js';\nexport { Shared };\nexport const fromBarrel = new Shared();\n",
+        );
+        writeFileSync(
+          join(dir, 'src/manifest.ts'),
+          "export async function load() {\n  const { Shared } = await import('./shared.js');\n  return new Shared();\n}\n",
+        );
+
+        const dep: ResolvedDependency = {
+          specifier: '@test/pkg',
+          importMapValue: '/static/deps/@test/pkg/index.js',
+          type: 'bundle',
+          entries: [
+            {
+              subpath: '.',
+              specifier: '@test/pkg',
+              name: 'index',
+              source: './src/index.ts',
+              importMapValue: '/static/deps/@test/pkg/index.js',
+            },
+            {
+              subpath: './manifest',
+              specifier: '@test/pkg/manifest',
+              name: 'manifest',
+              source: './src/manifest.ts',
+              importMapValue: '/static/deps/@test/pkg/manifest.js',
+            },
+          ],
+        };
+
+        const p = new PlaygroundDependenciesPlugin([dep], dir);
+        const emitted = new Map<string, string>();
+        await (p as any).processMultiEntryBundle(makeFakeCompilation(emitted), dep);
+
+        const base = 'static/deps/@test/pkg';
+        const indexPath = posix.join(base, 'index.js');
+        const manifestPath = posix.join(base, 'manifest.js');
+
+        // Both named entries are emitted at their subpath filenames.
+        expect(emitted.has(indexPath)).toBe(true);
+        expect(emitted.has(manifestPath)).toBe(true);
+
+        // Exactly ONE shared JS chunk (not a per-entry duplicate).
+        const sharedJsChunks = [...emitted.keys()].filter(
+          (path) =>
+            path.startsWith(base) &&
+            path.endsWith('.js') &&
+            path !== indexPath &&
+            path !== manifestPath,
+        );
+        expect(sharedJsChunks).toHaveLength(1);
+        const sharedChunkPath = sharedJsChunks[0];
+        const sharedChunkName = sharedChunkPath.slice(base.length + 1);
+
+        // The class body lives in the shared chunk, NOT inlined in either entry.
+        expect(emitted.get(sharedChunkPath)).toContain('SINGLETON_MARKER');
+        expect(emitted.get(indexPath)).not.toContain('SINGLETON_MARKER');
+        expect(emitted.get(manifestPath)).not.toContain('SINGLETON_MARKER');
+
+        // Both entries import that same shared chunk as a relative sibling, so
+        // every consumer resolves the one-and-only module instance.
+        expect(emitted.get(indexPath)).toContain(`./${sharedChunkName}`);
+        expect(emitted.get(manifestPath)).toContain(`./${sharedChunkName}`);
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    }, 60_000);
   });
 });
