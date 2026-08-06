@@ -481,6 +481,45 @@ describe('PlaygroundDependenciesPlugin', () => {
       expect(emitted.get('static/deps/multi/index.d.ts')).toBe('entry types');
     });
 
+    it('rewrites relative .js imports to .d.ts inside emitted declaration chunks', () => {
+      // rolldown-plugin-dts writes cross-chunk type imports with a `.js`
+      // extension, but the declaration chunks are hashed independently from the
+      // JS chunks, so `./Foo-<dtsHash>.js` never exists — only the matching
+      // `./Foo-<dtsHash>.d.ts` does. The emit step must swap the extension so
+      // the served type files resolve.
+      const emitted = emitAndCollect(
+        [
+          {
+            fileName: 'entry.d.ts',
+            code:
+              'import { Action } from "./Action-Bt0NVlQH.js";\n' +
+              'export { type Action } from "./Action-Bt0NVlQH.js";\n' +
+              'export declare const x: typeof import("./AccordionItem-DP2oetGf.js");\n' +
+              'import { isDefined } from "@studiometa/js-toolkit/utils";\n',
+            isEntry: true,
+          },
+          { fileName: 'entry.js', code: 'export const a = 1;', isEntry: true },
+          {
+            fileName: 'Action-Bt0NVlQH.d.ts',
+            code: 'export declare class Action {}',
+            isEntry: false,
+          },
+        ],
+        'static/deps/@studiometa/ui',
+      );
+
+      const dts = emitted.get('static/deps/@studiometa/ui/index.d.ts')!;
+      // Relative type imports now target the real `.d.ts` chunks.
+      expect(dts).toContain('from "./Action-Bt0NVlQH.d.ts"');
+      expect(dts).toContain('import("./AccordionItem-DP2oetGf.d.ts")');
+      // No relative `.js` specifier remains.
+      expect(dts).not.toMatch(/["']\.[^"']*\.js["']/);
+      // Bare (non-relative) specifiers are untouched.
+      expect(dts).toContain('from "@studiometa/js-toolkit/utils"');
+      // The JS entry is unaffected.
+      expect(emitted.get('static/deps/@studiometa/ui/index.js')).toBe('export const a = 1;');
+    });
+
     it('keeps the import map / _headers pointing at .../index.js and .../index.d.ts', () => {
       // The import map value and the _headers x-typescript-types entry are both
       // derived from the specifier as `.../index.js` and `.../index.d.ts`. The

@@ -345,13 +345,42 @@ export class PlaygroundDependenciesPlugin {
           const fileName =
             pinEntry && chunk.isEntry ? (isDts ? 'index.d.ts' : 'index.js') : chunk.fileName;
           const assetPath = posix.join(outputBase, fileName);
+          const code = isDts ? this.rewriteDtsChunkImports(chunk.code) : chunk.code;
           compilation.emitAsset(
             assetPath,
-            new compilation.compiler.webpack.sources.RawSource(chunk.code),
+            new compilation.compiler.webpack.sources.RawSource(code),
           );
         }
       }
     }
+  }
+
+  /**
+   * Rewrite relative `.js` module specifiers to `.d.ts` inside an emitted
+   * declaration chunk.
+   *
+   * rolldown-plugin-dts writes the relative imports between declaration chunks
+   * with a `.js` extension (mirroring the JS module graph, the convention TS
+   * expects on disk where `./foo.js` resolves to a sibling `./foo.d.ts`). But
+   * the declaration chunks are content-hashed **independently** from the JS
+   * chunks, so the referenced `./Foo-<dtsHash>.js` file never exists — only
+   * `./Foo-<dtsHash>.d.ts` does (the JS chunk carries a different hash). Served
+   * over HTTP the editor's LSP fetches the literal specifier and 404s, breaking
+   * type resolution.
+   *
+   * The specifier already carries the declaration chunk's own basename + hash;
+   * only the extension is wrong. Swapping `.js` → `.d.ts` points every relative
+   * type import at the real emitted declaration file. Bare specifiers (e.g.
+   * `@studiometa/js-toolkit/utils`) are untouched — only relative (`.`/`..`)
+   * paths are rewritten.
+   *
+   * @private
+   */
+  private rewriteDtsChunkImports(code: string): string {
+    return code.replace(
+      /(\b(?:from|import)\b\s*\(?\s*)(['"])(\.[^'"\n]*?)\.js\2/g,
+      (_match, keyword, quote, specifier) => `${keyword}${quote}${specifier}.d.ts${quote}`,
+    );
   }
 
   /**
