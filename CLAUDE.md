@@ -47,7 +47,7 @@ npm run test:ci      # Tests + coverage
 
 The `dependencies` option in `playgroundPreset()` goes through:
 
-1. **`resolveDependencies()`** (`src/lib/utils/resolve-dependencies.ts`) — resolves each dependency into either an esm.sh URL or a self-hosted bundle path. Produces an import map + self-hosted metadata.
+1. **`resolveDependencies()`** (`src/lib/utils/resolve-dependencies.ts`) — resolves each dependency into either an esm.sh URL or a self-hosted bundle path. Produces an import map + self-hosted metadata. Supports a `subpaths` option that auto-detects export subpaths from a package's `package.json` `exports` (esm.sh: disk-first then npm registry; local: derives the multi-entry `entries`).
 2. **`PlaygroundDependenciesPlugin`** (`src/lib/plugins/PlaygroundDependenciesPlugin.ts`) — webpack plugin that bundles self-hosted dependencies with tsdown into `.js` + `.d.ts`. Emits `_headers` file for `x-typescript-types`.
 3. **`playground.ts` preset** (`src/lib/presets/playground.ts`) — orchestrates everything: merges import maps, instantiates plugins, configures webpack.
 

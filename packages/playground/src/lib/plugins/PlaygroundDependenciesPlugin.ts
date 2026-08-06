@@ -65,8 +65,11 @@ export class PlaygroundDependenciesPlugin {
         for (const dep of this.dependencies) {
           // A multi-entry dependency contributes one import-map key per entry
           // subpath; single-entry ones contribute just their own specifier.
+          // Alias specifiers (e.g. `.js` export aliases collapsed onto a
+          // canonical entry) are prefixed too — they resolve to the same
+          // emitted file as their canonical entry.
           const specifiers = dep.entries?.length
-            ? dep.entries.map((entry) => entry.specifier)
+            ? [...dep.entries.map((entry) => entry.specifier), ...(dep.aliasSpecifiers ?? [])]
             : [dep.specifier];
           for (const specifier of specifiers) {
             const currentValue = this.importMap[specifier];
