@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Rewrite relative `.js` imports to `.d.ts` inside emitted declaration chunks of self-hosted dependencies. rolldown-plugin-dts writes cross-chunk type imports with a `.js` extension, but declaration chunks are content-hashed independently from the JS chunks, so `./Foo-<hash>.js` never existed on disk (only `./Foo-<hash>.d.ts` did) — the editor's LSP fetched the dead `.js` URL and type resolution broke for code-split subpaths
+
 ## v0.3.12 - 2026.08.06
 
 ### Added
