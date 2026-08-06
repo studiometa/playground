@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- Auto-detect a dependency's export subpaths via the new `subpaths` option on `DependencyConfig`. For esm.sh dependencies, `subpaths: true` reads the package's `package.json` `exports` (disk `node_modules` first, npm registry fallback) and adds each subpath to the import map as its own esm.sh URL, while `subpaths: ['./utils']` uses an explicit list. For local self-hosted dependencies, `subpaths: true` derives the multi-entry code-split `entries` from `exports` (each subpath maps to its `.ts` target), and is ignored when an explicit `entries` map is set
 - Support multiple entry points for a single self-hosted dependency via the new `entries` map on `DependencyConfig`. All subpaths of a workspace package (e.g. a barrel `.` and a lazy `./manifest`) are built together in one code-split tsdown build, so modules shared between entries are emitted once as a shared chunk and referenced by every entry — a single runtime instance, eliminating the singleton/identity hazard of bundling each subpath separately ([#74](https://github.com/studiometa/playground/pull/74))
 
 ## v0.3.11 - 2026.08.01
