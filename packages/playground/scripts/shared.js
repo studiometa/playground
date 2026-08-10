@@ -17,6 +17,13 @@ function getOptions() {
   const modernMonacoPkg = JSON.parse(readFileSync(modernMonacoPkgPath, 'utf-8'));
   const modernMonacoVersion = modernMonacoPkg.version;
 
+  // Read the installed esbuild-wasm version to inline it at build time.
+  // The front-end loads esbuild-wasm from esm.sh at runtime (like modern-monaco).
+  const esbuildWasmEntry = new URL(import.meta.resolve('esbuild-wasm'));
+  const esbuildWasmPkgPath = resolve(esbuildWasmEntry.pathname, '../../package.json');
+  const esbuildWasmPkg = JSON.parse(readFileSync(esbuildWasmPkgPath, 'utf-8'));
+  const esbuildWasmVersion = esbuildWasmPkg.version;
+
   return {
     entryPoints: glob.globSync(
       ['src/**/*.ts', 'src/**/*.twig', 'src/**/*.json', '!src/**/*.test.ts'],
@@ -31,6 +38,7 @@ function getOptions() {
     sourcemap: true,
     define: {
       __MODERN_MONACO_VERSION__: JSON.stringify(modernMonacoVersion),
+      __ESBUILD_WASM_VERSION__: JSON.stringify(esbuildWasmVersion),
     },
     loader: {
       '.twig': 'copy',
