@@ -13,6 +13,13 @@ import { createPatchedUrl } from '../utils/patch-iframe-url.js';
 
 type esbuildType = typeof import('esbuild-wasm');
 
+/**
+ * Installed esbuild-wasm version, inlined at build time by esbuild.
+ * Used to load the dependency from esm.sh at runtime (like modern-monaco),
+ * instead of bundling it through webpack.
+ */
+declare const __ESBUILD_WASM_VERSION__: string;
+
 export interface IframeProps extends BaseProps {
   $refs: {
     iframe: HTMLIFrameElement;
@@ -139,9 +146,17 @@ ${html}
 
     Iframe.esbuildPromise = Promise.withResolvers();
 
-    const esbuild = await import('esbuild-wasm');
+    // Load esbuild-wasm from esm.sh at runtime rather than bundling it through
+    // webpack. `new URL('esbuild-wasm/esbuild.wasm', import.meta.url)` (a bare
+    // specifier) is not resolved to a real asset URL by webpack 5.109+, so the
+    // wasmURL became `.../[object Object]` and esbuild failed to initialize. This
+    // mirrors how modern-monaco is loaded, and keeps the ~11 MB wasm out of the
+    // consumer bundle. esm.sh serves the CJS default export, so unwrap `.default`.
+    const esbuildUrl = `https://esm.sh/esbuild-wasm@${__ESBUILD_WASM_VERSION__}`;
+    const mod = await import(/* webpackIgnore: true */ esbuildUrl);
+    const esbuild: esbuildType = mod.default ?? mod;
     await esbuild.initialize({
-      wasmURL: new URL('esbuild-wasm/esbuild.wasm', import.meta.url),
+      wasmURL: `https://esm.sh/esbuild-wasm@${__ESBUILD_WASM_VERSION__}/esbuild.wasm`,
     });
 
     Iframe.esbuild = esbuild;
