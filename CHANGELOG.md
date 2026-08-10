@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
-- Write the virtual HTML/style/script loader modules at the package's resolved on-disk root instead of a path relative to the webpack compiler context, so the bare `@studiometa/playground/<name>-loader.js` imports resolve. These specifiers go through the package's `"./*": "./*"` exports entry, and since enhanced-resolve >= 5.21 (webpack/enhanced-resolve#399) a matched exports target that is missing on disk is a hard error instead of falling back to legacy resolution — so consumer builds on webpack 5.109+ failed with `Package path ./html-loader.js is exported from package ... but no valid target file was found`
+- Write the virtual HTML/style/script loader modules at the package's resolved on-disk root instead of a path relative to the webpack compiler context, so the bare `@studiometa/playground/<name>-loader.js` imports resolve. These specifiers go through the package's `"./*": "./*"` exports entry, and since enhanced-resolve >= 5.21 (webpack/enhanced-resolve#399) a matched exports target that is missing on disk is a hard error instead of falling back to legacy resolution — so consumer builds on webpack 5.109+ failed with `Package path ./html-loader.js is exported from package ... but no valid target file was found` ([#77](https://github.com/studiometa/playground/pull/77), [d0c924a](https://github.com/studiometa/playground/commit/d0c924a))
 
 ## v0.3.13 - 2026.08.06
 
