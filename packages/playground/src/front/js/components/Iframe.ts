@@ -99,6 +99,31 @@ export default class Iframe extends Base<IframeProps> {
     };
   }
 
+  /**
+   * Replace the preview's JavaScript realm, then build the document again.
+   *
+   * js-toolkit v4 registers a component class under its name in a
+   * module-scoped registry, and a second registration of the same name is
+   * ignored. Re-running an edited script inside the same realm therefore kept
+   * the first version of every class the author wrote — a playground where
+   * editing the script changes nothing. v3 had no registry, so re-running
+   * `createApp()` was enough and this method did not have to exist.
+   *
+   * Navigating the frame is what drops the registry, because it drops the
+   * realm and its module map with it.
+   */
+  async resetFrame(): Promise<void> {
+    const { iframe } = this.$refs;
+
+    await new Promise<void>((resolve) => {
+      iframe.addEventListener('load', () => resolve(), { once: true });
+      // A distinct value, so the assignment is a navigation rather than a no-op.
+      iframe.srcdoc = `<!doctype html><!--${Date.now()}-->`;
+    });
+
+    await this.initIframe();
+  }
+
   async initIframe() {
     this.$refs.iframe.classList.add('opacity-0');
     // Enable dev mode in render
@@ -246,8 +271,10 @@ ${html}
   async updateScript(resetHtml = true): Promise<void> {
     console.log('updating script...');
     if (resetHtml) {
-      this.doc.body.replaceWith(this.doc.body.cloneNode(true));
-      await wait();
+      // The author edited the script: it has to run from scratch, which means
+      // a new realm. `resetFrame()` calls back here with `false`.
+      await this.resetFrame();
+      return;
     }
     await wait();
 

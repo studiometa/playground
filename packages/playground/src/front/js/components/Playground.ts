@@ -189,7 +189,10 @@ export class Playground extends Base<PlaygroundProps> {
   }
 
   onIframeReloaderClick() {
-    this.iframe?.initIframe();
+    // A reload the user asked for is a full reset, realm included: under v4 a
+    // rebuilt document alone would keep the component registry the previous
+    // script filled in.
+    this.iframe?.resetFrame();
   }
 
   /**
