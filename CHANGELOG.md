@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.4.0 - 2026.08.28
+
+### Changed
+
+- ⚠️ Migrate the front-end to `@studiometa/js-toolkit` v4 (`^4.0.0-alpha.1`, published on the `next` dist-tag). The shipped shell called `createApp()`, which v4 removed, so any consumer already on v4 got `TypeError: createApp is not a function` before the playground rendered anything. Registration is now `registerComponent(Playground)`, and the page template declares `data-component="Playground"` on `<body>` so an instance exists because its element is in the document. Consumers must be on js-toolkit v4 ([#79](https://github.com/studiometa/playground/pull/79))
+- ⚠️ `createPlayground()` no longer returns an application object — v4 has none. It configures the playground and registers the root component ([#79](https://github.com/studiometa/playground/pull/79))
+- ⚠️ Coordination between the root component and the editors no longer relies on mount order. v4 gives no ordering guarantee between a parent and its children, so `Playground` watches `EditorVisibility`, `Editors` and `Iframe` with `$watchChildren()` and pushes the editor visibility onto every instance it sees, including the ones that mount after it. `Resizable` watches its `ResizableSync` children the same way, and reaches the nearest one from a cursor with `$closest()` ([#79](https://github.com/studiometa/playground/pull/79))
+- ⚠️ `HtmlEditor`, `ScriptEditor` and `StyleEditor` declare their own `config.name`. They used to inherit `Editor`'s, which v4 would have registered under the wrong `data-component` token ([#79](https://github.com/studiometa/playground/pull/79))
+- Editing the script now rebuilds the preview's JavaScript realm. v4 registers a component class under its name once and ignores a second registration of the same name, so re-running an edited script in the same realm kept the author's first version of every class — the editor looked dead. The reload button resets the realm for the same reason ([#79](https://github.com/studiometa/playground/pull/79))
+- Editors dispose their Monaco instance and drop their theme subscription when they unmount, through the cleanup `mounted()` returns. v3 had no teardown at all ([#79](https://github.com/studiometa/playground/pull/79))
+
+### Fixed
+
+- Clear the `is-resizing` state from the drag service rather than from a `pointerup` bound to the handle. A pointer released away from the handle never delivered that event, so the class stayed and `is-resizing:pointer-events-none` left the preview iframe unclickable ([#79](https://github.com/studiometa/playground/pull/79))
+- Register the preview's import map once per document instead of once per rebuild, which reported one console warning per overlapping specifier ([#79](https://github.com/studiometa/playground/pull/79))
+- `ResizableSync.set()` writes to `style.width` / `style.height` rather than to non-existent `width` / `height` element properties, so a synchronised panel keeps its measured size ([#79](https://github.com/studiometa/playground/pull/79))
+
 ## v0.3.14 - 2026.08.10
 
 ### Fixed

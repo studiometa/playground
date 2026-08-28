@@ -1,4 +1,3 @@
-import { domScheduler } from '@studiometa/js-toolkit/utils';
 import type { BaseConfig } from '@studiometa/js-toolkit';
 import Switcher from './Switcher.js';
 import { setTheme, getTheme } from '../store/index.js';
@@ -9,17 +8,15 @@ export default class ThemeSwitcher extends Switcher {
     name: 'ThemeSwitcher',
   };
 
-  mounted() {
-    domScheduler.read(async () => {
-      const value = await getTheme();
-      const input = this.$refs.inputs.find((i) => i.value === value);
+  async mounted() {
+    const value = await getTheme();
+    const input = this.$refs.inputs.find((i) => i.value === value);
 
-      domScheduler.write(() => {
-        if (input) {
-          input.checked = true;
-        }
+    if (input) {
+      this.$write(() => {
+        input.checked = true;
       });
-    });
+    }
   }
 
   switch(value: Themes) {

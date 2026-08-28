@@ -1,3 +1,4 @@
+import type { BaseConfig } from '@studiometa/js-toolkit';
 import type { InitOptions } from 'modern-monaco';
 import { getScript, setScript } from '../store/index.js';
 import { resolveImportMapUrls } from '../utils/resolve-import-map-urls.js';
@@ -6,11 +7,14 @@ import Editor from './Editor.js';
 export default class ScriptEditor extends Editor {
   /**
    * Config.
+   *
+   * An `Object` option default must be a factory in v4, so each instance gets
+   * its own value.
    */
-  static config = {
-    ...Editor.config,
+  static config: BaseConfig = {
+    name: 'ScriptEditor',
     options: {
-      importMap: Object,
+      importMap: { type: Object, default: () => ({}) },
     },
   };
 
@@ -47,7 +51,7 @@ export default class ScriptEditor extends Editor {
     return getScript();
   }
 
-  onContentChange({ args: [value] }) {
-    setScript(value);
+  onContentChange(event: CustomEvent<{ value: string }>) {
+    setScript(event.detail.value);
   }
 }

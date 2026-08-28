@@ -1,4 +1,4 @@
-import { domScheduler } from '@studiometa/js-toolkit/utils';
+import { defaultScheduler } from '@studiometa/js-toolkit';
 import { fallbackStore as store } from '../utils/storage/index.js';
 
 export type HeaderVisibility = 'visible' | 'hidden';
@@ -25,7 +25,7 @@ export async function headerIsHidden() {
 
 export async function headerUpdateDOM(value?: HeaderVisibility) {
   const header = value ?? (await getHeaderVisibility());
-  domScheduler.write(() => {
+  defaultScheduler.write(() => {
     document.documentElement.classList.toggle('has-header', header === 'visible');
   });
 }

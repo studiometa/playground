@@ -44,21 +44,21 @@ For longer code snippets, use `<script>` elements with custom `type` attributes.
 ```html
 <playground-preview height="80vh" theme="dark">
   <script type="playground/html">
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-4" data-component="App">
       <h1>Hello World</h1>
       <p>Some longer content here...</p>
     </div>
   </script>
 
   <script type="playground/script">
-    import { Base, createApp } from '@studiometa/js-toolkit';
+    import { Base, registerComponent } from '@studiometa/js-toolkit';
 
     class App extends Base {
       static config = { name: 'App' };
       mounted() { console.log('mounted!'); }
     }
 
-    export default createApp(App);
+    registerComponent(App);
   </script>
 
   <script type="playground/css">

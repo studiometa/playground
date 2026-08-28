@@ -1,4 +1,3 @@
-import { domScheduler } from '@studiometa/js-toolkit/utils';
 import type { BaseConfig } from '@studiometa/js-toolkit';
 import Switcher from './Switcher.js';
 import { setLayout, getLayout } from '../store/index.js';
@@ -9,17 +8,15 @@ export default class LayoutSwitcher extends Switcher {
     name: 'LayoutSwitcher',
   };
 
-  mounted() {
-    domScheduler.read(async () => {
-      const value = await getLayout();
-      const input = this.$refs.inputs.find((i) => i.value === value);
+  async mounted() {
+    const value = await getLayout();
+    const input = this.$refs.inputs.find((i) => i.value === value);
 
-      if (input) {
-        domScheduler.write(() => {
-          input.checked = true;
-        });
-      }
-    });
+    if (input) {
+      this.$write(() => {
+        input.checked = true;
+      });
+    }
   }
 
   switch(value: Layouts) {

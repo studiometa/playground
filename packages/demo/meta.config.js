@@ -14,7 +14,10 @@ export default defineWebpackConfig({
       syncColorScheme: true,
       dependencies: [
         {
+          // Pinned: js-toolkit v4 is published on the `next` dist-tag, so an
+          // unversioned esm.sh URL would still serve v3.
           specifier: '@studiometa/js-toolkit',
+          version: '4.0.0-alpha.1',
           esmSh: { bundle: false },
           subpaths: true,
         },
@@ -28,12 +31,12 @@ export default defineWebpackConfig({
         html: resolve('./html-loader.ts'),
       },
       defaults: {
-        html: '<p class="m-10">hello world</p>',
+        html: '<p class="m-10" data-component="App">hello world</p>',
         style: `html.dark {
   color: #fff;
   background-color: #222;
 }`,
-        script: `import { Base, createApp } from '@studiometa/js-toolkit';
+        script: `import { Base, registerComponent } from '@studiometa/js-toolkit';
 import { greet, isDefined } from 'demo-lib';
 
 class App extends Base {
@@ -48,7 +51,7 @@ class App extends Base {
   }
 }
 
-createApp(App);`,
+registerComponent(App);`,
       },
     }),
   ],

@@ -6,7 +6,11 @@ import { getMonaco, registerLspOptions, DARK_THEME, LIGHT_THEME } from '../utils
 import type { MonacoNamespace } from '../utils/monaco.js';
 import { themeIsDark, watchTheme } from '../store/index.js';
 
-export type EditorProps = BaseProps;
+export type EditorProps = BaseProps & {
+  $emits: {
+    'content-change': { value: string };
+  };
+};
 
 type MonacoEditor = ReturnType<MonacoNamespace['editor']['create']>;
 
@@ -19,7 +23,6 @@ export default class Editor extends Base<EditorProps> {
    */
   static config: BaseConfig = {
     name: 'Editor',
-    emits: ['content-change'],
   };
 
   /**
@@ -97,15 +100,24 @@ export default class Editor extends Base<EditorProps> {
 
     addJsAutocompletion(this.#monaco.languages);
 
-    watchTheme(async () => {
+    const unwatchTheme = watchTheme(async () => {
       this.#monaco.editor.setTheme((await themeIsDark()) ? DARK_THEME : LIGHT_THEME);
     });
 
     this.editor.onDidChangeModelContent(
       debounce(() => {
-        this.$emit('content-change', this.editor.getValue());
+        this.$emit('content-change', { value: this.editor.getValue() });
       }, 500),
     );
+
+    // v4 replaces `destroyed()` with the cleanup `mounted()` returns. The theme
+    // subscription and the Monaco instance both belong to this mount cycle.
+    return () => {
+      unwatchTheme();
+      this.editor?.dispose();
+      this.editor = undefined;
+      model.dispose();
+    };
   }
 
   async getInitialValue() {

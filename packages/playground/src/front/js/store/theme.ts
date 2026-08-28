@@ -1,4 +1,4 @@
-import { domScheduler } from '@studiometa/js-toolkit/utils';
+import { defaultScheduler } from '@studiometa/js-toolkit';
 import { fallbackStore as store } from '../utils/storage/index.js';
 
 export type Themes = 'dark' | 'light';
@@ -21,7 +21,7 @@ export async function themeIsLight() {
 
 export async function themeUpdateDOM(value?: Themes) {
   const theme = value ?? (await getTheme());
-  domScheduler.write(() => {
+  defaultScheduler.write(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
   });
 }

@@ -1,6 +1,6 @@
-import { Base } from '@studiometa/js-toolkit';
-import type { BaseProps } from '@studiometa/js-toolkit';
-import { nextTick, isArray, nextFrame } from '@studiometa/js-toolkit/utils';
+import { Base, nextFrame } from '@studiometa/js-toolkit';
+import type { BaseConfig, BaseProps } from '@studiometa/js-toolkit';
+import { wait } from '@studiometa/js-toolkit/utils';
 import {
   themeIsDark,
   watchTheme,
@@ -20,15 +20,16 @@ type esbuildType = typeof import('esbuild-wasm');
  */
 declare const __ESBUILD_WASM_VERSION__: string;
 
-export interface IframeProps extends BaseProps {
+export type IframeProps = BaseProps & {
   $refs: {
     iframe: HTMLIFrameElement;
   };
   $options: {
     tailwindcss: boolean;
+    syncColorScheme: boolean;
     importMap: Record<string, string>;
   };
-}
+};
 
 /**
  * Iframe class.
@@ -37,13 +38,13 @@ export default class Iframe extends Base<IframeProps> {
   /**
    * Config.
    */
-  static config = {
+  static config: BaseConfig = {
     name: 'Iframe',
     refs: ['iframe'],
     options: {
       tailwindcss: Boolean,
       syncColorScheme: Boolean,
-      importMap: Object,
+      importMap: { type: Object, default: () => ({}) },
     },
   };
 
@@ -63,9 +64,22 @@ export default class Iframe extends Base<IframeProps> {
   static esbuildPromise: PromiseWithResolvers<esbuildType>;
 
   /**
-   * The style element inside the iframe used to inject the style editor's content.
+   * The style element inside the iframe used to inject the script editor's content.
    */
   style: HTMLStyleElement;
+
+  /**
+   * Unsubscribe the theme watcher installed by the current iframe document.
+   *
+   * `initIframe()` runs again on every reload, so the previous subscription
+   * has to go before a new one replaces it.
+   */
+  #unwatchTheme?: () => void;
+
+  /**
+   * The document the import map was registered into, if any.
+   */
+  #importMapDocument?: Document;
 
   get window() {
     return this.$refs.iframe.contentWindow;
@@ -77,6 +91,36 @@ export default class Iframe extends Base<IframeProps> {
 
   async mounted() {
     await nextFrame();
+    await this.initIframe();
+
+    return () => {
+      this.#unwatchTheme?.();
+      this.#unwatchTheme = undefined;
+    };
+  }
+
+  /**
+   * Replace the preview's JavaScript realm, then build the document again.
+   *
+   * js-toolkit v4 registers a component class under its name in a
+   * module-scoped registry, and a second registration of the same name is
+   * ignored. Re-running an edited script inside the same realm therefore kept
+   * the first version of every class the author wrote — a playground where
+   * editing the script changes nothing. v3 had no registry, so re-running
+   * `createApp()` was enough and this method did not have to exist.
+   *
+   * Navigating the frame is what drops the registry, because it drops the
+   * realm and its module map with it.
+   */
+  async resetFrame(): Promise<void> {
+    const { iframe } = this.$refs;
+
+    await new Promise<void>((resolve) => {
+      iframe.addEventListener('load', () => resolve(), { once: true });
+      // A distinct value, so the assignment is a navigation rather than a no-op.
+      iframe.srcdoc = `<!doctype html><!--${Date.now()}-->`;
+    });
+
     await this.initIframe();
   }
 
@@ -109,7 +153,8 @@ ${html}
     }
     if (this.$options.syncColorScheme) {
       this.doc.documentElement.classList.toggle('dark', await themeIsDark());
-      watchTheme((theme) => {
+      this.#unwatchTheme?.();
+      this.#unwatchTheme = watchTheme((theme) => {
         this.doc.documentElement.classList.toggle('dark', theme === 'dark');
       });
     }
@@ -130,7 +175,7 @@ ${html}
     this.script.id = 'script';
     this.doc.head.append(this.script);
 
-    await nextTick();
+    await wait();
     await this.updateStyle();
     await this.updateScript(false);
   }
@@ -166,6 +211,16 @@ ${html}
   }
 
   async initImportMaps() {
+    // `initIframe()` rewrites `documentElement.innerHTML`, which drops the
+    // `<script type="importmap">` element but not the map the browser already
+    // registered for this document. Appending a second one makes the engine
+    // report every overlapping specifier — one warning per entry, and the
+    // js-toolkit v4 map has ninety-five of them.
+    if (this.#importMapDocument === this.doc) {
+      return;
+    }
+    this.#importMapDocument = this.doc;
+
     const importMap = this.doc.createElement('script');
     importMap.type = 'importmap';
     importMap.textContent = JSON.stringify({
@@ -194,32 +249,34 @@ ${html}
 
   async updateHtml() {
     console.log('updating html...');
-    await nextTick();
+    await wait();
     const html = await getHtml();
     if (html !== this.doc.body.innerHTML) {
       this.doc.body.innerHTML = html;
     }
-    await nextTick();
+    await wait();
     console.log('html updated!');
     await this.updateScript(false);
   }
 
   async updateStyle() {
     console.log('updating style...');
-    await nextTick();
+    await wait();
     const style = await getStyle();
     this.style.textContent = style;
-    await nextTick();
+    await wait();
     console.log('style updated!');
   }
 
   async updateScript(resetHtml = true): Promise<void> {
     console.log('updating script...');
     if (resetHtml) {
-      this.doc.body.replaceWith(this.doc.body.cloneNode(true));
-      await nextTick();
+      // The author edited the script: it has to run from scratch, which means
+      // a new realm. `resetFrame()` calls back here with `false`.
+      await this.resetFrame();
+      return;
     }
-    await nextTick();
+    await wait();
 
     const newScriptContent = await getScript();
     const newScript = `${newScriptContent}\ndocument.dispatchEvent(new Event("readystatechange"))`;
@@ -239,7 +296,7 @@ ${html}
       console.log('script updated!');
     } catch (err) {
       console.log('script not updated due to some errors:');
-      if (isArray(err.errors)) {
+      if (Array.isArray(err.errors)) {
         for (const error of err.errors) {
           console.error(`${error.text} (${error.location.line}:${error.location.column})`);
         }
