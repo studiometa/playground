@@ -56,7 +56,7 @@
     "build:types": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "@studiometa/js-toolkit": "^3.4.3",
+    "@studiometa/js-toolkit": "^4.0.0-alpha.1",
     "@studiometa/webpack-config": "^6.3.6",
     "@studiometa/webpack-config-preset-prototyping": "^6.3.6",
     "@studiometa/webpack-config-preset-tailwindcss-4": "6.3.6",

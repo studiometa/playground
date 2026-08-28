@@ -1,4 +1,4 @@
-import { domScheduler } from '@studiometa/js-toolkit/utils';
+import { defaultScheduler } from '@studiometa/js-toolkit';
 import { fallbackStore as store } from '../utils/storage/index.js';
 
 export type Layouts = 'top' | 'right' | 'bottom' | 'left';
@@ -27,7 +27,7 @@ export async function layoutIsHoritontal() {
 
 export async function layoutUpdateDOM(value?: Layouts) {
   const layout = value ?? (await getLayout());
-  domScheduler.write(() => {
+  defaultScheduler.write(() => {
     document.documentElement.classList.toggle('is-top', layout === 'top');
     document.documentElement.classList.toggle('is-right', layout === 'right');
     document.documentElement.classList.toggle('is-bottom', layout === 'bottom');

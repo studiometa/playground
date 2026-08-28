@@ -1,6 +1,5 @@
 import { Base } from '@studiometa/js-toolkit';
 import type { BaseConfig, BaseProps } from '@studiometa/js-toolkit';
-import { domScheduler } from '@studiometa/js-toolkit/utils';
 
 export type EditorsProps = BaseProps;
 
@@ -16,13 +15,13 @@ export default class Editors extends Base<EditorsProps> {
   };
 
   hide() {
-    domScheduler.write(() => {
+    this.$write(() => {
       this.$el.classList.add('hidden');
     });
   }
 
   show() {
-    domScheduler.write(() => {
+    this.$write(() => {
       this.$el.classList.remove('hidden');
     });
   }

@@ -1,17 +1,14 @@
 import { Base } from '@studiometa/js-toolkit';
-import type { BaseConfig, BaseProps, DragServiceProps } from '@studiometa/js-toolkit';
-import { domScheduler, wait } from '@studiometa/js-toolkit/utils';
+import type { BaseConfig, BaseProps, DelegatedEvent } from '@studiometa/js-toolkit';
+import { wait } from '@studiometa/js-toolkit/utils';
 import HeaderSwitcher from './HeaderSwitcher.js';
 import LayoutReactive from './LayoutReactive.js';
 import LayoutSwitcher from './LayoutSwitcher.js';
 import ThemeSwitcher from './ThemeSwitcher.js';
 import EditorVisibility from './EditorVisibility.js';
 import Editors from './Editors.js';
-import type HtmlEditor from './HtmlEditor.js';
 import Iframe from './Iframe.js';
 import type Resizable from './Resizable.js';
-import type ScriptEditor from './ScriptEditor.js';
-import type StyleEditor from './StyleEditor.js';
 import { layoutUpdateDOM, themeUpdateDOM, headerUpdateDOM } from '../store/index.js';
 import { urlStore } from '../utils/storage/index.js';
 import { setDefaults } from '../store/config.js';
@@ -20,19 +17,7 @@ layoutUpdateDOM();
 themeUpdateDOM();
 headerUpdateDOM();
 
-export interface PlaygroundProps extends BaseProps {
-  $children: {
-    LayoutSwitcher: LayoutSwitcher[];
-    LayoutReactive: LayoutReactive[];
-    HeaderSwitcher: HeaderSwitcher[];
-    Editors: Editors[];
-    Iframe: Iframe[];
-    EditorVisibility: EditorVisibility[];
-    Resizable: Promise<Resizable>[];
-    HtmlEditor: Promise<HtmlEditor>[];
-    ScriptEditor: Promise<ScriptEditor>[];
-    StyleEditor: Promise<StyleEditor>[];
-  };
+export type PlaygroundProps = BaseProps & {
   $refs: {
     htmlVisibility: HTMLInputElement;
     scriptVisibility: HTMLInputElement;
@@ -43,7 +28,18 @@ export interface PlaygroundProps extends BaseProps {
     style: string;
     script: string;
   };
-}
+};
+
+/**
+ * The `data-lang` value each visibility checkbox owns.
+ */
+const LANGS = {
+  html: 'text/html',
+  style: 'text/css',
+  script: 'text/javascript',
+} as const;
+
+type EditorKind = keyof typeof LANGS;
 
 export class Playground extends Base<PlaygroundProps> {
   static config: BaseConfig = {
@@ -70,36 +66,41 @@ export class Playground extends Base<PlaygroundProps> {
     },
   };
 
-  get iframe() {
-    return this.$children.Iframe[0];
+  /**
+   * Which editors are visible, by `data-lang`.
+   *
+   * v3 kept this in the DOM and read it back through `$children`, which was
+   * only safe because a parent mounted after its children. v4 gives no such
+   * ordering, so the coordinator owns the state and pushes it onto every
+   * `EditorVisibility` it sees — the ones already there, and the ones that
+   * arrive later.
+   */
+  #visibility = new Map<string, boolean>([
+    [LANGS.html, true],
+    [LANGS.style, true],
+    [LANGS.script, true],
+  ]);
+
+  #editorVisibilities = this.$watchChildren(EditorVisibility, {
+    added: (instance) => {
+      this.#applyVisibility(instance);
+      this.maybeToggleEditorsContainer();
+    },
+    removed: () => this.maybeToggleEditorsContainer(),
+  });
+
+  #editors = this.$watchChildren(Editors, {
+    added: () => this.maybeToggleEditorsContainer(),
+  });
+
+  #iframes = this.$watchChildren(Iframe);
+
+  get iframe(): Iframe | undefined {
+    return this.#iframes.items[0];
   }
 
-  get editors() {
-    return this.$children.Editors[0];
-  }
-
-  get htmlEditorVisibility() {
-    for (const editor of this.$children.EditorVisibility) {
-      if (editor.$el.dataset.lang === 'text/html') {
-        return editor;
-      }
-    }
-  }
-
-  get scriptEditorVisibility() {
-    for (const editor of this.$children.EditorVisibility) {
-      if (editor.$el.dataset.lang === 'text/javascript') {
-        return editor;
-      }
-    }
-  }
-
-  get styleEditorVisibility() {
-    for (const editor of this.$children.EditorVisibility) {
-      if (editor.$el.dataset.lang === 'text/css') {
-        return editor;
-      }
-    }
+  get editors(): Editors | undefined {
+    return this.#editors.items[0];
   }
 
   async mounted() {
@@ -109,80 +110,112 @@ export class Playground extends Base<PlaygroundProps> {
       style: this.$options.style,
     });
 
-    this.$refs.htmlVisibility.checked =
-      !(await urlStore.has('html-editor')) || (await urlStore.get('html-editor')) === 'true';
-    this.$refs.styleVisibility.checked =
-      !(await urlStore.has('style-editor')) || (await urlStore.get('style-editor')) === 'true';
-    this.$refs.scriptVisibility.checked =
-      !(await urlStore.has('script-editor')) || (await urlStore.get('script-editor')) === 'true';
+    const [html, style, script] = await Promise.all([
+      this.#readStoredVisibility('html-editor'),
+      this.#readStoredVisibility('style-editor'),
+      this.#readStoredVisibility('script-editor'),
+    ]);
 
-    this.htmlEditorVisibility.toggle(this.$refs.htmlVisibility.checked);
-    this.scriptEditorVisibility.toggle(this.$refs.scriptVisibility.checked);
-    this.styleEditorVisibility.toggle(this.$refs.styleVisibility.checked);
-    this.maybeToggleEditorsContainer();
+    this.$refs.htmlVisibility.checked = html;
+    this.$refs.styleVisibility.checked = style;
+    this.$refs.scriptVisibility.checked = script;
+
+    this.#setVisibility('html', html);
+    this.#setVisibility('style', style);
+    this.#setVisibility('script', script);
   }
 
   onHtmlVisibilityInput({ target: { checked } }) {
-    this.htmlEditorVisibility.toggle(checked);
+    this.#setVisibility('html', checked);
     urlStore.set('html-editor', checked);
-    this.maybeToggleEditorsContainer();
   }
 
   onStyleVisibilityInput({ target: { checked } }) {
-    this.styleEditorVisibility.toggle(this.$refs.styleVisibility.checked);
+    this.#setVisibility('style', checked);
     urlStore.set('style-editor', checked);
-    this.maybeToggleEditorsContainer();
   }
 
   onScriptVisibilityInput({ target: { checked } }) {
-    this.scriptEditorVisibility.toggle(this.$refs.scriptVisibility.checked);
+    this.#setVisibility('script', checked);
     urlStore.set('script-editor', checked);
-    this.maybeToggleEditorsContainer();
   }
 
   maybeToggleEditorsContainer() {
     const { editors } = this;
-    if (
-      !this.$refs.htmlVisibility.checked &&
-      !this.$refs.scriptVisibility.checked &&
-      !this.$refs.styleVisibility.checked
-    ) {
-      editors.hide();
-    } else {
+
+    if (!editors) {
+      return;
+    }
+
+    if ([...this.#visibility.values()].some(Boolean)) {
       editors.show();
+    } else {
+      editors.hide();
     }
   }
 
   onHtmlEditorContentChange() {
-    this.iframe.updateHtml();
+    this.iframe?.updateHtml();
   }
 
   onStyleEditorContentChange() {
-    this.iframe.updateStyle();
+    this.iframe?.updateStyle();
   }
 
   onScriptEditorContentChange() {
-    this.iframe.updateScript();
+    this.iframe?.updateScript();
   }
 
-  onResizableDragged(props: DragServiceProps) {
+  onResizableDragged({ payload }: DelegatedEvent<Resizable, 'dragged'>) {
     const { iframe } = this;
-    if (props.mode === 'start') {
-      domScheduler.write(() => {
+
+    if (!iframe) {
+      return;
+    }
+
+    if (payload.mode === 'start') {
+      this.$write(() => {
         document.body.classList.add('select-none');
         iframe.$el.parentElement.classList.add('pointer-events-none');
       });
     }
 
-    if (props.mode === 'drop') {
-      domScheduler.write(() => {
+    if (payload.mode === 'drop') {
+      this.$write(() => {
         document.body.classList.remove('select-none');
         iframe.$el.parentElement.classList.remove('pointer-events-none');
       });
     }
   }
 
-  async onIframeReloaderClick() {
-    this.iframe.initIframe();
+  onIframeReloaderClick() {
+    this.iframe?.initIframe();
+  }
+
+  /**
+   * Read one editor's stored visibility. Absent means visible.
+   */
+  async #readStoredVisibility(key: string): Promise<boolean> {
+    return !(await urlStore.has(key)) || (await urlStore.get(key)) === 'true';
+  }
+
+  #setVisibility(kind: EditorKind, isVisible: boolean) {
+    this.#visibility.set(LANGS[kind], isVisible);
+
+    for (const instance of this.#editorVisibilities) {
+      if (instance.lang === LANGS[kind]) {
+        instance.toggle(isVisible);
+      }
+    }
+
+    this.maybeToggleEditorsContainer();
+  }
+
+  #applyVisibility(instance: EditorVisibility) {
+    const isVisible = this.#visibility.get(instance.lang);
+
+    if (typeof isVisible === 'boolean') {
+      instance.toggle(isVisible);
+    }
   }
 }

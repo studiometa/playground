@@ -1,14 +1,13 @@
 import { Base } from '@studiometa/js-toolkit';
 import type { BaseConfig, BaseProps } from '@studiometa/js-toolkit';
-import { domScheduler } from '@studiometa/js-toolkit/utils';
 import { setHeaderVisibility, headerIsVisible } from '../store/header.js';
 
-export interface HeaderSwitcherProps extends BaseProps {
+export type HeaderSwitcherProps = BaseProps & {
   $refs: {
     show: HTMLButtonElement;
     hide: HTMLButtonElement;
   };
-}
+};
 
 /**
  * HeaderSwitcher class.
@@ -46,8 +45,8 @@ export default class HeaderSwitcher extends Base<HeaderSwitcherProps> {
     this.$refs.show.focus();
   }
 
-  update(isVisible) {
-    domScheduler.write(() => {
+  update(isVisible: boolean) {
+    this.$write(() => {
       this.$refs.hide.classList.toggle('flex', isVisible);
       this.$refs.show.classList.toggle('flex', !isVisible);
       this.$refs.hide.classList.toggle('hidden', !isVisible);

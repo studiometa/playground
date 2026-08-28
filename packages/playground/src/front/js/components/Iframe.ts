@@ -1,6 +1,6 @@
-import { Base } from '@studiometa/js-toolkit';
-import type { BaseProps } from '@studiometa/js-toolkit';
-import { nextTick, isArray, nextFrame } from '@studiometa/js-toolkit/utils';
+import { Base, nextFrame } from '@studiometa/js-toolkit';
+import type { BaseConfig, BaseProps } from '@studiometa/js-toolkit';
+import { wait } from '@studiometa/js-toolkit/utils';
 import {
   themeIsDark,
   watchTheme,
@@ -20,15 +20,16 @@ type esbuildType = typeof import('esbuild-wasm');
  */
 declare const __ESBUILD_WASM_VERSION__: string;
 
-export interface IframeProps extends BaseProps {
+export type IframeProps = BaseProps & {
   $refs: {
     iframe: HTMLIFrameElement;
   };
   $options: {
     tailwindcss: boolean;
+    syncColorScheme: boolean;
     importMap: Record<string, string>;
   };
-}
+};
 
 /**
  * Iframe class.
@@ -37,13 +38,13 @@ export default class Iframe extends Base<IframeProps> {
   /**
    * Config.
    */
-  static config = {
+  static config: BaseConfig = {
     name: 'Iframe',
     refs: ['iframe'],
     options: {
       tailwindcss: Boolean,
       syncColorScheme: Boolean,
-      importMap: Object,
+      importMap: { type: Object, default: () => ({}) },
     },
   };
 
@@ -63,9 +64,17 @@ export default class Iframe extends Base<IframeProps> {
   static esbuildPromise: PromiseWithResolvers<esbuildType>;
 
   /**
-   * The style element inside the iframe used to inject the style editor's content.
+   * The style element inside the iframe used to inject the script editor's content.
    */
   style: HTMLStyleElement;
+
+  /**
+   * Unsubscribe the theme watcher installed by the current iframe document.
+   *
+   * `initIframe()` runs again on every reload, so the previous subscription
+   * has to go before a new one replaces it.
+   */
+  #unwatchTheme?: () => void;
 
   get window() {
     return this.$refs.iframe.contentWindow;
@@ -78,6 +87,11 @@ export default class Iframe extends Base<IframeProps> {
   async mounted() {
     await nextFrame();
     await this.initIframe();
+
+    return () => {
+      this.#unwatchTheme?.();
+      this.#unwatchTheme = undefined;
+    };
   }
 
   async initIframe() {
@@ -109,7 +123,8 @@ ${html}
     }
     if (this.$options.syncColorScheme) {
       this.doc.documentElement.classList.toggle('dark', await themeIsDark());
-      watchTheme((theme) => {
+      this.#unwatchTheme?.();
+      this.#unwatchTheme = watchTheme((theme) => {
         this.doc.documentElement.classList.toggle('dark', theme === 'dark');
       });
     }
@@ -130,7 +145,7 @@ ${html}
     this.script.id = 'script';
     this.doc.head.append(this.script);
 
-    await nextTick();
+    await wait();
     await this.updateStyle();
     await this.updateScript(false);
   }
@@ -194,22 +209,22 @@ ${html}
 
   async updateHtml() {
     console.log('updating html...');
-    await nextTick();
+    await wait();
     const html = await getHtml();
     if (html !== this.doc.body.innerHTML) {
       this.doc.body.innerHTML = html;
     }
-    await nextTick();
+    await wait();
     console.log('html updated!');
     await this.updateScript(false);
   }
 
   async updateStyle() {
     console.log('updating style...');
-    await nextTick();
+    await wait();
     const style = await getStyle();
     this.style.textContent = style;
-    await nextTick();
+    await wait();
     console.log('style updated!');
   }
 
@@ -217,9 +232,9 @@ ${html}
     console.log('updating script...');
     if (resetHtml) {
       this.doc.body.replaceWith(this.doc.body.cloneNode(true));
-      await nextTick();
+      await wait();
     }
-    await nextTick();
+    await wait();
 
     const newScriptContent = await getScript();
     const newScript = `${newScriptContent}\ndocument.dispatchEvent(new Event("readystatechange"))`;
@@ -239,7 +254,7 @@ ${html}
       console.log('script updated!');
     } catch (err) {
       console.log('script not updated due to some errors:');
-      if (isArray(err.errors)) {
+      if (Array.isArray(err.errors)) {
         for (const error of err.errors) {
           console.error(`${error.text} (${error.location.line}:${error.location.column})`);
         }

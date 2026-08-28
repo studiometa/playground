@@ -1,3 +1,4 @@
+import type { BaseConfig } from '@studiometa/js-toolkit';
 import { getHtml, setHtml } from '../store/index.js';
 import { registerLang, registerHtmlLspAlias } from '../utils/monaco.js';
 import Editor from './Editor.js';
@@ -20,9 +21,13 @@ const LANG_EXTENSIONS: Record<string, string> = {
 export default class HtmlEditor extends Editor {
   /**
    * Config.
+   *
+   * v4 merges config along the prototype chain, so only what this class adds
+   * is declared here — and the name has to be its own, because it is the
+   * `data-component` token the registry answers for.
    */
-  static config = {
-    ...Editor.config,
+  static config: BaseConfig = {
+    name: 'HtmlEditor',
     options: {
       /**
        * The language ID for the editor (e.g. 'html', 'twig', 'liquid').
@@ -60,20 +65,22 @@ export default class HtmlEditor extends Editor {
       registerHtmlLspAlias(lang);
     }
 
-    await super.mounted();
+    const cleanup = await super.mounted();
 
     // Register language-specific snippets after Monaco is ready.
     if (lang === 'twig') {
       const { addTwigAutocompletion } = await import('../utils/twig/index.js');
       addTwigAutocompletion(this.monaco.languages);
     }
+
+    return cleanup;
   }
 
   async getInitialValue() {
     return getHtml();
   }
 
-  onContentChange({ args: [value] }) {
-    setHtml(value);
+  onContentChange(event: CustomEvent<{ value: string }>) {
+    setHtml(event.detail.value);
   }
 }

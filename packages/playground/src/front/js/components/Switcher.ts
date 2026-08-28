@@ -1,11 +1,14 @@
 import { Base } from '@studiometa/js-toolkit';
 import type { BaseConfig, BaseProps } from '@studiometa/js-toolkit';
 
-export interface SwitcherProps extends BaseProps {
+export type SwitcherProps = BaseProps & {
   $refs: {
     inputs: HTMLInputElement[];
   };
-}
+  $emits: {
+    switch: { value: string };
+  };
+};
 
 /**
  * Switcher class.
@@ -17,7 +20,6 @@ export default class Switcher extends Base<SwitcherProps> {
   static config: BaseConfig = {
     name: 'Switcher',
     refs: ['inputs[]'],
-    emits: ['switch'],
   };
 
   get value() {
@@ -25,8 +27,14 @@ export default class Switcher extends Base<SwitcherProps> {
   }
 
   onInputsInput() {
-    this.switch(this.value);
-    this.$emit('switch', this.value);
+    const { value } = this;
+
+    if (typeof value === 'undefined') {
+      return;
+    }
+
+    this.switch(value);
+    this.$emit('switch', { value });
   }
 
   switch(_value: string) {
