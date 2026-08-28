@@ -76,6 +76,11 @@ export default class Iframe extends Base<IframeProps> {
    */
   #unwatchTheme?: () => void;
 
+  /**
+   * The document the import map was registered into, if any.
+   */
+  #importMapDocument?: Document;
+
   get window() {
     return this.$refs.iframe.contentWindow;
   }
@@ -181,6 +186,16 @@ ${html}
   }
 
   async initImportMaps() {
+    // `initIframe()` rewrites `documentElement.innerHTML`, which drops the
+    // `<script type="importmap">` element but not the map the browser already
+    // registered for this document. Appending a second one makes the engine
+    // report every overlapping specifier — one warning per entry, and the
+    // js-toolkit v4 map has ninety-five of them.
+    if (this.#importMapDocument === this.doc) {
+      return;
+    }
+    this.#importMapDocument = this.doc;
+
     const importMap = this.doc.createElement('script');
     importMap.type = 'importmap';
     importMap.textContent = JSON.stringify({
