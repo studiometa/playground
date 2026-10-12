@@ -193,4 +193,7 @@ jobs:
           body: ${{ needs.release.outputs.body }}
           draft: false
           prerelease: ${{ needs.release.outputs.prerelease }}
+          # GitHub's latest release follows the `latest` dist-tag on npm.
           makeLatest: ${{ needs.release.outputs.prerelease != 'true' }}
+          # A replay updates the release when a previous run created it.
+          allowUpdates: true
