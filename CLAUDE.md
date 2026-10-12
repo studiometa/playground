@@ -23,7 +23,7 @@ A packaged web development playground (code editor + live preview) built as an n
 - **Linting:** oxlint (scripts), stylelint (CSS), prettier (formatting)
 - **Self-hosted deps:** tsdown (rolldown + rolldown-plugin-dts)
 - **CI:** GitHub Actions — build, test, coverage (Codecov)
-- **Publish:** npm with provenance, from the manual `Publish` workflow
+- **Publish:** npm with provenance and trusted publishing (OIDC, no npm token), from the manual `Publish` workflow
 
 ## Commands
 
@@ -96,7 +96,11 @@ git commit -m "feat: fix imports"
 
 - **Semantic Versioning:** `MAJOR.MINOR.PATCH` (on 0.x, a breaking change is a minor)
 - **Do not tag, bump or create GitHub releases manually** — run the `Publish` workflow: `gh workflow run publish.yml -f bump=patch` (or `minor` / `major`)
-- The workflow runs lint and tests, bumps all packages (the root `postversion` script syncs the workspace versions), folds `.changelog/` into `CHANGELOG.md` under `## vX.Y.Z - YYYY-MM-DD`, commits `vX.Y.Z`, tags `X.Y.Z` (no `v` prefix), pushes to `main`, publishes to npm and creates the GitHub release
+- The workflow runs lint and tests, bumps the root and all packages to the same version (`npm version --workspaces --include-workspace-root`), folds `.changelog/` into `CHANGELOG.md` under `## vX.Y.Z - YYYY-MM-DD`, commits `vX.Y.Z`, tags `X.Y.Z` (no `v` prefix), pushes to `main`, publishes to npm and creates the GitHub release
+- **Prereleases:** `gh workflow run publish.yml -f bump=prerelease -f preid=beta` (or `prepatch` / `preminor` / `premajor`; `preid` is `alpha`, `beta` or `rc`, default `alpha`). A version with a prerelease part (`X.Y.Z-beta.N`) is published on the `next` npm dist-tag and marked as a prerelease on GitHub; any other version goes to `latest`
+- **Promoting a prerelease:** releasing `X.Y.Z` after `X.Y.Z-rc.N` works without a fragment: `CHANGELOG.md` gets no new section and the GitHub release says `Stable release of X.Y.Z-rc.N.` Without a fragment, any other release fails
+- **npm token:** none. npm trusted publishing (OIDC) is bound to `publish.yml`: keep the publish job in that file, never in another or a reusable workflow
+- **Failed publish:** use "Re-run failed jobs" on the run. Each package has its own publish step, and a step skips a version that npm already has, so the replay publishes only the missing packages
 
 ## Testing
 

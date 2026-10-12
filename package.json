@@ -26,8 +26,7 @@
     "fix:templates": "npm run lint:templates -- --write",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:ci": "vitest run --coverage",
-    "postversion": "npm version --workspaces $npm_package_version"
+    "test:ci": "vitest run --coverage"
   },
   "dependencies": {
     "@studiometa/prettier-config": "^4.4.0",
