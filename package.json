@@ -27,7 +27,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ci": "vitest run --coverage",
-    "postversion": "npm version -ws $npm_package_version"
+    "postversion": "npm version --workspaces $npm_package_version"
   },
   "dependencies": {
     "@studiometa/prettier-config": "^4.4.0",

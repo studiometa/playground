@@ -23,7 +23,7 @@ A packaged web development playground (code editor + live preview) built as an n
 - **Linting:** oxlint (scripts), stylelint (CSS), prettier (formatting)
 - **Self-hosted deps:** tsdown (rolldown + rolldown-plugin-dts)
 - **CI:** GitHub Actions — build, test, coverage (Codecov)
-- **Publish:** npm with provenance, triggered by version tags
+- **Publish:** npm with provenance, from the manual `Publish` workflow
 
 ## Commands
 
@@ -84,20 +84,19 @@ git commit -m "feat: fix imports"
 ## Changelog
 
 - File: `CHANGELOG.md` — [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format, **in English**
-- Categories: Added, Changed, Fixed, Deprecated, Removed, Security
-- Always include PR and commit references: `([#58](url), [2f6994f](url))`
-- Add entries to `[Unreleased]` section first
-- On release: replace `[Unreleased]` heading with `## vX.Y.Z - YYYY.MM.DD`
-- Commit changelog changes separately from code
+- **Never edit `CHANGELOG.md` directly.** Each PR adds a fragment `.changelog/<slug>.md` (slug = branch name without its prefix, e.g. `feat/auto-detect-subpaths` → `auto-detect-subpaths.md`)
+- A fragment only contains `### Added|Changed|Deprecated|Removed|Fixed|Security|Dependencies` headings, each followed by its entries — no `#`/`##` heading
+- **Do not write the PR number**: the release appends `[[#N]]` and the link definition from the merged PR that added the fragment
+- Commit references are optional: `[2f6994f]` in the entry plus its `[2f6994f]: https://github.com/studiometa/playground/commit/2f6994f` link definition in the fragment
+- Prefix breaking changes with `⚠️`
+- The `Changelog` check fails when a PR changes `packages/playground/**` or `packages/playground-preview/**` without a fragment; set the `no-changelog` label for changes users do not see (tests, refactors, tooling)
+- Format and tooling: [`weareikko/changelog`](https://github.com/weareikko/changelog)
 
 ## Versioning & releases
 
-- **Semantic Versioning:** `MAJOR.MINOR.PATCH`
-- Root `package.json` has a `postversion` script that syncs workspace versions
-- Release process:
-  1. `npm version X.Y.Z --no-git-tag-version` on `main`
-  2. Update `CHANGELOG.md`
-  3. Commit, tag, push → triggers npm publish via GitHub Actions
+- **Semantic Versioning:** `MAJOR.MINOR.PATCH` (on 0.x, a breaking change is a minor)
+- **Do not tag, bump or create GitHub releases manually** — run the `Publish` workflow: `gh workflow run publish.yml -f bump=patch` (or `minor` / `major`)
+- The workflow runs lint and tests, bumps all packages (the root `postversion` script syncs the workspace versions), folds `.changelog/` into `CHANGELOG.md` under `## vX.Y.Z - YYYY-MM-DD`, commits `vX.Y.Z`, tags `X.Y.Z` (no `v` prefix), pushes to `main`, publishes to npm and creates the GitHub release
 
 ## Testing
 
