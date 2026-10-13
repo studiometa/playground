@@ -46,7 +46,7 @@
     "watch": "node scripts/watch.js"
   },
   "devDependencies": {
-    "@vitest/browser": "^4.0.18",
+    "@vitest/browser": "^4.1.10",
     "@vitest/browser-playwright": "^4.0.18",
     "esbuild-wasm": "^0.24.2",
     "fflate": "^0.8.2",
