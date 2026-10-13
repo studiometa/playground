@@ -23,7 +23,7 @@ A packaged web development playground (code editor + live preview) built as an n
 - **Linting:** oxlint (scripts), stylelint (CSS), prettier (formatting)
 - **Self-hosted deps:** tsdown (rolldown + rolldown-plugin-dts)
 - **CI:** GitHub Actions — build, test, coverage (Codecov)
-- **Publish:** npm with provenance, from the manual `Publish` workflow
+- **Publish:** npm with provenance and trusted publishing (OIDC, no npm token), from the `Publish` workflow on each merge into `main`
 
 ## Commands
 
@@ -86,7 +86,7 @@ git commit -m "feat: fix imports"
 - File: `CHANGELOG.md` — [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format, **in English**
 - **Never edit `CHANGELOG.md` directly.** Each PR adds a fragment `.changelog/<slug>.md` (slug = branch name without its prefix, e.g. `feat/auto-detect-subpaths` → `auto-detect-subpaths.md`)
 - A fragment only contains `### Added|Changed|Deprecated|Removed|Fixed|Security|Dependencies` headings, each followed by its entries — no `#`/`##` heading
-- **Do not write the PR number**: the release appends `[[#N]]` and the link definition from the merged PR that added the fragment
+- **Do not write the PR number**: the release appends `([#N])` and the link definition from the merged PR that added the fragment
 - Commit references are optional: `[2f6994f]` in the entry plus its `[2f6994f]: https://github.com/studiometa/playground/commit/2f6994f` link definition in the fragment
 - Prefix breaking changes with `⚠️`
 - The `Changelog` check fails when a PR changes `packages/playground/**` or `packages/playground-preview/**` without a fragment; set the `no-changelog` label for changes users do not see (tests, refactors, tooling)
@@ -95,8 +95,12 @@ git commit -m "feat: fix imports"
 ## Versioning & releases
 
 - **Semantic Versioning:** `MAJOR.MINOR.PATCH` (on 0.x, a breaking change is a minor)
-- **Do not tag, bump or create GitHub releases manually** — run the `Publish` workflow: `gh workflow run publish.yml -f bump=patch` (or `minor` / `major`)
-- The workflow runs lint and tests, bumps all packages (the root `postversion` script syncs the workspace versions), folds `.changelog/` into `CHANGELOG.md` under `## vX.Y.Z - YYYY-MM-DD`, commits `vX.Y.Z`, tags `X.Y.Z` (no `v` prefix), pushes to `main`, publishes to npm and creates the GitHub release
+- **Do not tag, bump or create GitHub releases manually** — each merge into `main` runs the `Publish` workflow (`publish.yml`), which releases the fragments in `.changelog/` with [`weareikko/changelog`](https://github.com/weareikko/changelog#release-1). Without a fragment and without a merged pull request from `renovate[bot]`, it releases nothing
+- **Version:** computed from the entries and the highest version tag: a breaking entry (`⚠️`) bumps the minor on 0.x, any other entry bumps the patch. To force a bump: `gh workflow run publish.yml -f version=major` (or `minor` / `patch`)
+- The workflow runs lint and tests, folds `.changelog/` into `CHANGELOG.md` under `## X.Y.Z - YYYY-MM-DD`, bumps the root and all packages to the same version (`npm version --workspaces --include-workspace-root`), commits `vX.Y.Z`, tags `X.Y.Z` (no `v` prefix), pushes to `main`, creates the GitHub release, then publishes `@studiometa/playground` and `@studiometa/playground-preview` to npm
+- **Prereleases:** a PR adds `.changelog/prerelease` with one identifier (`alpha`, `beta` or `rc`): each next merge with entries releases `X.Y.Z-rc.N`, published on the `next` npm dist-tag and marked as a prerelease on GitHub. A PR that deletes the file releases the stable version on merge, with or without new entries. See [Prereleases](https://github.com/weareikko/changelog#prereleases)
+- **npm token:** none. npm trusted publishing (OIDC) is bound to `publish.yml`: keep the publish job in that file, never in another or a reusable workflow
+- **Failed publish:** use "Re-run failed jobs" on the run. Each package has its own publish step, and a step skips a version that npm already has, so the replay publishes only the missing packages
 
 ## Testing
 
