@@ -80,10 +80,10 @@
     "node": ">=20.11.0"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "4.1.13",
-    "concurrently": "9.2.1",
-    "tsdown": "0.21.1",
-    "type-fest": "4.30.2",
-    "typescript": "5.8.3"
+    "@tailwindcss/cli": "4.3.3",
+    "concurrently": "9.2.5",
+    "tsdown": "0.23.1",
+    "type-fest": "4.41.0",
+    "typescript": "5.9.3"
   }
 }
