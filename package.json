@@ -41,10 +41,10 @@
   "devDependencies": {
     "@studiometa/oxlint-config": "0.2.0",
     "@vitest/browser": "^4.0.18",
-    "@vitest/coverage-v8": "4.0.18",
+    "@vitest/coverage-v8": "4.1.11",
     "happy-dom": "^20.8.3",
-    "oxlint": "1.52.0",
-    "playwright": "^1.58.2",
+    "oxlint": "1.88.0",
+    "playwright": "1.58.2",
     "vitest": "4.0.18"
   }
 }
