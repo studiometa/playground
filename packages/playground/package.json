@@ -60,7 +60,7 @@
     "@studiometa/webpack-config": "^6.3.6",
     "@studiometa/webpack-config-preset-prototyping": "^6.3.6",
     "@studiometa/webpack-config-preset-tailwindcss-4": "6.3.6",
-    "esbuild-wasm": "^0.24.2",
+    "esbuild-wasm": "^0.28.0",
     "fast-glob": "^3.3.3",
     "fflate": "^0.8.2",
     "modern-monaco": "^0.4.0",
