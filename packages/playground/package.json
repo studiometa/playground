@@ -59,7 +59,7 @@
     "@studiometa/js-toolkit": "^4.0.0-alpha.1",
     "@studiometa/webpack-config": "^6.3.6",
     "@studiometa/webpack-config-preset-prototyping": "^6.3.6",
-    "@studiometa/webpack-config-preset-tailwindcss-4": "6.3.6",
+    "@studiometa/webpack-config-preset-tailwindcss-4": "6.4.0",
     "esbuild-wasm": "^0.24.2",
     "fast-glob": "^3.3.3",
     "fflate": "^0.8.2",
